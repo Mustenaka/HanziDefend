@@ -1,0 +1,180 @@
+{
+  "effects": [
+    {
+      "id": "buff_atk_up",
+      "name": "锐意",
+      "desc": "所有我方单位攻击提高 10%。",
+      "rarity": "Common",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "AddStat",
+          "stat": "atk",
+          "mode": "mul",
+          "value": 0.10,
+          "target": "AllyAll",
+          "duration": -1.0
+        }
+      ]
+    },
+    {
+      "id": "buff_front_shield",
+      "name": "坚阵",
+      "desc": "为相邻我方单位提供护盾。",
+      "rarity": "Uncommon",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "GrantShield",
+          "value": 60.0,
+          "target": "AllyAdjacent",
+          "duration": -1.0
+        }
+      ]
+    },
+    {
+      "id": "cmd_bei_passive",
+      "name": "仁德",
+      "desc": "刘备在场时所有我方单位攻击提高 10%。",
+      "rarity": "Commander",
+      "trigger": "BattleStart",
+      "stacking": "Refresh",
+      "ops": [
+        {
+          "op": "AddStat",
+          "stat": "atk",
+          "mode": "mul",
+          "value": 0.10,
+          "target": "AllyAll",
+          "duration": -1.0
+        }
+      ]
+    },
+    {
+      "id": "cmd_bei_active",
+      "name": "仁心济世",
+      "desc": "立即为所有我方单位恢复生命。",
+      "rarity": "Commander",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "Heal",
+          "value": 100.0,
+          "target": "AllyAll",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "id": "unit_huo_blast",
+      "name": "火爆",
+      "desc": "火药兵接触敌人时对范围内敌人造成伤害。",
+      "rarity": "Unit",
+      "trigger": "SuicideContact",
+      "stacking": "Refresh",
+      "ops": [
+        {
+          "op": "Damage",
+          "value": 65.0,
+          "target": "EnemyInRadius",
+          "duration": 0.0,
+          "radius": 1.8
+        }
+      ]
+    },
+    {
+      "id": "boss_lv_fury",
+      "name": "无双",
+      "desc": "吕布强化自身攻击与攻速。",
+      "rarity": "Boss",
+      "trigger": "UnitSpawn",
+      "stacking": "Refresh",
+      "ops": [
+        {
+          "op": "AddStat",
+          "stat": "atk",
+          "mode": "mul",
+          "value": 0.25,
+          "target": "SelfUnit",
+          "duration": -1.0
+        },
+        {
+          "op": "AddStat",
+          "stat": "atkSpeed",
+          "mode": "mul",
+          "value": 0.15,
+          "target": "SelfUnit",
+          "duration": -1.0
+        }
+      ]
+    },
+    {
+      "id": "skill_reinforce",
+      "name": "援军",
+      "desc": "在我方阵线召唤两名长枪兵。",
+      "rarity": "Rare",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "SpawnUnit",
+          "target": "SelfUnit",
+          "duration": 0.0,
+          "unitId": "mao",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "skill_breakthrough",
+      "name": "破阵",
+      "desc": "对最近敌人造成一次直接伤害。",
+      "rarity": "Rare",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "Damage",
+          "value": 120.0,
+          "target": "EnemyNearest",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "id": "skill_breach_base",
+      "name": "攻城",
+      "desc": "对敌方基地造成一次直接伤害。",
+      "rarity": "Epic",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "Damage",
+          "value": 180.0,
+          "target": "EnemyBase",
+          "duration": 0.0
+        }
+      ]
+    },
+    {
+      "id": "reward_coins",
+      "name": "犒赏三军",
+      "desc": "立即获得金币。",
+      "rarity": "Uncommon",
+      "trigger": "Manual",
+      "stacking": "Stack",
+      "ops": [
+        {
+          "op": "ModifyCoins",
+          "value": 12.0,
+          "target": "SelfUnit",
+          "duration": 0.0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "commanders": [
+    {
+      "id": "cmd_bei",
+      "name": "刘备",
+      "passiveEffectId": "cmd_bei_passive",
+      "activeEffectId": "cmd_bei_active",
+      "activeCooldown": 30.0
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "refreshBaseCost": 15,
+  "refreshCostGrowth": 5,
+  "dropCoins": {
+    "normal": 1,
+    "elite": 3,
+    "boss": 20
+  },
+  "damage": {
+    "armorScale": 100.0,
+    "minimumDamage": 1
+  },
+  "cardWeights": {
+    "unit": 70,
+    "expand": 15,
+    "buff": 12,
+    "global": 3
+  },
+  "battle": {
+    "tickRateHz": 30,
+    "retargetInterval": 0.2,
+    "targetSearchRadius": 24.0,
+    "colliderRadius": 0.35,
+    "sameColumnTolerance": 0.6,
+    "separationDistance": 0.8,
+    "allyBasePosition": {
+      "x": 0.0,
+      "y": -8.0
+    },
+    "enemyBasePosition": {
+      "x": 0.0,
+      "y": 8.0
+    },
+    "enemySpawnCenter": {
+      "x": 0.0,
+      "y": 6.0
+    }
+  }
+}

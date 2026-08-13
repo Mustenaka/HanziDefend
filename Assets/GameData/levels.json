@@ -1,0 +1,69 @@
+{
+  "levels": [
+    {
+      "id": "level_1_1",
+      "stageIndex": 1,
+      "waveSetId": "main_20",
+      "baseHp": 1000.0,
+      "startCoins": 45,
+      "gridCols": 3,
+      "gridRows": 3,
+      "gridMaxCols": 7,
+      "gridMaxRows": 3
+    },
+    {
+      "id": "level_1_2",
+      "stageIndex": 2,
+      "waveSetId": "main_20",
+      "baseHp": 1100.0,
+      "startCoins": 45,
+      "gridCols": 3,
+      "gridRows": 3,
+      "gridMaxCols": 7,
+      "gridMaxRows": 3
+    },
+    {
+      "id": "level_1_3",
+      "stageIndex": 3,
+      "waveSetId": "main_20",
+      "baseHp": 1200.0,
+      "startCoins": 45,
+      "gridCols": 3,
+      "gridRows": 3,
+      "gridMaxCols": 7,
+      "gridMaxRows": 3
+    },
+    {
+      "id": "level_1_4",
+      "stageIndex": 4,
+      "waveSetId": "main_20",
+      "baseHp": 1300.0,
+      "startCoins": 45,
+      "gridCols": 3,
+      "gridRows": 3,
+      "gridMaxCols": 7,
+      "gridMaxRows": 3
+    },
+    {
+      "id": "level_1_5",
+      "stageIndex": 5,
+      "waveSetId": "main_20",
+      "baseHp": 1500.0,
+      "startCoins": 45,
+      "gridCols": 3,
+      "gridRows": 3,
+      "gridMaxCols": 7,
+      "gridMaxRows": 3
+    }
+  ],
+  "bases": {
+    "ally": {
+      "hp": 1000.0,
+      "armor": 20.0
+    },
+    "enemy": {
+      "hp": 1200.0,
+      "armor": 15.0
+    }
+  }
+}

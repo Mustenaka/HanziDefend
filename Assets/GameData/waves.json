@@ -1,0 +1,205 @@
+{
+  "waveSets": [
+    {
+      "id": "main_20",
+      "waves": [
+        {
+          "index": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 4, "spreadX": 2.0, "intervalSec": 0.8 }
+          ]
+        },
+        {
+          "index": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 5, "spreadX": 2.2, "intervalSec": 0.8 }
+          ]
+        },
+        {
+          "index": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 4, "spreadX": 2.4, "intervalSec": 0.75 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 1.6, "intervalSec": 1.0 }
+          ]
+        },
+        {
+          "index": 4,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 5, "spreadX": 2.6, "intervalSec": 0.75 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 1.8, "intervalSec": 1.0 }
+          ]
+        },
+        {
+          "index": 5,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 6, "spreadX": 2.8, "intervalSec": 0.7 },
+            { "unitId": "e_jia", "level": 1, "count": 2, "spreadX": 1.5, "intervalSec": 1.1 }
+          ]
+        },
+        {
+          "index": 6,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 6, "spreadX": 3.0, "intervalSec": 0.7 },
+            { "unitId": "e_she", "level": 1, "count": 3, "spreadX": 2.0, "intervalSec": 0.95 }
+          ]
+        },
+        {
+          "index": 7,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 6, "spreadX": 3.0, "intervalSec": 0.68 },
+            { "unitId": "e_jia", "level": 1, "count": 2, "spreadX": 1.8, "intervalSec": 1.0 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 1.8, "intervalSec": 0.9 }
+          ]
+        },
+        {
+          "index": 8,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 7, "spreadX": 3.2, "intervalSec": 0.65 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 2.0, "intervalSec": 0.9 },
+            { "unitId": "e_lang", "level": 1, "count": 2, "spreadX": 2.2, "intervalSec": 1.2 }
+          ]
+        },
+        {
+          "index": 9,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 7, "spreadX": 3.4, "intervalSec": 0.65 },
+            { "unitId": "e_jia", "level": 1, "count": 3, "spreadX": 2.0, "intervalSec": 1.0 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 2.0, "intervalSec": 0.9 }
+          ]
+        },
+        {
+          "index": 10,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 7, "spreadX": 3.4, "intervalSec": 0.62 },
+            { "unitId": "e_jia", "level": 1, "count": 2, "spreadX": 2.0, "intervalSec": 0.95 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 2.2, "intervalSec": 0.85 },
+            { "unitId": "e_lang", "level": 1, "count": 2, "spreadX": 2.4, "intervalSec": 1.1 }
+          ]
+        },
+        {
+          "index": 11,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 8, "spreadX": 3.6, "intervalSec": 0.6 },
+            { "unitId": "e_jia", "level": 1, "count": 3, "spreadX": 2.2, "intervalSec": 0.95 },
+            { "unitId": "e_she", "level": 1, "count": 3, "spreadX": 2.2, "intervalSec": 0.85 }
+          ]
+        },
+        {
+          "index": 12,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 8, "spreadX": 3.8, "intervalSec": 0.58 },
+            { "unitId": "e_jia", "level": 1, "count": 3, "spreadX": 2.4, "intervalSec": 0.9 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 2.2, "intervalSec": 0.82 },
+            { "unitId": "e_lang", "level": 1, "count": 2, "spreadX": 2.6, "intervalSec": 1.0 }
+          ]
+        },
+        {
+          "index": 13,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 9, "spreadX": 3.8, "intervalSec": 0.56 },
+            { "unitId": "e_jia", "level": 1, "count": 3, "spreadX": 2.4, "intervalSec": 0.88 },
+            { "unitId": "e_she", "level": 1, "count": 4, "spreadX": 2.4, "intervalSec": 0.8 }
+          ]
+        },
+        {
+          "index": 14,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 9, "spreadX": 4.0, "intervalSec": 0.55 },
+            { "unitId": "e_jia", "level": 1, "count": 4, "spreadX": 2.6, "intervalSec": 0.85 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 2.4, "intervalSec": 0.78 },
+            { "unitId": "e_lang", "level": 1, "count": 2, "spreadX": 2.8, "intervalSec": 0.95 }
+          ]
+        },
+        {
+          "index": 15,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 10, "spreadX": 4.0, "intervalSec": 0.52 },
+            { "unitId": "e_jia", "level": 1, "count": 4, "spreadX": 2.8, "intervalSec": 0.82 },
+            { "unitId": "e_she", "level": 1, "count": 4, "spreadX": 2.6, "intervalSec": 0.76 }
+          ]
+        },
+        {
+          "index": 16,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 10, "spreadX": 4.2, "intervalSec": 0.5 },
+            { "unitId": "e_jia", "level": 1, "count": 4, "spreadX": 2.8, "intervalSec": 0.8 },
+            { "unitId": "e_she", "level": 1, "count": 2, "spreadX": 2.6, "intervalSec": 0.74 },
+            { "unitId": "e_lang", "level": 1, "count": 3, "spreadX": 3.0, "intervalSec": 0.9 }
+          ]
+        },
+        {
+          "index": 17,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 10, "spreadX": 4.4, "intervalSec": 0.48 },
+            { "unitId": "e_jia", "level": 1, "count": 5, "spreadX": 3.0, "intervalSec": 0.78 },
+            { "unitId": "e_she", "level": 1, "count": 3, "spreadX": 2.8, "intervalSec": 0.72 },
+            { "unitId": "e_lang", "level": 1, "count": 2, "spreadX": 3.0, "intervalSec": 0.88 }
+          ]
+        },
+        {
+          "index": 18,
+          "rewardRank": "Normal",
+          "delaySec": 3.0,
+          "spawns": [
+            { "unitId": "e_zu", "level": 1, "count": 11, "spreadX": 4.4, "intervalSec": 0.46 },
+            { "unitId": "e_jia", "level": 1, "count": 4, "spreadX": 3.0, "intervalSec": 0.76 },
+            { "unitId": "e_she", "level": 1, "count": 3, "spreadX": 2.8, "intervalSec": 0.7 },
+            { "unitId": "e_lang", "level": 1, "count": 3, "spreadX": 3.2, "intervalSec": 0.85 }
+          ]
+        },
+        {
+          "index": 19,
+          "rewardRank": "Elite",
+          "delaySec": 4.0,
+          "spawns": [
+            { "unitId": "e_jia", "level": 1, "count": 6, "spreadX": 3.4, "intervalSec": 0.7 },
+            { "unitId": "e_she", "level": 1, "count": 4, "spreadX": 3.0, "intervalSec": 0.65 },
+            { "unitId": "e_lang", "level": 1, "count": 4, "spreadX": 3.4, "intervalSec": 0.75 }
+          ]
+        },
+        {
+          "index": 20,
+          "rewardRank": "Boss",
+          "delaySec": 5.0,
+          "spawns": [
+            { "unitId": "boss_lv", "level": 1, "count": 1, "spreadX": 0.0, "intervalSec": 0.0 }
+          ]
+        }
+      ]
+    }
+  ]
+}

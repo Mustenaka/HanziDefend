@@ -1,0 +1,20 @@
+{
+  "name": "HanziDefend.Tests.PlayMode",
+  "rootNamespace": "HanziDefend.Tests.PlayMode",
+  "references": [
+    "HanziDefend.Data",
+    "HanziDefend.Gameplay"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

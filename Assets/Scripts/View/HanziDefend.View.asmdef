@@ -1,0 +1,17 @@
+{
+  "name": "HanziDefend.View",
+  "rootNamespace": "HanziDefend.View",
+  "references": [
+    "HanziDefend.Data",
+    "HanziDefend.Gameplay"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,24 @@
+{
+  "name": "HanziDefend.Editor",
+  "rootNamespace": "HanziDefend.Editor",
+  "references": [
+    "HanziDefend.Data",
+    "HanziDefend.Gameplay",
+    "HanziDefend.View",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

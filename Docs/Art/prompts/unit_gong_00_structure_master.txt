@@ -1,0 +1,43 @@
+【使用方式】
+上传 Image 1：gong_kaishu_reference.png（标准楷体字骨，必须使用）。
+可选上传 Image 2：旧版失败图。Image 2 只是反例，不是构图或风格参考。
+这一步只生成一张“构形母版”，先锁定字形、武器比例和拉弓受力，不追求最终表面风格。
+
+Create exactly one production-ready square game sprite for a 1×1 battlefield unit, not a logo, typography poster, mascot sticker, character sheet, or concept grid.
+
+DESIGN THESIS
+The Chinese character is the warrior, and the weapon is its loudest expression.
+The result must read simultaneously as the exact Chinese character 「弓」 and as one archer drawing an enormous recurved war bow at full tension.
+
+REFERENCE PRIORITY
+Image 1 is the sole authority for the exact standard-Kaiti skeleton of 「弓」: preserve all three strokes, their direction, their topology, and the two main negative spaces. Keep the glyph front-facing, upright, complete, not mirrored, not invented, and not missing any stroke. Use Image 1 for structure only; do not copy its brush texture.
+If Image 2 is present, reject its failed choices: no oversized cream word occupying the whole canvas, no two miniature soldiers hanging at the sides, no thin triangular decorative bow, no passive horizontal arrow, no rounded cream-glaze sticker look, and no soft gradients.
+
+CORE CONSTRUCTION — highest priority
+1. Keep a clearly readable 「弓」 glyph core at only 42%–48% of canvas width and 50%–58% of canvas height. Do not enlarge the glyph to fill the canvas.
+2. Extend the outer long turning-and-hooking stroke of 「弓」 into the main limb of one massive recurved war bow. The original glyph path must remain readable before its terminals continue outward as weapon structure. Do not place a separate small bow beside a complete character.
+3. The upper and lower bow tips flare outward and are visibly thick. The full bow-and-glyph silhouette occupies 82%–90% of canvas width and 72%–84% of canvas height while staying close to a square 1×1 footprint.
+4. A taut bowstring runs from both bow tips to one unmistakable rear draw point, forming a strong V-shaped tension triangle. The draw point is pulled back by about 25% of canvas width relative to the grip. No loose string and no meaningless zigzag line.
+5. One oversized arrow is already nocked. It points 10°–15° upward to the right, spans 74%–82% of canvas width, and has an exaggerated broad arrowhead and large readable fletching.
+6. The character body is the glyph itself. Add only one simplified pair of armored gauntlets: the forward hand grips the bow handle and the rear hand pinches the string and arrow nock. Both hands must physically connect to the glyph/weapon. Do not create full human figures.
+7. Optional Three Kingdoms details are limited to two broad shoulder guards and one small helmet plume, together under 15% of the subject area. They must not cover the main strokes or the two negative spaces.
+8. Use an asymmetrical, forward-leaning heroic pose. Express motion only through bent bow limbs, the V-shaped string, the rear draw point, and the diagonal arrow—not through speed lines or particles.
+
+64PX-DRIVEN GEOMETRY
+On the 1024px source: outer silhouette outline 48–64px; major inner outlines 28–36px; bowstring and arrow shaft never thinner than 24–32px; both key glyph openings at least 48–64px wide. Use three or four large shapes instead of tiny details.
+
+COLOR FOR THE STRUCTURE TEST
+Use only solid opaque fills: cinnabar red #D93A2B, rattan yellow #F2B233, ink black #1A1A1E, and rice-paper cream #F5EDDD.
+The glyph core is cream with ink outline. Put red/yellow on the large bow limbs and broad armor planes so warm faction color covers 35%–45% of the visible subject, not just small ornaments.
+No gradient, bevel, glaze, soft highlight, realistic material, glow, or cast shadow.
+
+CONNECTED SILHOUETTE
+Every painted component has a closed, opaque ink-black boundary. Glyph, bow, arrow, gauntlets, and armor must touch or overlap so the result reads as one connected unit. No floating fragments, detached ribbons, sparks, smoke, ink droplets, or tiny holes.
+
+OUTPUT
+Exactly one centered subject on a perfectly flat, exact pure-white #FFFFFF background, edge to edge.
+Leave at least 6% empty margin on every side and 8% extra empty space at the bottom; bottom-center anchor; no edge contact.
+The only readable glyph allowed is the character body 「弓」 itself. No other words, labels, seals, signatures, watermark, border, frame, ground, or ground shadow.
+One image only, no alternatives, no multiple angles, no inset, no comparison sheet.
+Square 1024×1024.
+Do not explain the design in text; generate only the image.

@@ -1,0 +1,21 @@
+【使用方式】
+上传 Image 1：已经通过验收的「弓」构形母版。
+上传 Image 2：gong_kaishu_reference.png。
+这是定点风格覆写，不允许重新设计构图。
+
+Change only the rendering style and surface design of Image 1. Keep everything else exactly the same: the full connected silhouette, exact standard-Kaiti 「弓」 skeleton verified by Image 2, glyph size, two negative spaces, recurved bow size, V-shaped string, draw point, arrow direction and length, gauntlet positions, pose, margins, bottom-center anchor, and 1×1 footprint.
+
+STYLE — CHINESE SHADOW-PUPPET WARLORD
+Render the unit as a bold Shaanxi-style shadow-puppet warrior interpreted as a modern opaque game sprite. Emphasize the dramatic side silhouette, articulated gauntlet joints, lacquer-red leather planes, golden bindings, and long recurved weapon. It should feel theatrical, sharp, and commanding—not delicate handicraft, a paper doll, or a cute puppet.
+
+Simulate dyed translucent leather using solid opaque flat colors only; do not use actual transparency. Use exactly two large circular joint discs at the gauntlets and a few broad black printed motifs inside the shoulder guards. Any decorative opening must be represented as a dark printed shape, not a real white/transparent hole. No perforation or ornament smaller than 48px on the 1024px source.
+
+Strict palette only:
+ink black #1A1A1E, cinnabar #D93A2B, rattan yellow #F2B233, rice-paper cream #F5EDDD.
+Keep the exact cream 「弓」 glyph as the central body. Use red/yellow on the massive bow limbs and armor so the warm faction remains dominant.
+
+Use a crisp 48–64px black outer contour, 28–36px major internal borders, and at least 24–32px for the string and arrow shaft. Keep every part thick, opaque, connected, and readable at 64px.
+
+Exact flat pure-white #FFFFFF background. No stage, screen, backlight glow, cast shadow, sticks, puppeteer, fabric texture, fine lace holes, translucent alpha, detached tassels, floating pieces, seals, extra words, border, or frame.
+
+Exactly one square 1024×1024 image. Generate only the image.

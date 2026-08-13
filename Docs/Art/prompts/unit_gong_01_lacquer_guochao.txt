@@ -1,0 +1,20 @@
+【使用方式】
+上传 Image 1：已经通过验收的「弓」构形母版。
+上传 Image 2：gong_kaishu_reference.png。
+这是定点风格覆写，不允许重新设计构图。
+
+Change only the rendering style and surface design of Image 1. Keep everything else exactly the same: the full connected silhouette, exact standard-Kaiti 「弓」 skeleton verified by Image 2, glyph size, two negative spaces, recurved bow size, V-shaped string, draw point, arrow direction and length, gauntlet positions, pose, margins, bottom-center anchor, and 1×1 footprint.
+
+STYLE — LACQUER-PAINTED GUOCHAO 2.0
+Render it as a bold Three Kingdoms door-guardian weapon spirit painted in matte Chinese lacquer: heroic, angular, ceremonial, and aggressive—not cute, rounded, soft, or mascot-like.
+Use large interlocking lacquer planes, sharp armor corners, swallowtail-shaped recurved bow tips, one broad cloud-scroll notch on each shoulder guard, and thick gold binding at the grip. These accents must stay large and simple enough to survive at 64px.
+
+Strict opaque palette only:
+cinnabar #D93A2B, rattan yellow #F2B233, rice-paper cream #F5EDDD, ink black #1A1A1E.
+Keep the cream glyph as the bright recognition core. Make the massive bow limbs and broad armor planes predominantly cinnabar and yellow so warm faction color remains 35%–45% of the visible subject.
+
+Use a 48–64px ink-black outer contour on the 1024px source and 28–36px major inner contours. Allow at most one hard-edged darker plane per large fill, with one consistent upper-left light direction. No thin decorative lines.
+
+Keep every component opaque, closed, connected, and easy to cut out. Exact pure-white #FFFFFF background. No gradient, glaze shine, bevel, metallic realism, soft light, texture noise, glow, cast shadow, ground, particles, detached ribbons, small floating ornaments, or extra text.
+
+Exactly one square 1024×1024 image. Generate only the image.

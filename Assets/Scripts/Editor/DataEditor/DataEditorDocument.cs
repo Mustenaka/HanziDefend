@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using HanziDefend.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -91,6 +92,35 @@ namespace HanziDefend.Editor
             ReplaceToken(token, value.ToString("0.0###############", CultureInfo.InvariantCulture));
         }
 
+        public void SetUnitString(string unitId, string field, string value)
+        {
+            if (FileName != "units.json")
+            {
+                throw new InvalidOperationException("Unit fields can only be edited in units.json.");
+            }
+
+            JObject root = ParseRoot(CurrentText);
+            JArray units = root["units"] as JArray
+                ?? throw new InvalidOperationException("units.json is missing units[].");
+            JObject unit = FindById(units, unitId)
+                ?? throw new KeyNotFoundException($"units.json has no unit '{unitId}'.");
+            JValue token = unit[field] as JValue
+                ?? throw new KeyNotFoundException($"Unit '{unitId}' has no field '{field}'.");
+            ReplaceToken(token, JsonConvert.ToString(value ?? string.Empty));
+        }
+
+        public void SetUnitBonusTarget(string unitId, int bonusIndex, BonusTarget value)
+        {
+            JValue token = GetUnitBonusToken(unitId, bonusIndex, "target");
+            ReplaceToken(token, JsonConvert.ToString(value.ToString()));
+        }
+
+        public void SetUnitBonusValue(string unitId, int bonusIndex, double value)
+        {
+            JValue token = GetUnitBonusToken(unitId, bonusIndex, "value");
+            ReplaceToken(token, value.ToString("0.0###############", CultureInfo.InvariantCulture));
+        }
+
         public string BuildLineDiff()
         {
             string[] before = SplitLines(OriginalText);
@@ -144,6 +174,35 @@ namespace HanziDefend.Editor
             return null;
         }
 
+        private JValue GetUnitBonusToken(string unitId, int bonusIndex, string field)
+        {
+            if (FileName != "units.json")
+            {
+                throw new InvalidOperationException("Unit bonuses can only be edited in units.json.");
+            }
+
+            if (bonusIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bonusIndex), bonusIndex, "Bonus index cannot be negative.");
+            }
+
+            JObject root = ParseRoot(CurrentText);
+            JArray units = root["units"] as JArray
+                ?? throw new InvalidOperationException("units.json is missing units[].");
+            JObject unit = FindById(units, unitId)
+                ?? throw new KeyNotFoundException($"units.json has no unit '{unitId}'.");
+            JArray bonuses = unit["bonusVs"] as JArray
+                ?? throw new KeyNotFoundException($"Unit '{unitId}' has no bonusVs array.");
+            if (bonusIndex >= bonuses.Count || !(bonuses[bonusIndex] is JObject bonus))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(bonusIndex), bonusIndex, $"Unit '{unitId}' has no bonus at index {bonusIndex}.");
+            }
+
+            return bonus[field] as JValue
+                ?? throw new KeyNotFoundException($"Unit '{unitId}' bonus {bonusIndex} has no field '{field}'.");
+        }
+
         private void ReplaceToken(JValue token, string replacement)
         {
             if (!(token is IJsonLineInfo lineInfo) || !lineInfo.HasLineInfo())
@@ -161,7 +220,12 @@ namespace HanziDefend.Editor
             string propertyName = (token.Parent as JProperty)?.Name
                 ?? throw new InvalidOperationException("JSON value is not owned by a property.");
             string propertyMarker = "\"" + propertyName + "\"";
-            int marker = CurrentText.IndexOf(propertyMarker, lineStart, lineEnd - lineStart, StringComparison.Ordinal);
+            int tokenOffset = GetOffset(CurrentText, lineInfo.LineNumber, lineInfo.LinePosition);
+            int marker = CurrentText.LastIndexOf(
+                propertyMarker,
+                Math.Min(tokenOffset, lineEnd - 1),
+                Math.Max(1, Math.Min(tokenOffset, lineEnd - 1) - lineStart + 1),
+                StringComparison.Ordinal);
             if (marker < 0)
             {
                 throw new InvalidOperationException($"Cannot locate JSON property '{propertyName}' on its source line.");

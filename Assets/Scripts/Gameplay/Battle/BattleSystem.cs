@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HanziDefend.Data;
+using HanziDefend.Gameplay.Performance;
 using UnityEngine;
 
 namespace HanziDefend.Gameplay.Battle
@@ -11,8 +12,7 @@ namespace HanziDefend.Gameplay.Battle
     /// </summary>
     public sealed partial class BattleSystem : IDisposable
     {
-        private const string AllyBaseDefinitionId = "base_ally";
-        private const string EnemyBaseDefinitionId = "base_enemy";
+        public const string IceAuraPresentationEffectId = "trait_ice_aura";
 
         private readonly GameConfig config;
         private readonly BattleRulesDef rules;
@@ -21,15 +21,23 @@ namespace HanziDefend.Gameplay.Battle
         private readonly IBattleEffectEvents effectEvents;
         private readonly RngStreams rngStreams;
         private readonly List<BattleUnit> units = new List<BattleUnit>();
+        private readonly List<BattleUnit> aliveAllyUnits = new List<BattleUnit>();
+        private readonly List<BattleUnit> aliveEnemyUnits = new List<BattleUnit>();
         private readonly Dictionary<int, BattleUnit> unitsById = new Dictionary<int, BattleUnit>();
         private readonly Dictionary<int, BattleBase> basesById = new Dictionary<int, BattleBase>();
-        private readonly List<Collider2D> queryResults = new List<Collider2D>();
-        private readonly List<TargetRef> targetCandidates = new List<TargetRef>();
-        private readonly HashSet<int> candidateEntityIds = new HashSet<int>();
         private readonly List<AttackIntent> anchorAttackIntents = new List<AttackIntent>();
-        private readonly ContactFilter2D queryFilter;
+        private readonly List<BattleUnit> separationUnits = new List<BattleUnit>();
+        private readonly Dictionary<long, List<BattleUnit>> separationBuckets =
+            new Dictionary<long, List<BattleUnit>>();
+        private readonly List<List<BattleUnit>> activeSeparationBuckets =
+            new List<List<BattleUnit>>();
+        private readonly List<BattleUnit> separationNeighbors = new List<BattleUnit>();
+        private readonly List<Vector2> targetQueryPositions = new List<Vector2>();
         private readonly SimulationMode2D previousSimulationMode;
-        private readonly GameObject physicsRoot;
+        private readonly bool simulatePhysics;
+
+        private static readonly Comparison<BattleUnit> SeparationOrderComparison =
+            CompareSeparationOrder;
 
         private WaveScheduler waveScheduler;
         private BattleBase allyBase;
@@ -42,7 +50,11 @@ namespace HanziDefend.Gameplay.Battle
         private bool tickSettlementPhase;
         private bool disposed;
 
-        public BattleSystem(GameConfig config, uint seed, IBattleEvents battleEvents = null)
+        public BattleSystem(
+            GameConfig config,
+            uint seed,
+            IBattleEvents battleEvents = null,
+            bool simulatePhysics = true)
         {
             this.config = config ?? throw new ArgumentNullException(nameof(config));
             rules = config.Economy?.Battle
@@ -51,20 +63,21 @@ namespace HanziDefend.Gameplay.Battle
             encounterEvents = battleEvents as IBattleEncounterEvents ?? NullBattleEvents.Instance;
             effectEvents = battleEvents as IBattleEffectEvents ?? NullBattleEffectEvents.Instance;
             rngStreams = new RngStreams(seed);
-            queryFilter = ContactFilter2D.noFilter;
-            queryFilter.useTriggers = true;
+            this.simulatePhysics = simulatePhysics;
 
-            previousSimulationMode = Physics2D.simulationMode;
-            Physics2D.simulationMode = SimulationMode2D.Script;
-            physicsRoot = new GameObject("HanziDefend Battle Physics");
-            physicsRoot.hideFlags = HideFlags.HideAndDontSave;
+            if (simulatePhysics)
+            {
+                previousSimulationMode = Physics2D.simulationMode;
+                Physics2D.simulationMode = SimulationMode2D.Script;
+            }
         }
 
         public static BattleSystem CreateEncounter(
             GameConfig config,
             string levelId,
             uint seed,
-            IBattleEvents battleEvents = null)
+            IBattleEvents battleEvents = null,
+            bool simulatePhysics = true)
         {
             if (config == null)
             {
@@ -72,9 +85,45 @@ namespace HanziDefend.Gameplay.Battle
             }
 
             LevelDef level = config.GetLevel(levelId);
-            var system = new BattleSystem(config, seed, battleEvents);
+            var system = new BattleSystem(config, seed, battleEvents, simulatePhysics);
             try
             {
+                system.InitializeEncounter(level);
+                return system;
+            }
+            catch
+            {
+                system.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Recreates an encounter from the run's persisted independent RNG streams. The wave
+        /// scheduler consumes the restored Battle stream while CardDraw and Settlement remain
+        /// untouched, preserving a five-stage replay as one continuous run.
+        /// </summary>
+        public static BattleSystem CreateEncounter(
+            GameConfig config,
+            string levelId,
+            uint seed,
+            RngStreamsState randomState,
+            IBattleEvents battleEvents = null,
+            bool simulatePhysics = true)
+        {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
+            LevelDef level = config.GetLevel(levelId);
+            var system = new BattleSystem(config, seed, battleEvents, simulatePhysics);
+            try
+            {
+                if (randomState != null)
+                {
+                    system.rngStreams.RestoreState(randomState);
+                }
                 system.InitializeEncounter(level);
                 return system;
             }
@@ -147,7 +196,7 @@ namespace HanziDefend.Gameplay.Battle
             }
 
             UnitDef definition = config.GetUnit(request.DefinitionId);
-            return SpawnUnit(definition, request.Level, request.Position, request.RewardRank, null);
+            return SpawnUnit(definition, request.Level, request.Position, request.RewardRank, null, null);
         }
 
         public int GetAliveCount(BattleTeam team)
@@ -229,15 +278,15 @@ namespace HanziDefend.Gameplay.Battle
                 waveScheduler?.Advance(SimulatedTimeSeconds, PublishWaveStarted, SpawnScheduled);
 
                 ApplySeparation();
-                SynchronizeBodies();
-                Physics2D.SyncTransforms();
-                if (!Physics2D.Simulate(dt))
+                CaptureTargetQueryPositions();
+                if (simulatePhysics && !Physics2D.Simulate(dt))
                 {
                     throw new InvalidOperationException("Physics2D refused the manual simulation step.");
                 }
 
                 anchorAttackIntents.Clear();
-                for (int index = 0; index < units.Count; index++)
+                int actingUnitCount = units.Count;
+                for (int index = 0; index < actingUnitCount; index++)
                 {
                     BattleUnit unit = units[index];
                     if (unit.State == BattleUnitState.Dead)
@@ -256,6 +305,11 @@ namespace HanziDefend.Gameplay.Battle
                     float distance = delta.magnitude;
                     unit.Facing = ResolveFacing(delta, unit.Facing);
 
+                    if (TryAdvanceTrample(unit, target, dt))
+                    {
+                        continue;
+                    }
+
                     if (unit.Targeting == TargetingMode.Suicide
                         && distance <= unit.Stats.Range)
                     {
@@ -264,21 +318,32 @@ namespace HanziDefend.Gameplay.Battle
                         continue;
                     }
 
-                    if (distance <= unit.Stats.Range)
+                    if (distance >= unit.Stats.MinRange && distance <= unit.Stats.Range)
                     {
                         unit.State = BattleUnitState.Attack;
                         TryAttack(unit, target);
                     }
+                    else if (distance < unit.Stats.MinRange)
+                    {
+                        // M1 does not introduce retreat behaviour. A minimum-range unit
+                        // simply holds until an enemy enters its legal attack annulus.
+                        unit.State = BattleUnitState.Idle;
+                    }
                     else
                     {
                         unit.State = BattleUnitState.Move;
-                        MoveTowardsRange(unit, target.Position, delta, distance, dt);
+                        MoveTowardsRange(
+                            unit,
+                            target.Position,
+                            delta,
+                            distance,
+                            GetTraitAdjustedMoveSpeed(unit),
+                            dt);
                     }
                 }
 
                 ResolveAnchorAttackIntents();
                 ApplySeparation();
-                SynchronizeBodies();
                 tickSettlementPhase = true;
                 TrySettle();
             }
@@ -338,41 +403,9 @@ namespace HanziDefend.Gameplay.Battle
             }
 
             disposed = true;
-            for (int index = 0; index < units.Count; index++)
+            if (simulatePhysics)
             {
-                DisablePhysics(units[index].Collider, units[index].Rigidbody);
-            }
-
-            foreach (BattleBase value in basesById.Values)
-            {
-                DisablePhysics(value.Collider, value.Rigidbody);
-            }
-
-            if (physicsRoot != null)
-            {
-                if (Application.isPlaying)
-                {
-                    UnityEngine.Object.Destroy(physicsRoot);
-                }
-                else
-                {
-                    UnityEngine.Object.DestroyImmediate(physicsRoot);
-                }
-            }
-
-            Physics2D.simulationMode = previousSimulationMode;
-        }
-
-        private static void DisablePhysics(Collider2D collider, Rigidbody2D rigidbody)
-        {
-            if (collider != null)
-            {
-                collider.enabled = false;
-            }
-
-            if (rigidbody != null)
-            {
-                rigidbody.simulated = false;
+                Physics2D.simulationMode = previousSimulationMode;
             }
         }
 
@@ -384,14 +417,14 @@ namespace HanziDefend.Gameplay.Battle
                                          ?? throw new InvalidOperationException("Enemy base position is required.");
 
             allyBase = CreateBase(
+                config.Bases.Ally,
                 BattleTeam.Ally,
                 level.BaseHp,
-                config.Bases.Ally.Armor,
                 new Vector2(allyPosition.X, allyPosition.Y));
             enemyBase = CreateBase(
+                config.Bases.Enemy,
                 BattleTeam.Enemy,
                 config.Bases.Enemy.Hp,
-                config.Bases.Enemy.Armor,
                 new Vector2(enemyPosition.X, enemyPosition.Y));
             waveScheduler = new WaveScheduler(config, level, rngStreams.Battle);
             Coins = level.StartCoins;
@@ -399,14 +432,21 @@ namespace HanziDefend.Gameplay.Battle
         }
 
         private BattleBase CreateBase(
+            BaseDef definition,
             BattleTeam team,
             float maxHp,
-            float armor,
             Vector2 position)
         {
             int entityId = nextEntityId++;
-            var value = new BattleBase(entityId, team, maxHp, armor, position);
-            CreatePhysicsBody(value);
+            var value = new BattleBase(
+                entityId,
+                definition.Id,
+                team,
+                maxHp,
+                definition.Armor,
+                position,
+                definition.UnitType,
+                definition.ArmorType);
             basesById.Add(entityId, value);
             return value;
         }
@@ -416,23 +456,33 @@ namespace HanziDefend.Gameplay.Battle
             int level,
             Vector2 position,
             EnemyRank rewardRank,
-            WaveSpawnContext? waveContext)
+            WaveSpawnContext? waveContext,
+            BattleTeam? teamOverride,
+            bool awardsCoins = true)
         {
-            BattleTeam team;
-            EnemyRank? awardedRank;
+            BattleTeam definitionTeam;
             switch (definition.Faction)
             {
                 case UnitFaction.Ally:
-                    team = BattleTeam.Ally;
-                    awardedRank = null;
+                    definitionTeam = BattleTeam.Ally;
                     break;
                 case UnitFaction.Enemy:
-                    team = BattleTeam.Enemy;
-                    awardedRank = rewardRank;
+                    definitionTeam = BattleTeam.Enemy;
                     break;
                 default:
                     throw new NotSupportedException($"Cannot spawn faction {definition.Faction} as a UnitDef.");
             }
+
+            BattleTeam team = teamOverride ?? definitionTeam;
+            if (definition.Faction == UnitFaction.Enemy && team == BattleTeam.Ally)
+            {
+                throw new InvalidOperationException(
+                    $"Enemy-exclusive unit '{definition.Id}' cannot spawn for the ally team.");
+            }
+
+            EnemyRank? awardedRank = team == BattleTeam.Enemy && awardsCoins
+                ? rewardRank
+                : (EnemyRank?)null;
 
             BattleStats stats = BuildStats(definition, level);
             int entityId = nextEntityId++;
@@ -447,7 +497,12 @@ namespace HanziDefend.Gameplay.Battle
                 facing,
                 awardedRank,
                 BattleTargetKind.Unit,
-                definition.Targeting);
+                definition.Targeting,
+                definition.UnitType,
+                definition.ArmorType,
+                definition.AtkType,
+                definition.BonusVs,
+                definition.Traits);
 
             AddUnit(unit, waveContext);
             ApplyAttachedEffects(unit, definition.Effects, EffectTrigger.UnitSpawn);
@@ -474,7 +529,12 @@ namespace HanziDefend.Gameplay.Battle
                 Vector2.down,
                 context.RewardRank,
                 BattleTargetKind.Boss,
-                TargetingMode.Nearest);
+                TargetingMode.Nearest,
+                definition.UnitType,
+                definition.ArmorType,
+                definition.AtkType,
+                definition.BonusVs,
+                Array.Empty<UnitTraitDef>());
             BossEntityId = entityId;
             AddUnit(boss, context);
             encounterEvents.BossSpawned(new BossSpawnedEvent(
@@ -493,8 +553,8 @@ namespace HanziDefend.Gameplay.Battle
 
         private void AddUnit(BattleUnit unit, WaveSpawnContext? waveContext)
         {
-            CreatePhysicsBody(unit);
             units.Add(unit);
+            (unit.Team == BattleTeam.Ally ? aliveAllyUnits : aliveEnemyUnits).Add(unit);
             unitsById.Add(unit.EntityId, unit);
             events.UnitSpawned(new UnitSpawnedEvent(
                 NextEventSequence(),
@@ -540,13 +600,16 @@ namespace HanziDefend.Gameplay.Battle
             }
 
             UnitDef definition = config.GetUnit(scheduled.UnitId);
-            if (definition.Faction != UnitFaction.Enemy)
-            {
-                throw new InvalidOperationException(
-                    $"Wave {scheduled.WaveIndex} cannot spawn non-enemy unit '{definition.Id}'.");
-            }
-
-            SpawnUnit(definition, scheduled.Level, scheduled.Position, scheduled.RewardRank, context);
+            // The fourteen deployable definitions are shared by both sides. Their catalog
+            // faction controls public/deployment spawns, while a wave always owns its
+            // combatants as Enemy regardless of that default.
+            SpawnUnit(
+                definition,
+                scheduled.Level,
+                scheduled.Position,
+                scheduled.RewardRank,
+                context,
+                BattleTeam.Enemy);
         }
 
         private static Vector2 ResolveFacing(Vector2 delta, Vector2 previous)
@@ -560,6 +623,7 @@ namespace HanziDefend.Gameplay.Battle
                 Formula.StatAtLevel(definition.Hp.Base, definition.Hp.Growth, level),
                 Formula.StatAtLevel(definition.Atk.Base, definition.Atk.Growth, level),
                 Formula.StatAtLevel(definition.Range.Base, definition.Range.Growth, level),
+                Formula.StatAtLevel(definition.MinRange.Base, definition.MinRange.Growth, level),
                 Formula.StatAtLevel(definition.AtkSpeed.Base, definition.AtkSpeed.Growth, level),
                 Formula.StatAtLevel(definition.Cooldown.Base, definition.Cooldown.Growth, level),
                 Formula.StatAtLevel(definition.Armor.Base, definition.Armor.Growth, level),
@@ -573,6 +637,7 @@ namespace HanziDefend.Gameplay.Battle
                 definition.Hp,
                 definition.Atk,
                 definition.Range,
+                0f,
                 definition.AtkSpeed,
                 default,
                 definition.Armor,
@@ -580,76 +645,33 @@ namespace HanziDefend.Gameplay.Battle
                 default);
         }
 
-        private void CreatePhysicsBody(BattleUnit unit)
-        {
-            var gameObject = new GameObject($"BattleUnit {unit.EntityId} {unit.DefinitionId}");
-            gameObject.hideFlags = HideFlags.HideAndDontSave;
-            gameObject.transform.SetParent(physicsRoot.transform, false);
-            gameObject.transform.position = unit.Position;
-
-            var body = gameObject.AddComponent<BattleTargetBody>();
-            body.Owner = this;
-            body.EntityId = unit.EntityId;
-            body.Kind = unit.TargetKind;
-            var rigidbody = gameObject.AddComponent<Rigidbody2D>();
-            rigidbody.bodyType = RigidbodyType2D.Kinematic;
-            rigidbody.gravityScale = 0f;
-            rigidbody.freezeRotation = true;
-            rigidbody.position = unit.Position;
-            var collider = gameObject.AddComponent<CircleCollider2D>();
-            collider.radius = rules.ColliderRadius;
-            collider.isTrigger = true;
-
-            unit.Body = body;
-            unit.Rigidbody = rigidbody;
-            unit.Collider = collider;
-        }
-
-        private void CreatePhysicsBody(BattleBase value)
-        {
-            string definitionId = BaseDefinitionId(value.Team);
-            var gameObject = new GameObject($"BattleBase {value.EntityId} {definitionId}");
-            gameObject.hideFlags = HideFlags.HideAndDontSave;
-            gameObject.transform.SetParent(physicsRoot.transform, false);
-            gameObject.transform.position = value.Position;
-
-            var body = gameObject.AddComponent<BattleTargetBody>();
-            body.Owner = this;
-            body.EntityId = value.EntityId;
-            body.Kind = BattleTargetKind.Base;
-            var rigidbody = gameObject.AddComponent<Rigidbody2D>();
-            rigidbody.bodyType = RigidbodyType2D.Kinematic;
-            rigidbody.gravityScale = 0f;
-            rigidbody.freezeRotation = true;
-            rigidbody.position = value.Position;
-            var collider = gameObject.AddComponent<CircleCollider2D>();
-            collider.radius = rules.ColliderRadius;
-            collider.isTrigger = true;
-
-            value.Body = body;
-            value.Rigidbody = rigidbody;
-            value.Collider = collider;
-        }
-
         private void UpdateTarget(BattleUnit unit)
         {
-            bool hasLivingTarget = TryGetLivingTarget(unit, out _);
+            bool hasLivingTarget = TryGetLivingTarget(unit, out TargetRef currentTarget)
+                                   && (currentTarget.Position - unit.Position).sqrMagnitude
+                                   >= unit.Stats.MinRange * unit.Stats.MinRange;
             if (hasLivingTarget && SimulatedTimeSeconds < unit.NextRetargetTime)
             {
                 return;
             }
 
             TargetRef selected;
-            switch (unit.Targeting)
+            if (HasPendingTrample(unit))
+            {
+                selected = FindBacklineTarget(unit);
+            }
+            else switch (unit.Targeting)
             {
                 case TargetingMode.Nearest:
-                    selected = FindNearestTarget(unit, true);
+                    selected = unit.IsBoss && unit.UnitType == UnitType.Building
+                        ? FindCastleTarget(unit)
+                        : FindNearestTarget(unit, true);
                     break;
                 case TargetingMode.Backline:
                     selected = FindBacklineTarget(unit);
                     break;
                 case TargetingMode.RushBase:
-                    selected = FindOpposingBase(unit.Team);
+                    selected = FindOpposingBuilding(unit.Team);
                     break;
                 case TargetingMode.Suicide:
                     selected = FindNearestTarget(unit, false);
@@ -660,59 +682,40 @@ namespace HanziDefend.Gameplay.Battle
             }
 
             unit.TargetEntityId = selected.IsValid ? selected.EntityId : (int?)null;
-            unit.NextRetargetTime = SimulatedTimeSeconds + rules.RetargetInterval;
+            unit.NextRetargetTime = RetargetPhaseSchedule.GetNextDeadline(
+                SimulatedTimeSeconds,
+                unit.EntityId,
+                rules.RetargetInterval,
+                FixedDeltaTime);
         }
 
         private TargetRef FindNearestTarget(BattleUnit seeker, bool includeBases)
         {
-            CollectTargetCandidates(seeker, includeBases);
-            targetCandidates.Sort((left, right) =>
-            {
-                float leftDistance = (left.Position - seeker.Position).sqrMagnitude;
-                float rightDistance = (right.Position - seeker.Position).sqrMagnitude;
-                int distanceOrder = leftDistance.CompareTo(rightDistance);
-                return distanceOrder != 0 ? distanceOrder : left.EntityId.CompareTo(right.EntityId);
-            });
+            return FindBestTarget(seeker, includeBases, TargetSelectionMode.Nearest);
+        }
 
-            return targetCandidates.Count == 0 ? default : targetCandidates[0];
+        private TargetRef FindCastleTarget(BattleUnit castle)
+        {
+            return FindBestTarget(castle, true, TargetSelectionMode.Castle);
         }
 
         private TargetRef FindBacklineTarget(BattleUnit seeker)
         {
-            CollectTargetCandidates(seeker, true);
-            bool hasCombatant = false;
-            for (int index = 0; index < targetCandidates.Count; index++)
+            return FindBestTarget(seeker, true, TargetSelectionMode.Backline);
+        }
+
+        private TargetRef FindOpposingBuilding(BattleTeam team)
+        {
+            if (team == BattleTeam.Ally
+                && TryGetBoss(out BattleUnit boss)
+                && boss.State != BattleUnitState.Dead
+                && boss.UnitType == UnitType.Building)
             {
-                if (targetCandidates[index].Kind != BattleTargetKind.Base)
-                {
-                    hasCombatant = true;
-                    break;
-                }
+                return new TargetRef(boss);
             }
 
-            if (hasCombatant)
-            {
-                targetCandidates.RemoveAll(value => value.Kind == BattleTargetKind.Base);
-            }
-
-            float direction = seeker.Team == BattleTeam.Ally ? 1f : -1f;
-            targetCandidates.Sort((left, right) =>
-            {
-                float leftRow = left.Position.y * direction;
-                float rightRow = right.Position.y * direction;
-                int rowOrder = rightRow.CompareTo(leftRow);
-                if (rowOrder != 0)
-                {
-                    return rowOrder;
-                }
-
-                float leftDistance = (left.Position - seeker.Position).sqrMagnitude;
-                float rightDistance = (right.Position - seeker.Position).sqrMagnitude;
-                int distanceOrder = leftDistance.CompareTo(rightDistance);
-                return distanceOrder != 0 ? distanceOrder : left.EntityId.CompareTo(right.EntityId);
-            });
-
-            return targetCandidates.Count == 0 ? default : targetCandidates[0];
+            BattleBase target = team == BattleTeam.Ally ? enemyBase : allyBase;
+            return target != null && !target.IsDestroyed ? new TargetRef(target) : default;
         }
 
         private TargetRef FindOpposingBase(BattleTeam team)
@@ -721,31 +724,156 @@ namespace HanziDefend.Gameplay.Battle
             return target != null && !target.IsDestroyed ? new TargetRef(target) : default;
         }
 
-        private void CollectTargetCandidates(BattleUnit seeker, bool includeBases)
+        private TargetRef FindBestTarget(
+            BattleUnit seeker,
+            bool includeBases,
+            TargetSelectionMode selectionMode)
         {
-            queryResults.Clear();
-            Physics2D.OverlapCircle(seeker.Position, rules.TargetSearchRadius, queryFilter, queryResults);
-            targetCandidates.Clear();
-            candidateEntityIds.Clear();
+            TargetRef best = default;
+            float bestDistanceSquared = default;
 
-            for (int index = 0; index < queryResults.Count; index++)
+            List<BattleUnit> candidates = seeker.Team == BattleTeam.Ally
+                ? aliveEnemyUnits
+                : aliveAllyUnits;
+            for (int index = 0; index < candidates.Count; index++)
             {
-                Collider2D collider = queryResults[index];
-                if (collider == null
-                    || !collider.TryGetComponent(out BattleTargetBody body)
-                    || !ReferenceEquals(body.Owner, this)
-                    || body.EntityId == seeker.EntityId
-                    || !candidateEntityIds.Add(body.EntityId)
-                    || !TryResolveTarget(body.EntityId, out TargetRef candidate)
-                    || !candidate.IsAlive
-                    || candidate.Team == seeker.Team
-                    || (!includeBases && candidate.Kind == BattleTargetKind.Base))
+                var candidate = new TargetRef(candidates[index]);
+                if (!TryGetTargetDistanceSquared(seeker, candidate, includeBases, out float distanceSquared)
+                    || (best.IsValid
+                        && !IsBetterTarget(
+                            seeker,
+                            selectionMode,
+                            candidate,
+                            distanceSquared,
+                            best,
+                            bestDistanceSquared)))
                 {
                     continue;
                 }
 
-                targetCandidates.Add(candidate);
+                best = candidate;
+                bestDistanceSquared = distanceSquared;
             }
+
+            if (includeBases)
+            {
+                TargetRef candidate = FindOpposingBase(seeker.Team);
+                if (candidate.IsValid
+                    && TryGetTargetDistanceSquared(seeker, candidate, true, out float distanceSquared)
+                    && (!best.IsValid
+                        || IsBetterTarget(
+                            seeker,
+                            selectionMode,
+                            candidate,
+                            distanceSquared,
+                            best,
+                            bestDistanceSquared)))
+                {
+                    best = candidate;
+                }
+            }
+
+            return best;
+        }
+
+        private bool TryGetTargetDistanceSquared(
+            BattleUnit seeker,
+            TargetRef candidate,
+            bool includeBases,
+            out float distanceSquared)
+        {
+            distanceSquared = default;
+            if (!candidate.IsValid
+                || candidate.EntityId == seeker.EntityId
+                || !candidate.IsAlive
+                || candidate.Team == seeker.Team
+                || (!includeBases && candidate.Kind == BattleTargetKind.Base))
+            {
+                return false;
+            }
+
+            distanceSquared = (candidate.Position - seeker.Position).sqrMagnitude;
+            float minimumRangeSquared = seeker.Stats.MinRange * seeker.Stats.MinRange;
+            if (distanceSquared < minimumRangeSquared)
+            {
+                return false;
+            }
+
+            // OverlapCircle included a target when its tick-start collider touched the
+            // query circle. Keep that snapshot timing while replacing the query itself.
+            float searchDistance = rules.TargetSearchRadius + rules.ColliderRadius;
+            Vector2 queryPosition = candidate.EntityId < targetQueryPositions.Count
+                ? targetQueryPositions[candidate.EntityId]
+                : candidate.Position;
+            return (queryPosition - seeker.Position).sqrMagnitude <= searchDistance * searchDistance;
+        }
+
+        private void CaptureTargetQueryPositions()
+        {
+            while (targetQueryPositions.Count < nextEntityId)
+            {
+                targetQueryPositions.Add(default);
+            }
+
+            for (int index = 0; index < units.Count; index++)
+            {
+                BattleUnit unit = units[index];
+                targetQueryPositions[unit.EntityId] = unit.Position;
+            }
+
+            if (allyBase != null)
+            {
+                targetQueryPositions[allyBase.EntityId] = allyBase.Position;
+            }
+
+            if (enemyBase != null)
+            {
+                targetQueryPositions[enemyBase.EntityId] = enemyBase.Position;
+            }
+        }
+
+        private static bool IsBetterTarget(
+            BattleUnit seeker,
+            TargetSelectionMode selectionMode,
+            TargetRef candidate,
+            float candidateDistanceSquared,
+            TargetRef current,
+            float currentDistanceSquared)
+        {
+            if (selectionMode == TargetSelectionMode.Castle)
+            {
+                bool candidateIsSiege = candidate.Unit != null
+                                        && candidate.AttackType == AttackType.Siege;
+                bool currentIsSiege = current.Unit != null
+                                      && current.AttackType == AttackType.Siege;
+                if (candidateIsSiege != currentIsSiege)
+                {
+                    return candidateIsSiege;
+                }
+            }
+            else if (selectionMode == TargetSelectionMode.Backline)
+            {
+                bool candidateIsCombatant = candidate.Kind != BattleTargetKind.Base;
+                bool currentIsCombatant = current.Kind != BattleTargetKind.Base;
+                if (candidateIsCombatant != currentIsCombatant)
+                {
+                    return candidateIsCombatant;
+                }
+
+                float direction = seeker.Team == BattleTeam.Ally ? 1f : -1f;
+                float candidateProgress = candidate.Position.y * direction;
+                float currentProgress = current.Position.y * direction;
+                int progressOrder = candidateProgress.CompareTo(currentProgress);
+                if (progressOrder != 0)
+                {
+                    return progressOrder > 0;
+                }
+            }
+
+            int distanceOrder = candidateDistanceSquared.CompareTo(currentDistanceSquared);
+            return distanceOrder != 0
+                ? distanceOrder < 0
+                : candidate.EntityId < current.EntityId;
         }
 
         private bool TryGetLivingTarget(BattleUnit unit, out TargetRef target)
@@ -779,15 +907,16 @@ namespace HanziDefend.Gameplay.Battle
             Vector2 targetPosition,
             Vector2 delta,
             float distance,
+            float moveSpeed,
             float dt)
         {
-            if (distance <= 0f || unit.Stats.MoveSpeed <= 0f)
+            if (distance <= 0f || moveSpeed <= 0f)
             {
                 return;
             }
 
             float gap = Mathf.Max(0f, distance - unit.Stats.Range);
-            float travel = Mathf.Min(unit.Stats.MoveSpeed * dt, gap);
+            float travel = Mathf.Min(moveSpeed * dt, gap);
             unit.Position += delta / distance * travel;
             unit.Facing = ResolveFacing(targetPosition - unit.Position, unit.Facing);
         }
@@ -846,12 +975,17 @@ namespace HanziDefend.Gameplay.Battle
                 target.Position,
                 attacker.Facing));
 
-            DealDamage(
-                intent.AttackId,
-                attacker.EntityId,
-                target,
-                attacker.Stats.Atk,
-                attacker.Stats.Pierce);
+            float attack = GetTraitAdjustedAttack(attacker);
+            if (!TryResolvePiercingShot(intent.AttackId, attacker, target, attack))
+            {
+                DealDamage(
+                    intent.AttackId,
+                    attacker.EntityId,
+                    target,
+                    attack,
+                    attacker.Stats.Pierce);
+                ApplyAttackAuras(intent.AttackId, attacker, target);
+            }
         }
 
         private void Kill(BattleUnit unit, int killerEntityId)
@@ -864,8 +998,7 @@ namespace HanziDefend.Gameplay.Battle
             unit.State = BattleUnitState.Dead;
             unit.TargetEntityId = null;
             unit.CurrentHp = 0f;
-            DisablePhysics(unit.Collider, unit.Rigidbody);
-
+            (unit.Team == BattleTeam.Ally ? aliveAllyUnits : aliveEnemyUnits).Remove(unit);
             events.UnitDied(new UnitDiedEvent(
                 NextEventSequence(),
                 TickIndex,
@@ -878,6 +1011,8 @@ namespace HanziDefend.Gameplay.Battle
                 unit.CurrentHp,
                 unit.Stats.MaxHp,
                 unit.RewardRank));
+
+            SpawnDeathChildren(unit);
 
             if (!unit.RewardRank.HasValue)
             {
@@ -901,77 +1036,234 @@ namespace HanziDefend.Gameplay.Battle
 
         private void ApplySeparation()
         {
-            for (int firstIndex = 0; firstIndex < units.Count; firstIndex++)
+            ClearSeparationBuckets();
+            separationUnits.Clear();
+            for (int index = 0; index < units.Count; index++)
             {
-                BattleUnit first = units[firstIndex];
-                if (first.State == BattleUnitState.Dead || first.IsBoss)
+                BattleUnit unit = units[index];
+                if (unit.State != BattleUnitState.Dead
+                    && !unit.IsBoss
+                    && !HasPendingTrample(unit))
                 {
-                    continue;
+                    separationUnits.Add(unit);
+                }
+            }
+
+            if (separationUnits.Count < 2)
+            {
+                return;
+            }
+
+            separationUnits.Sort(SeparationOrderComparison);
+            float cellSize = Mathf.Max(rules.SeparationDistance, rules.SameColumnTolerance);
+            for (int index = 0; index < separationUnits.Count; index++)
+            {
+                BattleUnit follower = separationUnits[index];
+                ResolveSeparationAgainstLeaders(follower, index, cellSize);
+                AddToSeparationBucket(follower, cellSize);
+            }
+        }
+
+        private void ResolveSeparationAgainstLeaders(
+            BattleUnit follower,
+            int followerIndex,
+            float cellSize)
+        {
+            // Moving away from a leader can expose the follower to a different adjacent
+            // bucket. Re-query until stable; the bounded fallback keeps pathological
+            // layouts finite while preserving the same progress/EntityId leader order.
+            for (int pass = 0; pass < separationUnits.Count; pass++)
+            {
+                CollectSeparationNeighbors(follower, cellSize);
+                if (separationNeighbors.Count == 0)
+                {
+                    return;
                 }
 
-                for (int secondIndex = firstIndex + 1; secondIndex < units.Count; secondIndex++)
+                separationNeighbors.Sort(SeparationOrderComparison);
+                bool adjusted = false;
+                for (int index = 0; index < separationNeighbors.Count; index++)
                 {
-                    BattleUnit second = units[secondIndex];
-                    if (second.State == BattleUnitState.Dead
-                        || second.IsBoss
-                        || first.Team != second.Team
-                        || Mathf.Abs(first.Position.x - second.Position.x) > rules.SameColumnTolerance)
-                    {
-                        continue;
-                    }
+                    adjusted |= TrySeparatePair(separationNeighbors[index], follower);
+                }
 
-                    float yGap = Mathf.Abs(first.Position.y - second.Position.y);
-                    if (yGap >= rules.SeparationDistance)
-                    {
-                        continue;
-                    }
+                if (!adjusted)
+                {
+                    return;
+                }
+            }
 
-                    BattleUnit leader;
-                    BattleUnit follower;
-                    float direction = first.Team == BattleTeam.Ally ? 1f : -1f;
-                    float firstProgress = first.Position.y * direction;
-                    float secondProgress = second.Position.y * direction;
-                    if (firstProgress > secondProgress
-                        || (firstProgress == secondProgress && first.EntityId < second.EntityId))
-                    {
-                        leader = first;
-                        follower = second;
-                    }
-                    else
-                    {
-                        leader = second;
-                        follower = first;
-                    }
-
-                    follower.Position = new Vector2(
-                        follower.Position.x,
-                        leader.Position.y - direction * rules.SeparationDistance);
+            CollectSeparationNeighbors(follower, cellSize);
+            for (int index = 0; index < separationNeighbors.Count; index++)
+            {
+                if (IsSeparationViolation(separationNeighbors[index], follower))
+                {
+                    MoveBehindRearLeader(follower, followerIndex);
+                    return;
                 }
             }
         }
 
-        private void SynchronizeBodies()
+        private void CollectSeparationNeighbors(BattleUnit follower, float cellSize)
         {
-            for (int index = 0; index < units.Count; index++)
+            separationNeighbors.Clear();
+            int centerX = Mathf.FloorToInt(follower.Position.x / cellSize);
+            int centerY = Mathf.FloorToInt(follower.Position.y / cellSize);
+            for (int yOffset = -1; yOffset <= 1; yOffset++)
             {
-                BattleUnit unit = units[index];
-                if (unit.Rigidbody != null && unit.Rigidbody.simulated)
+                for (int xOffset = -1; xOffset <= 1; xOffset++)
                 {
-                    unit.Rigidbody.position = unit.Position;
-                    unit.Body.transform.position = unit.Position;
+                    long key = SeparationBucketKey(centerX + xOffset, centerY + yOffset);
+                    if (!separationBuckets.TryGetValue(key, out List<BattleUnit> bucket))
+                    {
+                        continue;
+                    }
+
+                    for (int index = 0; index < bucket.Count; index++)
+                    {
+                        BattleUnit leader = bucket[index];
+                        if (leader.Team == follower.Team)
+                        {
+                            separationNeighbors.Add(leader);
+                        }
+                    }
                 }
             }
+        }
+
+        private bool TrySeparatePair(BattleUnit leader, BattleUnit follower)
+        {
+            if (!IsSeparationViolation(leader, follower))
+            {
+                return false;
+            }
+
+            float direction = follower.Team == BattleTeam.Ally ? 1f : -1f;
+            float xGap = Mathf.Abs(leader.Position.x - follower.Position.x);
+            if (xGap <= rules.SameColumnTolerance)
+            {
+                // Preserve the accepted same-column contract: X stays fixed and only
+                // the follower is moved backward along battle progress.
+                follower.Position = new Vector2(
+                    follower.Position.x,
+                    leader.Position.y - direction * rules.SeparationDistance);
+                return true;
+            }
+
+            Vector2 offset = follower.Position - leader.Position;
+            float distance = offset.magnitude;
+            if (distance <= 0f)
+            {
+                follower.Position = new Vector2(
+                    follower.Position.x,
+                    leader.Position.y - direction * rules.SeparationDistance);
+                return true;
+            }
+
+            follower.Position = leader.Position + offset / distance * rules.SeparationDistance;
+            return true;
+        }
+
+        private bool IsSeparationViolation(BattleUnit leader, BattleUnit follower)
+        {
+            float xGap = Mathf.Abs(leader.Position.x - follower.Position.x);
+            if (xGap <= rules.SameColumnTolerance)
+            {
+                float yGap = Mathf.Abs(leader.Position.y - follower.Position.y);
+                return yGap < rules.SeparationDistance
+                       && !Mathf.Approximately(yGap, rules.SeparationDistance);
+            }
+
+            float distanceSquared = (leader.Position - follower.Position).sqrMagnitude;
+            float separationSquared = rules.SeparationDistance * rules.SeparationDistance;
+            return distanceSquared < separationSquared
+                   && !Mathf.Approximately(distanceSquared, separationSquared);
+        }
+
+        private void MoveBehindRearLeader(BattleUnit follower, int followerIndex)
+        {
+            BattleUnit rearLeader = null;
+            float direction = follower.Team == BattleTeam.Ally ? 1f : -1f;
+            float rearProgress = float.PositiveInfinity;
+            for (int index = 0; index < followerIndex; index++)
+            {
+                BattleUnit candidate = separationUnits[index];
+                if (candidate.Team != follower.Team)
+                {
+                    continue;
+                }
+
+                float progress = candidate.Position.y * direction;
+                if (progress < rearProgress)
+                {
+                    rearProgress = progress;
+                    rearLeader = candidate;
+                }
+            }
+
+            if (rearLeader != null)
+            {
+                follower.Position = new Vector2(
+                    follower.Position.x,
+                    rearLeader.Position.y - direction * rules.SeparationDistance);
+            }
+        }
+
+        private void AddToSeparationBucket(BattleUnit unit, float cellSize)
+        {
+            int cellX = Mathf.FloorToInt(unit.Position.x / cellSize);
+            int cellY = Mathf.FloorToInt(unit.Position.y / cellSize);
+            long key = SeparationBucketKey(cellX, cellY);
+            if (!separationBuckets.TryGetValue(key, out List<BattleUnit> bucket))
+            {
+                bucket = new List<BattleUnit>();
+                separationBuckets.Add(key, bucket);
+            }
+
+            if (bucket.Count == 0)
+            {
+                activeSeparationBuckets.Add(bucket);
+            }
+
+            bucket.Add(unit);
+        }
+
+        private void ClearSeparationBuckets()
+        {
+            for (int index = 0; index < activeSeparationBuckets.Count; index++)
+            {
+                activeSeparationBuckets[index].Clear();
+            }
+
+            activeSeparationBuckets.Clear();
+        }
+
+        private static int CompareSeparationOrder(BattleUnit left, BattleUnit right)
+        {
+            int teamOrder = left.Team.CompareTo(right.Team);
+            if (teamOrder != 0)
+            {
+                return teamOrder;
+            }
+
+            float direction = left.Team == BattleTeam.Ally ? 1f : -1f;
+            float leftProgress = left.Position.y * direction;
+            float rightProgress = right.Position.y * direction;
+            int progressOrder = rightProgress.CompareTo(leftProgress);
+            return progressOrder != 0
+                ? progressOrder
+                : left.EntityId.CompareTo(right.EntityId);
+        }
+
+        private static long SeparationBucketKey(int x, int y)
+        {
+            return unchecked(((long)x << 32) | (uint)y);
         }
 
         private bool TryGetBoss(out BattleUnit boss)
         {
             boss = null;
             return BossEntityId.HasValue && unitsById.TryGetValue(BossEntityId.Value, out boss);
-        }
-
-        private static string BaseDefinitionId(BattleTeam team)
-        {
-            return team == BattleTeam.Ally ? AllyBaseDefinitionId : EnemyBaseDefinitionId;
         }
 
         private long NextEventSequence()
@@ -1001,6 +1293,13 @@ namespace HanziDefend.Gameplay.Battle
             {
                 throw new ObjectDisposedException(nameof(BattleSystem));
             }
+        }
+
+        private enum TargetSelectionMode
+        {
+            Nearest,
+            Backline,
+            Castle
         }
 
         private readonly struct AttackIntent
@@ -1041,7 +1340,7 @@ namespace HanziDefend.Gameplay.Battle
 
             internal int EntityId => Unit != null ? Unit.EntityId : Base.EntityId;
 
-            internal string DefinitionId => Unit != null ? Unit.DefinitionId : BaseDefinitionId(Base.Team);
+            internal string DefinitionId => Unit != null ? Unit.DefinitionId : Base.DefinitionId;
 
             internal BattleTeam Team => Unit != null ? Unit.Team : Base.Team;
 
@@ -1050,6 +1349,12 @@ namespace HanziDefend.Gameplay.Battle
             internal Vector2 Position => Unit != null ? Unit.Position : Base.Position;
 
             internal float Armor => Unit != null ? Unit.Stats.Armor : Base.Armor;
+
+            internal UnitType UnitType => Unit != null ? Unit.UnitType : Base.UnitType;
+
+            internal ArmorType ArmorType => Unit != null ? Unit.ArmorType : Base.ArmorType;
+
+            internal AttackType AttackType => Unit != null ? Unit.AttackType : AttackType.None;
 
             internal float MaxHp => Unit != null ? Unit.Stats.MaxHp : Base.MaxHp;
 

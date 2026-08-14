@@ -1,6 +1,18 @@
 {
   "refreshBaseCost": 15,
   "refreshCostGrowth": 5,
+  "gridUnlock": {
+    "purchaseBaseCost": 40,
+    "purchaseCostGrowth": 20,
+    "baseAnchorRowOffset": -1.0,
+    "autoUnlockPerMinorStage": 1
+  },
+  "deployUi": {
+    "cellSpacingRatio": 0.08,
+    "handCardScale": 0.70,
+    "snapRadiusCells": 0.60,
+    "dragLiftCells": 0.80
+  },
   "dropCoins": {
     "normal": 1,
     "elite": 3,
@@ -8,13 +20,75 @@
   },
   "damage": {
     "armorScale": 100.0,
-    "minimumDamage": 1
+    "minimumDamage": 1,
+    "neutralTypeMultiplier": 1.0,
+    "typeMultipliers": [
+      { "armorType": "Unarmored", "atkType": "Slash", "value": 2.0 },
+      { "armorType": "Unarmored", "atkType": "Blunt", "value": 0.5 },
+      { "armorType": "Unarmored", "atkType": "Arrow", "value": 2.0 },
+      { "armorType": "Unarmored", "atkType": "Siege", "value": 0.5 },
+      { "armorType": "Light", "atkType": "Slash", "value": 1.5 },
+      { "armorType": "Light", "atkType": "Blunt", "value": 1.0 },
+      { "armorType": "Light", "atkType": "Arrow", "value": 1.0 },
+      { "armorType": "Light", "atkType": "Siege", "value": 1.0 },
+      { "armorType": "Heavy", "atkType": "Slash", "value": 0.5 },
+      { "armorType": "Heavy", "atkType": "Blunt", "value": 2.0 },
+      { "armorType": "Heavy", "atkType": "Arrow", "value": 0.5 },
+      { "armorType": "Heavy", "atkType": "Siege", "value": 4.0 },
+      { "armorType": "Building", "atkType": "Slash", "value": 0.5 },
+      { "armorType": "Building", "atkType": "Blunt", "value": 1.0 },
+      { "armorType": "Building", "atkType": "Arrow", "value": 0.25 },
+      { "armorType": "Building", "atkType": "Siege", "value": 2.0 }
+    ]
   },
   "cardWeights": {
     "unit": 70,
-    "expand": 15,
+    "unlock": 15,
     "buff": 12,
     "global": 3
+  },
+  "cardOffer": {
+    "baseCount": 3,
+    "luckyExtraCount": 1,
+    "luckyChance": 0.10
+  },
+  "cardPool": {
+    "shapeUnlocks": [
+      { "gridW": 1, "gridH": 1 },
+      { "gridW": 2, "gridH": 1 },
+      { "gridW": 1, "gridH": 2 },
+      { "gridW": 2, "gridH": 2 },
+      { "gridW": 3, "gridH": 1 }
+    ],
+    "guaranteeBeforeStageIndex": 5,
+    "guaranteeAttackType": "Siege",
+    "buffEffectIds": ["buff_front_shield"],
+    "globalEffectIds": [
+      "buff_atk_up",
+      "skill_reinforce",
+      "skill_breakthrough",
+      "skill_breach_base",
+      "reward_coins"
+    ]
+  },
+  "settlementReward": {
+    "slotCount": 3,
+    "buffWeight": 85,
+    "activeSkillWeight": 15,
+    "buffEffectIds": [
+      "buff_atk_up",
+      "buff_front_shield"
+    ],
+    "activeSkillEffectIds": [
+      "skill_reinforce",
+      "skill_breakthrough",
+      "skill_breach_base"
+    ],
+    "uniqueEffectIds": [
+      "skill_reinforce",
+      "skill_breakthrough",
+      "skill_breach_base"
+    ]
   },
   "battle": {
     "tickRateHz": 30,
@@ -34,6 +108,14 @@
     "enemySpawnCenter": {
       "x": 0.0,
       "y": 6.0
+    },
+    "deploymentOriginOffset": {
+      "x": 0.0,
+      "y": 1.2
+    },
+    "deploymentCellSize": {
+      "x": 1.2,
+      "y": 0.85
     }
   }
 }

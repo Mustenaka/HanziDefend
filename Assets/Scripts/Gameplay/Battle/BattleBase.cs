@@ -1,3 +1,4 @@
+using HanziDefend.Data;
 using UnityEngine;
 
 namespace HanziDefend.Gameplay.Battle
@@ -6,20 +7,28 @@ namespace HanziDefend.Gameplay.Battle
     {
         internal BattleBase(
             int entityId,
+            string definitionId,
             BattleTeam team,
             float maxHp,
             float armor,
-            Vector2 position)
+            Vector2 position,
+            UnitType unitType,
+            ArmorType armorType)
         {
             EntityId = entityId;
+            DefinitionId = definitionId;
             Team = team;
             MaxHp = maxHp;
             CurrentHp = maxHp;
             Armor = armor;
             Position = position;
+            UnitType = unitType;
+            ArmorType = armorType;
         }
 
         internal int EntityId { get; }
+
+        internal string DefinitionId { get; }
 
         internal BattleTeam Team { get; }
 
@@ -31,17 +40,16 @@ namespace HanziDefend.Gameplay.Battle
 
         internal Vector2 Position { get; }
 
+        internal UnitType UnitType { get; }
+
+        internal ArmorType ArmorType { get; }
+
         internal bool IsDestroyed => CurrentHp <= 0f;
-
-        internal Rigidbody2D Rigidbody { get; set; }
-
-        internal Collider2D Collider { get; set; }
-
-        internal BattleTargetBody Body { get; set; }
 
         internal BattleBaseSnapshot Snapshot()
         {
-            return new BattleBaseSnapshot(EntityId, Team, MaxHp, CurrentHp, Armor, Position);
+            return new BattleBaseSnapshot(
+                EntityId, DefinitionId, Team, MaxHp, CurrentHp, Armor, Position, UnitType, ArmorType);
         }
     }
 

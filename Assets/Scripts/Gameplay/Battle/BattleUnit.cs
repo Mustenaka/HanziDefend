@@ -15,7 +15,12 @@ namespace HanziDefend.Gameplay.Battle
             Vector2 facing,
             EnemyRank? rewardRank,
             BattleTargetKind targetKind,
-            TargetingMode targeting)
+            TargetingMode targeting,
+            UnitType unitType,
+            ArmorType armorType,
+            AttackType attackType,
+            BonusVsDef[] bonusVs,
+            UnitTraitDef[] traits)
         {
             EntityId = entityId;
             DefinitionId = definitionId;
@@ -30,6 +35,11 @@ namespace HanziDefend.Gameplay.Battle
             RewardRank = rewardRank;
             TargetKind = targetKind;
             Targeting = targeting;
+            UnitType = unitType;
+            ArmorType = armorType;
+            AttackType = attackType;
+            BonusVs = bonusVs ?? System.Array.Empty<BonusVsDef>();
+            Traits = traits ?? System.Array.Empty<UnitTraitDef>();
         }
 
         internal int EntityId { get; }
@@ -62,17 +72,32 @@ namespace HanziDefend.Gameplay.Battle
 
         internal TargetingMode Targeting { get; }
 
+        internal UnitType UnitType { get; }
+
+        internal ArmorType ArmorType { get; }
+
+        internal AttackType AttackType { get; }
+
+        internal BonusVsDef[] BonusVs { get; }
+
+        internal UnitTraitDef[] Traits { get; }
+
         internal bool IsBoss => TargetKind == BattleTargetKind.Boss;
 
         internal double NextAttackTime { get; set; }
 
         internal double NextRetargetTime { get; set; }
 
-        internal Rigidbody2D Rigidbody { get; set; }
+        internal bool ChargeConsumed { get; set; }
 
-        internal Collider2D Collider { get; set; }
+        internal bool TrampleCompleted { get; set; }
 
-        internal BattleTargetBody Body { get; set; }
+        internal System.Collections.Generic.HashSet<int> TrampledEntityIds { get; } =
+            new System.Collections.Generic.HashSet<int>();
+
+        internal double FrozenUntilSeconds { get; set; }
+
+        internal float FrozenMoveSpeedMultiplier { get; set; } = 1f;
 
         internal BattleUnitSnapshot Snapshot()
         {
@@ -89,18 +114,12 @@ namespace HanziDefend.Gameplay.Battle
                 TargetEntityId,
                 TargetKind,
                 Targeting,
-                CurrentShield);
+                CurrentShield,
+                UnitType,
+                ArmorType,
+                AttackType,
+                BonusVs);
         }
-    }
-
-    [DisallowMultipleComponent]
-    internal sealed class BattleTargetBody : MonoBehaviour
-    {
-        internal object Owner { get; set; }
-
-        internal int EntityId { get; set; }
-
-        internal BattleTargetKind Kind { get; set; }
     }
 
 }

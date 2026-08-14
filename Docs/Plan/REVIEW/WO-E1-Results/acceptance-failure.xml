@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<balance-acceptance work-order="WO-E1" status="failed" generated-utc="2026-08-14T06:38:58Z">
+  <run job-id="b09e0c3c931b4cd2887710c6cb351e52" seed="0xE1002026" games="100" wall-clock-seconds="11.800" timeout-count="5" />
+  <checks total="8" passed="5" failed="3">
+    <check id="performance" status="passed" expected="100 games &lt; 60s" actual="11.800s" />
+    <check id="timeouts" status="failed" expected="0" actual="5" />
+    <check id="stage1_win_rate" status="failed" expected="55%-75%" actual="48.0%" />
+    <check id="stage5_win_rate" status="passed" expected="30%-50%" actual="40.0%" />
+    <check id="stage1_duration" status="failed" expected="90-150s" actual="181.507s" />
+    <check id="stage5_duration" status="passed" expected="90-150s" actual="130.504s" />
+    <check id="stage1_heavy_armor" status="passed" expected="&gt;=15%" actual="15.0%" />
+    <check id="stage5_heavy_armor" status="passed" expected="&gt;=15%" actual="18.2%" />
+  </checks>
+  <failure-message>No timed-out battles: 5 timeout(s); A win rate, stage 1: 48.0%; target 55%-75%; Mean duration A_siege_nub/stage 1: 181.507s; target 90-150s</failure-message>
+</balance-acceptance>

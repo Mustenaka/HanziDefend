@@ -1,0 +1,5 @@
+numpy>=2.3,<3
+Pillow>=11,<13
+scipy>=1.16,<2
+rembg>=2.0.72,<3
+onnxruntime-gpu[cuda,cudnn]>=1.23.2,<1.27

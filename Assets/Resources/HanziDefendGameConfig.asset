@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a7d6b42ac69e5949aee4aee8d20f6f1, type: 3}
+  m_Name: HanziDefendGameConfig
+  m_EditorClassIdentifier: HanziDefend.View::HanziDefend.View.GameConfigTextBundle
+  Units: {fileID: 4900000, guid: 773a9ebd59254decb98793c0ba17f080, type: 3}
+  Commanders: {fileID: 4900000, guid: 9de8cf98e8824be19a04fa4cd00910ac, type: 3}
+  Waves: {fileID: 4900000, guid: 5147213305fd421398a657a7e2630a33, type: 3}
+  Levels: {fileID: 4900000, guid: 2f8b64b378064cc089d4bb8a9d5e2e72, type: 3}
+  Effects: {fileID: 4900000, guid: 8b8c093a61414a57a9ddfb82863fcb92, type: 3}
+  Economy: {fileID: 4900000, guid: ba7436ed077d467a8f52c63c62f638f4, type: 3}
+  Feedback: {fileID: 4900000, guid: 73bed195f8e0e3549bb7d101a257452e, type: 3}

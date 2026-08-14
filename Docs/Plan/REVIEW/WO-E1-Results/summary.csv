@@ -1,0 +1,5 @@
+﻿lineup_id,lineup_name,level_id,stage_index,games,wins,losses,timeouts,win_rate,mean_duration_s,median_duration_s,p95_duration_s,mean_wall_ms,cohort_wall_s,mean_end_coins
+A_siege_nub,A · 含器械（3弓+1盾+1矛+1弩兵）,level_1_1,1,25,12,11,2,0.48,181.506676,156.166675,600.000031,133.074536,3.326863,75.68
+A_siege_nub,A · 含器械（3弓+1盾+1矛+1弩兵）,level_1_5,5,25,10,14,1,0.4,130.504007,99.800005,301.166682,123.085216,3.07713,75.32
+B_no_siege,B · 无器械（3弓+2盾+1矛）,level_1_1,1,25,0,23,2,0,345.668018,326.966684,600.000031,563.000556,14.075014,57.44
+B_no_siege,B · 无器械（3弓+2盾+1矛）,level_1_5,5,25,0,25,0,0,106.904006,87.966671,261.133347,243.988168,6.099704,55.04

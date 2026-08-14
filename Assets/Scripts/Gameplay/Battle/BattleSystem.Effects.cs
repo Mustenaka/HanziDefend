@@ -526,6 +526,7 @@ namespace HanziDefend.Gameplay.Battle
                 key == "hp" ? replacement : value.MaxHp,
                 key == "atk" ? replacement : value.Atk,
                 key == "range" ? replacement : value.Range,
+                value.MinRange,
                 key == "atkspeed" ? replacement : value.AtkSpeed,
                 key == "cooldown" ? replacement : value.Cooldown,
                 key == "armor" ? replacement : value.Armor,
@@ -593,7 +594,23 @@ namespace HanziDefend.Gameplay.Battle
                 return;
             }
 
-            int damage = Formula.Damage(attack, target.Armor, pierce, config.Economy);
+            AttackType attackType = AttackType.None;
+            IReadOnlyList<BonusVsDef> bonusVs = Array.Empty<BonusVsDef>();
+            if (sourceEntityId != 0 && unitsById.TryGetValue(sourceEntityId, out BattleUnit source))
+            {
+                attackType = source.AttackType;
+                bonusVs = source.BonusVs;
+            }
+
+            int damage = Formula.Damage(
+                attack,
+                attackType,
+                bonusVs,
+                target.Armor,
+                target.ArmorType,
+                target.UnitType,
+                pierce,
+                config.Economy);
             int hpDamage = damage;
             if (target.Unit != null && target.Unit.CurrentShield > 0f)
             {
@@ -616,10 +633,6 @@ namespace HanziDefend.Gameplay.Battle
                     NextEventSequence(), TickIndex, SimulatedTimeSeconds, attackId,
                     sourceEntityId, value.EntityId, value.Team, damage, hpBefore,
                     hpAfter, value.MaxHp, value.Position));
-                if (lethal)
-                {
-                    DisablePhysics(value.Collider, value.Rigidbody);
-                }
                 return;
             }
 

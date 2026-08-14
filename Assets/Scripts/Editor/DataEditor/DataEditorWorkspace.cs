@@ -57,10 +57,13 @@ namespace HanziDefend.Editor
         public void DiscoverFiles()
         {
             documents.Clear();
-            foreach (string filePath in Directory.GetFiles(rootDirectory, "*.json", SearchOption.TopDirectoryOnly)
-                         .OrderBy(Path.GetFileName, StringComparer.Ordinal))
+            foreach (string fileName in RequiredFiles.OrderBy(value => value, StringComparer.Ordinal))
             {
-                documents.Add(new DataEditorDocument(filePath));
+                string filePath = Path.Combine(rootDirectory, fileName);
+                if (File.Exists(filePath))
+                {
+                    documents.Add(new DataEditorDocument(filePath));
+                }
             }
 
             if (CurrentDocument != null)
@@ -168,12 +171,13 @@ namespace HanziDefend.Editor
             {
                 string[] scalarFields =
                 {
-                    "id", "name", "displayName", "faction", "tier", "gridW", "gridH",
-                    "layer", "spawnMode", "targeting", "effects"
+                    "id", "name", "displayName", "faction", "tier", "gridW", "gridH", "footprint",
+                    "layer", "spawnMode", "targeting", "unitType", "armorType", "atkType",
+                    "bonusVs", "traits", "effects"
                 };
                 string[] curveFields =
                 {
-                    "hp", "atk", "range", "atkSpeed", "cooldown", "armor", "pierce", "moveSpeed"
+                    "hp", "atk", "range", "minRange", "atkSpeed", "cooldown", "armor", "pierce", "moveSpeed"
                 };
 
                 for (int index = 0; index < units.Count; index++)
@@ -198,6 +202,28 @@ namespace HanziDefend.Editor
                             RequireToken(curve, "units.json", $"units[{index}].{field}", "growth", errors);
                         }
                     }
+
+                    if (unit["bonusVs"] is JArray bonuses)
+                    {
+                        for (int bonusIndex = 0; bonusIndex < bonuses.Count; bonusIndex++)
+                        {
+                            JObject bonus = RequireObject(bonuses[bonusIndex], "units.json",
+                                $"units[{index}].bonusVs[{bonusIndex}]", errors);
+                            if (bonus == null) continue;
+                            RequireToken(bonus, "units.json", $"units[{index}].bonusVs[{bonusIndex}]", "target", errors);
+                            RequireToken(bonus, "units.json", $"units[{index}].bonusVs[{bonusIndex}]", "value", errors);
+                        }
+                    }
+                    if (unit["traits"] is JArray traits)
+                    {
+                        for (int traitIndex = 0; traitIndex < traits.Count; traitIndex++)
+                        {
+                            JObject trait = RequireObject(traits[traitIndex], "units.json",
+                                $"units[{index}].traits[{traitIndex}]", errors);
+                            if (trait != null)
+                                RequireToken(trait, "units.json", $"units[{index}].traits[{traitIndex}]", "type", errors);
+                        }
+                    }
                 }
             }
 
@@ -205,7 +231,8 @@ namespace HanziDefend.Editor
             {
                 string[] bossFields =
                 {
-                    "id", "name", "displayName", "hp", "armor", "atk", "range", "atkSpeed", "pierce", "effects"
+                    "id", "name", "displayName", "hp", "armor", "unitType", "armorType",
+                    "atk", "range", "atkSpeed", "pierce", "atkType", "bonusVs", "effects"
                 };
                 for (int index = 0; index < bosses.Count; index++)
                 {
@@ -223,9 +250,9 @@ namespace HanziDefend.Editor
             }
 
             ValidateSimpleArrayRoot(roots["commanders.json"], "commanders.json", "commanders",
-                new[] { "id", "name", "passiveEffectId", "activeEffectId", "activeCooldown" }, errors);
+                new[] { "id", "name", "displayName", "faction", "passiveEffectId", "activeEffectId", "activeCooldown" }, errors);
             ValidateSimpleArrayRoot(roots["levels.json"], "levels.json", "levels",
-                new[] { "id", "stageIndex", "waveSetId", "baseHp", "startCoins", "gridCols", "gridRows", "gridMaxCols", "gridMaxRows" }, errors);
+                new[] { "id", "stageIndex", "waveSetId", "baseHp", "startCoins", "gridWidth", "gridHeight", "initialUnlock" }, errors);
             RequireToken(roots["levels.json"], "levels.json", "$", "bases", errors);
 
             JArray waveSets = RequireArray(roots["waves.json"], "waves.json", "waveSets", errors);
@@ -315,7 +342,11 @@ namespace HanziDefend.Editor
                 }
             }
 
-            foreach (string field in new[] { "refreshBaseCost", "refreshCostGrowth", "dropCoins", "damage", "cardWeights", "battle" })
+            foreach (string field in new[]
+                     {
+                         "refreshBaseCost", "refreshCostGrowth", "gridUnlock", "dropCoins", "damage",
+                         "cardWeights", "cardOffer", "cardPool", "settlementReward", "battle"
+                     })
             {
                 RequireToken(roots["economy.json"], "economy.json", "$", field, errors);
             }
@@ -329,6 +360,8 @@ namespace HanziDefend.Editor
                     if (baseDef == null) continue;
                     RequireToken(baseDef, "levels.json", $"bases.{side}", "hp", errors);
                     RequireToken(baseDef, "levels.json", $"bases.{side}", "armor", errors);
+                    foreach (string field in new[] { "id", "name", "displayName", "unitType", "armorType" })
+                        RequireToken(baseDef, "levels.json", $"bases.{side}", field, errors);
                 }
             }
 
@@ -336,9 +369,47 @@ namespace HanziDefend.Editor
             RequireObjectFields(economy["dropCoins"] as JObject, "economy.json", "dropCoins",
                 new[] { "normal", "elite", "boss" }, errors);
             RequireObjectFields(economy["damage"] as JObject, "economy.json", "damage",
-                new[] { "armorScale", "minimumDamage" }, errors);
+                new[] { "armorScale", "minimumDamage", "neutralTypeMultiplier", "typeMultipliers" }, errors);
+            RequireObjectFields(economy["gridUnlock"] as JObject, "economy.json", "gridUnlock",
+                new[] { "purchaseBaseCost", "purchaseCostGrowth", "baseAnchorRowOffset", "autoUnlockPerMinorStage" }, errors);
             RequireObjectFields(economy["cardWeights"] as JObject, "economy.json", "cardWeights",
-                new[] { "unit", "expand", "buff", "global" }, errors);
+                new[] { "unit", "unlock", "buff", "global" }, errors);
+            RequireObjectFields(economy["cardOffer"] as JObject, "economy.json", "cardOffer",
+                new[] { "baseCount", "luckyExtraCount", "luckyChance" }, errors);
+            RequireObjectFields(economy["cardPool"] as JObject, "economy.json", "cardPool",
+                new[]
+                {
+                    "shapeUnlocks", "guaranteeBeforeStageIndex", "guaranteeAttackType",
+                    "buffEffectIds", "globalEffectIds"
+                 }, errors);
+            RequireObjectFields(economy["settlementReward"] as JObject, "economy.json", "settlementReward",
+                new[]
+                {
+                    "slotCount", "buffWeight", "activeSkillWeight", "buffEffectIds",
+                    "activeSkillEffectIds", "uniqueEffectIds"
+                }, errors);
+            if (economy["damage"]?["typeMultipliers"] is JArray multipliers)
+            {
+                for (int index = 0; index < multipliers.Count; index++)
+                {
+                    JObject entry = RequireObject(multipliers[index], "economy.json",
+                        $"damage.typeMultipliers[{index}]", errors);
+                    if (entry == null) continue;
+                    foreach (string field in new[] { "armorType", "atkType", "value" })
+                        RequireToken(entry, "economy.json", $"damage.typeMultipliers[{index}]", field, errors);
+                }
+            }
+            if (economy["cardPool"]?["shapeUnlocks"] is JArray unlocks)
+            {
+                for (int index = 0; index < unlocks.Count; index++)
+                {
+                    JObject entry = RequireObject(unlocks[index], "economy.json",
+                        $"cardPool.shapeUnlocks[{index}]", errors);
+                    if (entry == null) continue;
+                    foreach (string field in new[] { "gridW", "gridH" })
+                        RequireToken(entry, "economy.json", $"cardPool.shapeUnlocks[{index}]", field, errors);
+                }
+            }
             RequireObjectFields(economy["battle"] as JObject, "economy.json", "battle",
                 new[]
                 {
@@ -389,12 +460,30 @@ namespace HanziDefend.Editor
             var unitIds = new HashSet<string>(
                 units.Select(value => value["id"].Value<string>()),
                 StringComparer.Ordinal);
-            string[] curves = { "hp", "atk", "range", "atkSpeed", "cooldown", "armor", "pierce", "moveSpeed" };
+            string[] curves = { "hp", "atk", "range", "minRange", "atkSpeed", "cooldown", "armor", "pierce", "moveSpeed" };
             for (int index = 0; index < units.Count; index++)
             {
                 JObject unit = (JObject)units[index];
                 RequirePositiveNumber(unit["gridW"], "units.json", $"units[{index}].gridW", errors);
                 RequirePositiveNumber(unit["gridH"], "units.json", $"units[{index}].gridH", errors);
+                RequireEnumString(unit["footprint"], "units.json", $"units[{index}].footprint", errors,
+                    "Rectangle", "MissingUpperRight", "MissingLowerLeft");
+                string footprint = unit["footprint"]?.Value<string>();
+                if ((string.Equals(footprint, "MissingUpperRight", StringComparison.Ordinal)
+                     || string.Equals(footprint, "MissingLowerLeft", StringComparison.Ordinal))
+                    && (unit["gridW"]?.Value<int>() != 2 || unit["gridH"]?.Value<int>() != 2))
+                {
+                    errors.Add(new DataEditorValidationError(
+                        "units.json",
+                        $"units[{index}].footprint",
+                        $"{footprint} requires a 2x2 bounding box."));
+                }
+                RequireEnumString(unit["unitType"], "units.json", $"units[{index}].unitType", errors,
+                    "Infantry", "Cavalry", "Naval", "Air", "Building", "Special");
+                RequireEnumString(unit["armorType"], "units.json", $"units[{index}].armorType", errors,
+                    "Unarmored", "Light", "Heavy", "Building");
+                RequireEnumString(unit["atkType"], "units.json", $"units[{index}].atkType", errors,
+                    "None", "Slash", "Blunt", "Arrow", "Siege");
                 foreach (string curveName in curves)
                 {
                     JObject curve = (JObject)unit[curveName];
@@ -416,6 +505,43 @@ namespace HanziDefend.Editor
                             "Level 4 value cannot be negative."));
                     }
                 }
+                if (IsNumber(unit["minRange"]?["base"])
+                    && IsNumber(unit["range"]?["base"])
+                    && unit["minRange"]["base"].Value<double>() > unit["range"]["base"].Value<double>())
+                {
+                    errors.Add(new DataEditorValidationError(
+                        "units.json", $"units[{index}].minRange.base", "Minimum range cannot exceed range."));
+                }
+
+                if (unit["bonusVs"] is JArray bonuses)
+                {
+                    var bonusTargets = new HashSet<string>(StringComparer.Ordinal);
+                    for (int bonusIndex = 0; bonusIndex < bonuses.Count; bonusIndex++)
+                    {
+                        string path = $"units[{index}].bonusVs[{bonusIndex}]";
+                        RequireEnumString(bonuses[bonusIndex]["target"], "units.json", path + ".target", errors,
+                            "Cavalry", "HeavyArmor", "Building");
+                        RequireNonNegativeNumber(bonuses[bonusIndex]["value"], "units.json", path + ".value", errors);
+                        string target = bonuses[bonusIndex]["target"].Value<string>();
+                        if (!bonusTargets.Add(target))
+                            errors.Add(new DataEditorValidationError("units.json", path + ".target",
+                                $"Duplicate bonus target '{target}'."));
+                    }
+                }
+                if (unit["traits"] is JArray traits)
+                {
+                    var traitTypes = new HashSet<string>(StringComparer.Ordinal);
+                    for (int traitIndex = 0; traitIndex < traits.Count; traitIndex++)
+                    {
+                        string path = $"units[{index}].traits[{traitIndex}]";
+                        RequireEnumString(traits[traitIndex]["type"], "units.json", path + ".type", errors,
+                            "Charge", "Trample", "PiercingShot", "FireAura", "IceAura", "DeathSpawn");
+                        string type = traits[traitIndex]["type"].Value<string>();
+                        if (!traitTypes.Add(type))
+                            errors.Add(new DataEditorValidationError("units.json", path + ".type",
+                                $"Duplicate trait '{type}'."));
+                    }
+                }
             }
 
             JArray bosses = (JArray)roots["units.json"]["bosses"];
@@ -425,6 +551,10 @@ namespace HanziDefend.Editor
             for (int index = 0; index < bosses.Count; index++)
             {
                 JObject boss = (JObject)bosses[index];
+                RequireEnumString(boss["unitType"], "units.json", $"bosses[{index}].unitType", errors, "Building");
+                RequireEnumString(boss["armorType"], "units.json", $"bosses[{index}].armorType", errors, "Building");
+                RequireEnumString(boss["atkType"], "units.json", $"bosses[{index}].atkType", errors,
+                    "Slash", "Blunt", "Arrow", "Siege");
                 RequirePositiveNumber(boss["hp"], "units.json", $"bosses[{index}].hp", errors);
                 foreach (string field in new[] { "armor", "atk", "range", "atkSpeed", "pierce" })
                 {
@@ -435,6 +565,8 @@ namespace HanziDefend.Editor
             JArray commanders = (JArray)roots["commanders.json"]["commanders"];
             for (int index = 0; index < commanders.Count; index++)
             {
+                RequireEnumString(commanders[index]["faction"], "commanders.json",
+                    $"commanders[{index}].faction", errors, "Ally", "Enemy");
                 RequireNonNegativeNumber(
                     commanders[index]["activeCooldown"],
                     "commanders.json",
@@ -532,18 +664,9 @@ namespace HanziDefend.Editor
                 RequirePositiveNumber(level["stageIndex"], "levels.json", path + ".stageIndex", errors);
                 RequirePositiveNumber(level["baseHp"], "levels.json", path + ".baseHp", errors);
                 RequireNonNegativeNumber(level["startCoins"], "levels.json", path + ".startCoins", errors);
-                RequirePositiveNumber(level["gridCols"], "levels.json", path + ".gridCols", errors);
-                RequirePositiveNumber(level["gridRows"], "levels.json", path + ".gridRows", errors);
-                RequirePositiveNumber(level["gridMaxCols"], "levels.json", path + ".gridMaxCols", errors);
-                RequirePositiveNumber(level["gridMaxRows"], "levels.json", path + ".gridMaxRows", errors);
-                if (level["gridMaxCols"].Value<int>() < level["gridCols"].Value<int>())
-                {
-                    errors.Add(new DataEditorValidationError("levels.json", path + ".gridMaxCols", "Maximum columns cannot be smaller than starting columns."));
-                }
-                if (level["gridMaxRows"].Value<int>() < level["gridRows"].Value<int>())
-                {
-                    errors.Add(new DataEditorValidationError("levels.json", path + ".gridMaxRows", "Maximum rows cannot be smaller than starting rows."));
-                }
+                RequirePositiveNumber(level["gridWidth"], "levels.json", path + ".gridWidth", errors);
+                RequirePositiveNumber(level["gridHeight"], "levels.json", path + ".gridHeight", errors);
+                ValidateInitialUnlockRect(level, path, errors);
             }
 
             JObject bases = (JObject)roots["levels.json"]["bases"];
@@ -556,16 +679,95 @@ namespace HanziDefend.Editor
             JObject economy = roots["economy.json"];
             RequireNonNegativeNumber(economy["refreshBaseCost"], "economy.json", "refreshBaseCost", errors);
             RequireNonNegativeNumber(economy["refreshCostGrowth"], "economy.json", "refreshCostGrowth", errors);
+            JObject gridUnlock = (JObject)economy["gridUnlock"];
+            RequireNonNegativeNumber(gridUnlock["purchaseBaseCost"], "economy.json", "gridUnlock.purchaseBaseCost", errors);
+            RequireNonNegativeNumber(gridUnlock["purchaseCostGrowth"], "economy.json", "gridUnlock.purchaseCostGrowth", errors);
+            RequireNonNegativeNumber(gridUnlock["autoUnlockPerMinorStage"], "economy.json", "gridUnlock.autoUnlockPerMinorStage", errors);
             foreach (string field in new[] { "normal", "elite", "boss" })
             {
                 RequirePositiveNumber(economy["dropCoins"][field], "economy.json", "dropCoins." + field, errors);
             }
             RequirePositiveNumber(economy["damage"]["armorScale"], "economy.json", "damage.armorScale", errors);
             RequirePositiveNumber(economy["damage"]["minimumDamage"], "economy.json", "damage.minimumDamage", errors);
-            foreach (string field in new[] { "unit", "expand", "buff", "global" })
+            RequirePositiveNumber(economy["damage"]["neutralTypeMultiplier"], "economy.json", "damage.neutralTypeMultiplier", errors);
+            JArray typeMultipliers = (JArray)economy["damage"]["typeMultipliers"];
+            var multiplierKeys = new HashSet<string>(StringComparer.Ordinal);
+            for (int index = 0; index < typeMultipliers.Count; index++)
+            {
+                JObject entry = (JObject)typeMultipliers[index];
+                string path = $"damage.typeMultipliers[{index}]";
+                RequireEnumString(entry["armorType"], "economy.json", path + ".armorType", errors,
+                    "Unarmored", "Light", "Heavy", "Building");
+                RequireEnumString(entry["atkType"], "economy.json", path + ".atkType", errors,
+                    "Slash", "Blunt", "Arrow", "Siege");
+                RequirePositiveNumber(entry["value"], "economy.json", path + ".value", errors);
+                string key = entry["armorType"].Value<string>() + "/" + entry["atkType"].Value<string>();
+                if (!multiplierKeys.Add(key))
+                    errors.Add(new DataEditorValidationError("economy.json", path,
+                        $"Duplicate type multiplier '{key}'."));
+            }
+            if (multiplierKeys.Count != 16)
+                errors.Add(new DataEditorValidationError("economy.json", "damage.typeMultipliers",
+                    "All 16 armor/attack combinations are required exactly once."));
+            foreach (string field in new[] { "unit", "unlock", "buff", "global" })
             {
                 RequireNonNegativeNumber(economy["cardWeights"][field], "economy.json", "cardWeights." + field, errors);
             }
+            JObject cardOffer = (JObject)economy["cardOffer"];
+            RequirePositiveNumber(cardOffer["baseCount"], "economy.json", "cardOffer.baseCount", errors);
+            RequirePositiveNumber(cardOffer["luckyExtraCount"], "economy.json", "cardOffer.luckyExtraCount", errors);
+            RequireNumberInRange(
+                cardOffer["luckyChance"],
+                "economy.json",
+                "cardOffer.luckyChance",
+                0d,
+                1d,
+                errors);
+            JObject cardPool = (JObject)economy["cardPool"];
+            RequirePositiveNumber(cardPool["guaranteeBeforeStageIndex"], "economy.json",
+                "cardPool.guaranteeBeforeStageIndex", errors);
+            RequireEnumString(cardPool["guaranteeAttackType"], "economy.json",
+                "cardPool.guaranteeAttackType", errors, "Slash", "Blunt", "Arrow", "Siege");
+            foreach (JObject unlock in (JArray)cardPool["shapeUnlocks"])
+            {
+                int unlockIndex = ((JArray)cardPool["shapeUnlocks"]).IndexOf(unlock);
+                string path = $"cardPool.shapeUnlocks[{unlockIndex}]";
+                RequirePositiveNumber(unlock["gridW"], "economy.json", path + ".gridW", errors);
+                RequirePositiveNumber(unlock["gridH"], "economy.json", path + ".gridH", errors);
+            }
+            ValidateNonEmptyUniqueStringArray(
+                cardPool["buffEffectIds"],
+                "economy.json",
+                "cardPool.buffEffectIds",
+                errors);
+            ValidateNonEmptyUniqueStringArray(
+                cardPool["globalEffectIds"],
+                "economy.json",
+                "cardPool.globalEffectIds",
+                errors);
+
+            JObject settlementReward = (JObject)economy["settlementReward"];
+            RequirePositiveNumber(settlementReward["slotCount"], "economy.json",
+                "settlementReward.slotCount", errors);
+            RequireNonNegativeNumber(settlementReward["buffWeight"], "economy.json",
+                "settlementReward.buffWeight", errors);
+            RequireNonNegativeNumber(settlementReward["activeSkillWeight"], "economy.json",
+                "settlementReward.activeSkillWeight", errors);
+            ValidateNonEmptyUniqueStringArray(
+                settlementReward["buffEffectIds"],
+                "economy.json",
+                "settlementReward.buffEffectIds",
+                errors);
+            ValidateNonEmptyUniqueStringArray(
+                settlementReward["activeSkillEffectIds"],
+                "economy.json",
+                "settlementReward.activeSkillEffectIds",
+                errors);
+            ValidateNonEmptyUniqueStringArray(
+                settlementReward["uniqueEffectIds"],
+                "economy.json",
+                "settlementReward.uniqueEffectIds",
+                errors);
 
             JObject battle = (JObject)economy["battle"];
             foreach (string field in new[]
@@ -607,6 +809,64 @@ namespace HanziDefend.Editor
         private static bool IsNumber(JToken value)
         {
             return value.Type == JTokenType.Integer || value.Type == JTokenType.Float;
+        }
+
+        private static void RequireNumberInRange(
+            JToken value,
+            string fileName,
+            string path,
+            double minimum,
+            double maximum,
+            ICollection<DataEditorValidationError> errors)
+        {
+            if (!IsNumber(value))
+            {
+                errors.Add(new DataEditorValidationError(fileName, path, "Value must be a number."));
+                return;
+            }
+
+            double number = value.Value<double>();
+            if (double.IsNaN(number) || double.IsInfinity(number) || number < minimum || number > maximum)
+            {
+                errors.Add(new DataEditorValidationError(
+                    fileName,
+                    path,
+                    $"Value must be finite and in [{minimum},{maximum}]."));
+            }
+        }
+
+        private static void ValidateNonEmptyUniqueStringArray(
+            JToken value,
+            string fileName,
+            string path,
+            ICollection<DataEditorValidationError> errors)
+        {
+            if (!(value is JArray array))
+            {
+                errors.Add(new DataEditorValidationError(fileName, path, "Value must be an array."));
+                return;
+            }
+            if (array.Count == 0)
+            {
+                errors.Add(new DataEditorValidationError(fileName, path, "Array must not be empty."));
+                return;
+            }
+
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            for (int index = 0; index < array.Count; index++)
+            {
+                string itemPath = $"{path}[{index}]";
+                if (array[index].Type != JTokenType.String || string.IsNullOrWhiteSpace(array[index].Value<string>()))
+                {
+                    errors.Add(new DataEditorValidationError(fileName, itemPath, "Effect id must be non-empty text."));
+                    continue;
+                }
+                string effectId = array[index].Value<string>();
+                if (!seen.Add(effectId))
+                {
+                    errors.Add(new DataEditorValidationError(fileName, itemPath, $"Duplicate effect id '{effectId}'."));
+                }
+            }
         }
 
         private static void RequireEnumString(
@@ -669,6 +929,55 @@ namespace HanziDefend.Editor
             if (double.IsNaN(number) || double.IsInfinity(number))
             {
                 errors.Add(new DataEditorValidationError(fileName, path, "Value must be finite."));
+            }
+        }
+
+        /// <summary>
+        /// Checks a level's initial unlock rect: it must unlock at least one cell and fit entirely
+        /// inside the fixed playfield, because the field never grows once a run has started.
+        /// </summary>
+        private static void ValidateInitialUnlockRect(
+            JObject level,
+            string path,
+            ICollection<DataEditorValidationError> errors)
+        {
+            string rectPath = path + ".initialUnlock";
+            JObject rect = RequireObject(level["initialUnlock"], "levels.json", rectPath, errors);
+            if (rect == null)
+            {
+                return;
+            }
+
+            foreach (string field in new[] { "col", "row", "width", "height" })
+            {
+                RequireToken(rect, "levels.json", rectPath, field, errors);
+            }
+
+            if (rect["col"] == null || rect["row"] == null || rect["width"] == null || rect["height"] == null)
+            {
+                return;
+            }
+
+            RequireNonNegativeNumber(rect["col"], "levels.json", rectPath + ".col", errors);
+            RequireNonNegativeNumber(rect["row"], "levels.json", rectPath + ".row", errors);
+            RequirePositiveNumber(rect["width"], "levels.json", rectPath + ".width", errors);
+            RequirePositiveNumber(rect["height"], "levels.json", rectPath + ".height", errors);
+
+            if (level["gridWidth"].Type != JTokenType.Integer || level["gridHeight"].Type != JTokenType.Integer)
+            {
+                return;
+            }
+
+            if (rect["col"].Value<int>() + rect["width"].Value<int>() > level["gridWidth"].Value<int>())
+            {
+                errors.Add(new DataEditorValidationError(
+                    "levels.json", rectPath + ".width", "Initial unlock rect exceeds gridWidth."));
+            }
+
+            if (rect["row"].Value<int>() + rect["height"].Value<int>() > level["gridHeight"].Value<int>())
+            {
+                errors.Add(new DataEditorValidationError(
+                    "levels.json", rectPath + ".height", "Initial unlock rect exceeds gridHeight."));
             }
         }
 

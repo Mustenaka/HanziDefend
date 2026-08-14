@@ -66,6 +66,27 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [Test]
+        public void DiscoverFiles_IgnoresGeneratedArtManifest()
+        {
+            File.WriteAllText(Path.Combine(tempRoot, "art_manifest.json"), "{ invalid generated json");
+
+            workspace.DiscoverFiles();
+
+            string[] actual = workspace.Documents
+                .Select(document => document.FileName)
+                .OrderBy(fileName => fileName, StringComparer.Ordinal)
+                .ToArray();
+            Assert.That(actual, Is.EqualTo(ExpectedFiles));
+            Assert.Throws<FileNotFoundException>(() => workspace.Open("art_manifest.json"));
+
+            IReadOnlyList<DataEditorValidationError> errors = workspace.ValidateAll();
+            Assert.That(
+                errors,
+                Is.Empty,
+                string.Join(Environment.NewLine, errors.Select(FormatError)));
+        }
+
+        [Test]
         public void SetOneUnitCurveValue_SaveChangesOnlyItsSourceLine_AndReloadsValue()
         {
             DataEditorDocument document = workspace.Open("units.json");
@@ -76,13 +97,36 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(document.IsDirty, Is.True);
             workspace.SaveCurrent();
             string saved = File.ReadAllText(document.FilePath);
-            AssertSingleChangedLine(original, saved, "\"atk\": { \"base\": 23.0, \"growth\": 0.35 },");
+            AssertSingleChangedLine(original, saved,
+                "\"hp\": { \"base\": 90.0, \"growth\": 0.0 }, \"atk\": { \"base\": 23.0, \"growth\": 0.0 },");
             Assert.That(document.IsDirty, Is.False);
 
             workspace.ReloadCurrent();
             GameConfig reloaded = GameConfig.Load(new JsonConfigSource(tempRoot));
             Assert.That(reloaded.GetUnit("gong").Atk.Base, Is.EqualTo(23f));
             Assert.That(document.CurrentText, Is.EqualTo(saved));
+        }
+
+        [Test]
+        public void SetUnitBonus_ChangesOnlyItsSourceLine_AndRoundTrips()
+        {
+            DataEditorDocument document = workspace.Open("units.json");
+            string original = File.ReadAllText(document.FilePath);
+
+            document.SetUnitBonusTarget("mao", 0, BonusTarget.HeavyArmor);
+            document.SetUnitBonusValue("mao", 0, 61d);
+
+            workspace.SaveCurrent();
+            string saved = File.ReadAllText(document.FilePath);
+            AssertSingleChangedLine(
+                original,
+                saved,
+                "\"bonusVs\": [{ \"target\": \"HeavyArmor\", \"value\": 61.0 }], \"traits\": [], \"effects\": [],");
+
+            GameConfig reloaded = GameConfig.Load(new JsonConfigSource(tempRoot));
+            BonusVsDef bonus = reloaded.GetUnit("mao").BonusVs.Single();
+            Assert.That(bonus.Target, Is.EqualTo(BonusTarget.HeavyArmor));
+            Assert.That(bonus.Value, Is.EqualTo(61f));
         }
 
         [Test]
@@ -103,7 +147,7 @@ namespace HanziDefend.Tests.EditMode
         {
             DataEditorDocument document = workspace.Open("units.json");
             string original = document.OriginalText;
-            document.ReplaceText(original.Replace("\"弓箭手\"", "\"临时未保存名称\""));
+            document.ReplaceText(original.Replace("\"displayName\": \"弓\"", "\"displayName\": \"临时未保存名称\""));
 
             Assert.That(document.IsDirty, Is.True);
             Assert.That(document.CurrentText, Does.Contain("临时未保存名称"));
@@ -128,9 +172,9 @@ namespace HanziDefend.Tests.EditMode
         {
             ReplaceFirst(
                 "units.json",
-                "      \"displayName\": \"弓箭手\",\r\n",
+                "\"displayName\": \"卒\", ",
                 string.Empty,
-                "      \"displayName\": \"弓箭手\",\n");
+                "\"displayName\": \"卒\", ");
 
             AssertHasError(workspace.ValidateAll(), "units.json", "units[0].displayName", "required");
         }
@@ -139,6 +183,10 @@ namespace HanziDefend.Tests.EditMode
         [TestCase("tier", "Green", "Mythic")]
         [TestCase("spawnMode", "Delayed", "Teleport")]
         [TestCase("targeting", "Nearest", "Random")]
+        [TestCase("unitType", "Infantry", "Beast")]
+        [TestCase("armorType", "Unarmored", "Cloth")]
+        [TestCase("atkType", "Slash", "Magic")]
+        [TestCase("footprint", "Rectangle", "Hexagon")]
         public void InvalidUnitEnum_ReportsExactField(string field, string validValue, string invalidValue)
         {
             ReplaceFirst(
@@ -217,7 +265,7 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [TestCase("\"gridW\": 1", "\"gridW\": 0", "units[0].gridW")]
-        [TestCase("\"hp\": { \"base\": 90.0", "\"hp\": { \"base\": -1.0", "units[0].hp.base")]
+        [TestCase("\"hp\": { \"base\": 70.0", "\"hp\": { \"base\": -1.0", "units[0].hp.base")]
         public void OutOfRangeUnitNumber_ReportsExactField(
             string originalFragment,
             string invalidFragment,
@@ -229,9 +277,24 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [Test]
+        public void MinimumRangeAboveRange_ReportsExactField()
+        {
+            ReplaceFirst(
+                "units.json",
+                "\"minRange\": { \"base\": 0.0",
+                "\"minRange\": { \"base\": 1.0");
+
+            AssertHasError(
+                workspace.ValidateAll(),
+                "units.json",
+                "units[0].minRange.base",
+                "cannot exceed range");
+        }
+
+        [Test]
         public void DanglingWaveUnitId_ReportsExactSpawnLocation()
         {
-            ReplaceFirst("waves.json", "\"unitId\": \"e_zu\"", "\"unitId\": \"missing_unit\"");
+            ReplaceFirst("waves.json", "\"unitId\": \"zu\"", "\"unitId\": \"missing_unit\"");
 
             AssertHasError(
                 workspace.ValidateAll(),
@@ -243,11 +306,13 @@ namespace HanziDefend.Tests.EditMode
         [Test]
         public void MissingWaveRewardRank_ReportsExactWaveField()
         {
+            // Deliberately format-agnostic: dropping just the field token works whether waves.json
+            // is written one-wave-per-line or one-field-per-line, so re-serialising the data source
+            // cannot silently break this fixture again.
             ReplaceFirst(
                 "waves.json",
-                "          \"rewardRank\": \"Normal\",\r\n",
-                string.Empty,
-                "          \"rewardRank\": \"Normal\",\n");
+                "\"rewardRank\": \"Normal\",",
+                string.Empty);
 
             AssertHasError(
                 workspace.ValidateAll(),
@@ -343,6 +408,46 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [Test]
+        public void MissingCardOfferField_ReportsExactEconomyPath()
+        {
+            ReplaceFirst("economy.json", "    \"luckyExtraCount\": 1,\r\n", string.Empty,
+                "    \"luckyExtraCount\": 1,\n");
+
+            AssertHasError(
+                workspace.ValidateAll(),
+                "economy.json",
+                "cardOffer.luckyExtraCount",
+                "required");
+        }
+
+        [Test]
+        public void InvalidLuckyChance_ReportsExactEconomyPath()
+        {
+            ReplaceFirst("economy.json", "\"luckyChance\": 0.10", "\"luckyChance\": 1.10");
+
+            AssertHasError(
+                workspace.ValidateAll(),
+                "economy.json",
+                "cardOffer.luckyChance",
+                "[0,1]");
+        }
+
+        [Test]
+        public void EmptyBuffEffectPool_ReportsExactEconomyPath()
+        {
+            ReplaceFirst(
+                "economy.json",
+                "\"buffEffectIds\": [\"buff_front_shield\"]",
+                "\"buffEffectIds\": []");
+
+            AssertHasError(
+                workspace.ValidateAll(),
+                "economy.json",
+                "cardPool.buffEffectIds",
+                "empty");
+        }
+
+        [Test]
         public void DanglingCommanderEffectId_ReportsExactReferenceLocation()
         {
             ReplaceFirst(
@@ -362,7 +467,7 @@ namespace HanziDefend.Tests.EditMode
         {
             ReplaceFirst(
                 "units.json",
-                "      \"displayName\": \"吕布\",",
+                "\"displayName\": \"敌方城堡\",",
                 string.Empty);
 
             AssertHasError(workspace.ValidateAll(), "units.json", "bosses[0].displayName", "required");
@@ -376,7 +481,7 @@ namespace HanziDefend.Tests.EditMode
             AssertHasError(
                 workspace.ValidateAll(),
                 "effects.json",
-                "effects[6].ops[0].unitId",
+                "effects[5].ops[0].unitId",
                 "missing_unit");
         }
 

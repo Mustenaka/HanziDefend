@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using HanziDefend.Data;
 using UnityEngine;
 
@@ -63,16 +65,36 @@ namespace HanziDefend.Gameplay.Battle
             float currentHp,
             float armor,
             Vector2 position)
+            : this(entityId, string.Empty, team, maxHp, currentHp, armor, position,
+                UnitType.Building, ArmorType.Building)
+        {
+        }
+
+        public BattleBaseSnapshot(
+            int entityId,
+            string definitionId,
+            BattleTeam team,
+            float maxHp,
+            float currentHp,
+            float armor,
+            Vector2 position,
+            UnitType unitType,
+            ArmorType armorType)
         {
             EntityId = entityId;
+            DefinitionId = definitionId;
             Team = team;
             MaxHp = maxHp;
             CurrentHp = currentHp;
             Armor = armor;
             Position = position;
+            UnitType = unitType;
+            ArmorType = armorType;
         }
 
         public int EntityId { get; }
+
+        public string DefinitionId { get; }
 
         public BattleTeam Team { get; }
 
@@ -83,6 +105,10 @@ namespace HanziDefend.Gameplay.Battle
         public float Armor { get; }
 
         public Vector2 Position { get; }
+
+        public UnitType UnitType { get; }
+
+        public ArmorType ArmorType { get; }
 
         public bool IsDestroyed => CurrentHp <= 0f;
     }
@@ -98,10 +124,25 @@ namespace HanziDefend.Gameplay.Battle
             float armor,
             float pierce,
             float moveSpeed)
+            : this(maxHp, atk, range, 0f, atkSpeed, cooldown, armor, pierce, moveSpeed)
+        {
+        }
+
+        public BattleStats(
+            float maxHp,
+            float atk,
+            float range,
+            float minRange,
+            float atkSpeed,
+            float cooldown,
+            float armor,
+            float pierce,
+            float moveSpeed)
         {
             MaxHp = maxHp;
             Atk = atk;
             Range = range;
+            MinRange = minRange;
             AtkSpeed = atkSpeed;
             Cooldown = cooldown;
             Armor = armor;
@@ -114,6 +155,8 @@ namespace HanziDefend.Gameplay.Battle
         public float Atk { get; }
 
         public float Range { get; }
+
+        public float MinRange { get; }
 
         public float AtkSpeed { get; }
 
@@ -199,6 +242,30 @@ namespace HanziDefend.Gameplay.Battle
             BattleTargetKind targetKind,
             TargetingMode targeting,
             float currentShield)
+            : this(entityId, definitionId, team, level, stats, currentHp, position, facing,
+                state, targetEntityId, targetKind, targeting, currentShield, UnitType.Unknown,
+                ArmorType.Unknown, AttackType.Unknown, Array.Empty<BonusVsDef>())
+        {
+        }
+
+        public BattleUnitSnapshot(
+            int entityId,
+            string definitionId,
+            BattleTeam team,
+            int level,
+            BattleStats stats,
+            float currentHp,
+            Vector2 position,
+            Vector2 facing,
+            BattleUnitState state,
+            int? targetEntityId,
+            BattleTargetKind targetKind,
+            TargetingMode targeting,
+            float currentShield,
+            UnitType unitType,
+            ArmorType armorType,
+            AttackType attackType,
+            IReadOnlyList<BonusVsDef> bonusVs)
         {
             EntityId = entityId;
             DefinitionId = definitionId;
@@ -213,6 +280,10 @@ namespace HanziDefend.Gameplay.Battle
             TargetKind = targetKind;
             Targeting = targeting;
             CurrentShield = currentShield;
+            UnitType = unitType;
+            ArmorType = armorType;
+            AttackType = attackType;
+            BonusVs = bonusVs ?? Array.Empty<BonusVsDef>();
         }
 
         public int EntityId { get; }
@@ -240,6 +311,14 @@ namespace HanziDefend.Gameplay.Battle
         public TargetingMode Targeting { get; }
 
         public float CurrentShield { get; }
+
+        public UnitType UnitType { get; }
+
+        public ArmorType ArmorType { get; }
+
+        public AttackType AttackType { get; }
+
+        public IReadOnlyList<BonusVsDef> BonusVs { get; }
 
         public float Shield => CurrentShield;
     }

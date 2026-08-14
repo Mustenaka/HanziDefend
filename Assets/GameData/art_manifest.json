@@ -1,0 +1,593 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "key": "building/bld_cheng",
+      "id": "bld_cheng",
+      "category": "building",
+      "variant": "",
+      "path": "Assets/Art/Buildings/bld_cheng.png"
+    },
+    {
+      "key": "building/bld_ying",
+      "id": "bld_ying",
+      "category": "building",
+      "variant": "",
+      "path": "Assets/Art/Buildings/bld_ying.png"
+    },
+    {
+      "key": "commander/cmd_bei/avatar",
+      "id": "cmd_bei",
+      "category": "commander",
+      "variant": "avatar",
+      "path": "Assets/Art/Commanders/cmd_bei/avatar.png"
+    },
+    {
+      "key": "commander/cmd_bei/card",
+      "id": "cmd_bei",
+      "category": "commander",
+      "variant": "card",
+      "path": "Assets/Art/Commanders/cmd_bei/card.png"
+    },
+    {
+      "key": "commander/cmd_lv/avatar",
+      "id": "cmd_lv",
+      "category": "commander",
+      "variant": "avatar",
+      "path": "Assets/Art/Commanders/cmd_lv/avatar.png"
+    },
+    {
+      "key": "commander/cmd_lv/card",
+      "id": "cmd_lv",
+      "category": "commander",
+      "variant": "card",
+      "path": "Assets/Art/Commanders/cmd_lv/card.png"
+    },
+    {
+      "key": "fx/bao_zha_01",
+      "id": "bao_zha_01",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/bao_zha_01.png"
+    },
+    {
+      "key": "fx/bao_zha_02",
+      "id": "bao_zha_02",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/bao_zha_02.png"
+    },
+    {
+      "key": "fx/bao_zha_03",
+      "id": "bao_zha_03",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/bao_zha_03.png"
+    },
+    {
+      "key": "fx/bao_zha_04",
+      "id": "bao_zha_04",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/bao_zha_04.png"
+    },
+    {
+      "key": "fx/bao_zha_05",
+      "id": "bao_zha_05",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/bao_zha_05.png"
+    },
+    {
+      "key": "fx/chong_ji",
+      "id": "chong_ji",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/chong_ji.png"
+    },
+    {
+      "key": "fx/ci_bao",
+      "id": "ci_bao",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/ci_bao.png"
+    },
+    {
+      "key": "fx/dao_guang_01",
+      "id": "dao_guang_01",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/dao_guang_01.png"
+    },
+    {
+      "key": "fx/dao_guang_02",
+      "id": "dao_guang_02",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/dao_guang_02.png"
+    },
+    {
+      "key": "fx/dao_guang_03",
+      "id": "dao_guang_03",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/dao_guang_03.png"
+    },
+    {
+      "key": "fx/dao_guang_04",
+      "id": "dao_guang_04",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/dao_guang_04.png"
+    },
+    {
+      "key": "fx/dao_guang_05",
+      "id": "dao_guang_05",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/dao_guang_05.png"
+    },
+    {
+      "key": "fx/jian_shi",
+      "id": "jian_shi",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/jian_shi.png"
+    },
+    {
+      "key": "fx/nu_qiang",
+      "id": "nu_qiang",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/nu_qiang.png"
+    },
+    {
+      "key": "fx/qiang_kou_01",
+      "id": "qiang_kou_01",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/qiang_kou_01.png"
+    },
+    {
+      "key": "fx/ran_shao_01",
+      "id": "ran_shao_01",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/ran_shao_01.png"
+    },
+    {
+      "key": "fx/ran_shao_02",
+      "id": "ran_shao_02",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/ran_shao_02.png"
+    },
+    {
+      "key": "fx/ran_shao_03",
+      "id": "ran_shao_03",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/ran_shao_03.png"
+    },
+    {
+      "key": "fx/ran_shao_04",
+      "id": "ran_shao_04",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/ran_shao_04.png"
+    },
+    {
+      "key": "fx/ran_shao_05",
+      "id": "ran_shao_05",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/ran_shao_05.png"
+    },
+    {
+      "key": "fx/shi_dan_01",
+      "id": "shi_dan_01",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shi_dan_01.png"
+    },
+    {
+      "key": "fx/shi_dan_02",
+      "id": "shi_dan_02",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shi_dan_02.png"
+    },
+    {
+      "key": "fx/shuang_dong_01",
+      "id": "shuang_dong_01",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shuang_dong_01.png"
+    },
+    {
+      "key": "fx/shuang_dong_02",
+      "id": "shuang_dong_02",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shuang_dong_02.png"
+    },
+    {
+      "key": "fx/shuang_dong_03",
+      "id": "shuang_dong_03",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shuang_dong_03.png"
+    },
+    {
+      "key": "fx/shuang_dong_04",
+      "id": "shuang_dong_04",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shuang_dong_04.png"
+    },
+    {
+      "key": "fx/shuang_dong_05",
+      "id": "shuang_dong_05",
+      "category": "fx",
+      "variant": "",
+      "path": "Assets/Art/FX/shuang_dong_05.png"
+    },
+    {
+      "key": "icon/buff_armor_up",
+      "id": "buff_armor_up",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_armor_up.png"
+    },
+    {
+      "key": "icon/buff_aspd_up",
+      "id": "buff_aspd_up",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_aspd_up.png"
+    },
+    {
+      "key": "icon/buff_atk_up",
+      "id": "buff_atk_up",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_atk_up.png"
+    },
+    {
+      "key": "icon/buff_burn_on_hit",
+      "id": "buff_burn_on_hit",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_burn_on_hit.png"
+    },
+    {
+      "key": "icon/buff_coin_gain",
+      "id": "buff_coin_gain",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_coin_gain.png"
+    },
+    {
+      "key": "icon/buff_front_shield",
+      "id": "buff_front_shield",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_front_shield.png"
+    },
+    {
+      "key": "icon/buff_hp_up",
+      "id": "buff_hp_up",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_hp_up.png"
+    },
+    {
+      "key": "icon/buff_last_stand",
+      "id": "buff_last_stand",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_last_stand.png"
+    },
+    {
+      "key": "icon/buff_move_up",
+      "id": "buff_move_up",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_move_up.png"
+    },
+    {
+      "key": "icon/buff_pierce_up",
+      "id": "buff_pierce_up",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_pierce_up.png"
+    },
+    {
+      "key": "icon/buff_slow_on_hit",
+      "id": "buff_slow_on_hit",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/buff_slow_on_hit.png"
+    },
+    {
+      "key": "icon/cmd_bei_active",
+      "id": "cmd_bei_active",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/cmd_bei_active.png"
+    },
+    {
+      "key": "icon/cmd_bei_passive",
+      "id": "cmd_bei_passive",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/cmd_bei_passive.png"
+    },
+    {
+      "key": "icon/currency_coin",
+      "id": "currency_coin",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/currency_coin.png"
+    },
+    {
+      "key": "icon/expand_column",
+      "id": "expand_column",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/expand_column.png"
+    },
+    {
+      "key": "icon/reward_coins",
+      "id": "reward_coins",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/reward_coins.png"
+    },
+    {
+      "key": "icon/skill_breach_base",
+      "id": "skill_breach_base",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/skill_breach_base.png"
+    },
+    {
+      "key": "icon/skill_breakthrough",
+      "id": "skill_breakthrough",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/skill_breakthrough.png"
+    },
+    {
+      "key": "icon/skill_meteor",
+      "id": "skill_meteor",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/skill_meteor.png"
+    },
+    {
+      "key": "icon/skill_reinforce",
+      "id": "skill_reinforce",
+      "category": "icon",
+      "variant": "",
+      "path": "Assets/Art/Icons/skill_reinforce.png"
+    },
+    {
+      "key": "unit/bing/idle",
+      "id": "bing",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/bing/idle.png"
+    },
+    {
+      "key": "unit/bing_enemy/idle",
+      "id": "bing_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/bing_enemy/idle.png"
+    },
+    {
+      "key": "unit/chc/idle",
+      "id": "chc",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/chc/idle.png"
+    },
+    {
+      "key": "unit/chc_enemy/idle",
+      "id": "chc_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/chc_enemy/idle.png"
+    },
+    {
+      "key": "unit/dao/idle",
+      "id": "dao",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/dao/idle.png"
+    },
+    {
+      "key": "unit/dao_enemy/idle",
+      "id": "dao_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/dao_enemy/idle.png"
+    },
+    {
+      "key": "unit/dun/idle",
+      "id": "dun",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/dun/idle.png"
+    },
+    {
+      "key": "unit/dun_enemy/idle",
+      "id": "dun_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/dun_enemy/idle.png"
+    },
+    {
+      "key": "unit/e_lang/idle",
+      "id": "e_lang",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/e_lang/idle.png"
+    },
+    {
+      "key": "unit/e_liu/idle",
+      "id": "e_liu",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/e_liu/idle.png"
+    },
+    {
+      "key": "unit/e_shan/idle",
+      "id": "e_shan",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/e_shan/idle.png"
+    },
+    {
+      "key": "unit/gong/idle",
+      "id": "gong",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/gong/idle.png"
+    },
+    {
+      "key": "unit/gong_enemy/idle",
+      "id": "gong_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/gong_enemy/idle.png"
+    },
+    {
+      "key": "unit/huo/idle",
+      "id": "huo",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/huo/idle.png"
+    },
+    {
+      "key": "unit/huo_enemy/idle",
+      "id": "huo_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/huo_enemy/idle.png"
+    },
+    {
+      "key": "unit/lia/idle",
+      "id": "lia",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/lia/idle.png"
+    },
+    {
+      "key": "unit/lia_enemy/idle",
+      "id": "lia_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/lia_enemy/idle.png"
+    },
+    {
+      "key": "unit/mao/idle",
+      "id": "mao",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/mao/idle.png"
+    },
+    {
+      "key": "unit/mao_enemy/idle",
+      "id": "mao_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/mao_enemy/idle.png"
+    },
+    {
+      "key": "unit/nub/idle",
+      "id": "nub",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/nub/idle.png"
+    },
+    {
+      "key": "unit/nub_enemy/idle",
+      "id": "nub_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/nub_enemy/idle.png"
+    },
+    {
+      "key": "unit/nuc/idle",
+      "id": "nuc",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/nuc/idle.png"
+    },
+    {
+      "key": "unit/nuc_enemy/idle",
+      "id": "nuc_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/nuc_enemy/idle.png"
+    },
+    {
+      "key": "unit/qqi/idle",
+      "id": "qqi",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/qqi/idle.png"
+    },
+    {
+      "key": "unit/qqi_enemy/idle",
+      "id": "qqi_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/qqi_enemy/idle.png"
+    },
+    {
+      "key": "unit/tie/idle",
+      "id": "tie",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/tie/idle.png"
+    },
+    {
+      "key": "unit/tie_enemy/idle",
+      "id": "tie_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/tie_enemy/idle.png"
+    },
+    {
+      "key": "unit/zqi/idle",
+      "id": "zqi",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/zqi/idle.png"
+    },
+    {
+      "key": "unit/zqi_enemy/idle",
+      "id": "zqi_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/zqi_enemy/idle.png"
+    },
+    {
+      "key": "unit/zu/idle",
+      "id": "zu",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/zu/idle.png"
+    },
+    {
+      "key": "unit/zu_enemy/idle",
+      "id": "zu_enemy",
+      "category": "unit",
+      "variant": "idle",
+      "path": "Assets/Art/Units/zu_enemy/idle.png"
+    }
+  ]
+}

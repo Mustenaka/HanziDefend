@@ -50,6 +50,7 @@ namespace HanziDefend.Data
             Bases = levelCatalog.Bases;
 
             Validate();
+            Economy.Damage.BuildTypeMultiplierLookup();
         }
 
         public UnitCatalog UnitCatalog { get; }
@@ -258,16 +259,40 @@ namespace HanziDefend.Data
                 Require(unit.Layer != UnitLayer.Unknown, $"Unit '{unit.Id}' has invalid layer.");
                 Require(unit.SpawnMode != UnitSpawnMode.Unknown, $"Unit '{unit.Id}' has invalid spawnMode.");
                 Require(unit.Targeting != TargetingMode.Unknown, $"Unit '{unit.Id}' has invalid targeting.");
+                Require(unit.UnitType != UnitType.Unknown, $"Unit '{unit.Id}' has invalid unitType.");
+                Require(unit.ArmorType != ArmorType.Unknown, $"Unit '{unit.Id}' has invalid armorType.");
+                Require(unit.AtkType != AttackType.Unknown, $"Unit '{unit.Id}' has invalid atkType.");
                 Require(unit.GridW > 0 && unit.GridH > 0, $"Unit '{unit.Id}' grid size must be positive.");
+                Require(unit.Footprint == UnitFootprintShape.Rectangle
+                        || unit.Footprint == UnitFootprintShape.MissingUpperRight
+                        || unit.Footprint == UnitFootprintShape.MissingLowerLeft,
+                    $"Unit '{unit.Id}' has invalid footprint.");
+                if (unit.Footprint == UnitFootprintShape.MissingUpperRight ||
+                    unit.Footprint == UnitFootprintShape.MissingLowerLeft)
+                {
+                    Require(unit.GridW == 2 && unit.GridH == 2,
+                        $"Unit '{unit.Id}' footprint '{unit.Footprint}' requires a 2x2 bounding box.");
+                }
                 Require(unit.Effects != null, $"Unit '{unit.Id}' effects must be an array.");
+                Require(unit.BonusVs != null, $"Unit '{unit.Id}' bonusVs must be an array.");
+                Require(unit.Traits != null, $"Unit '{unit.Id}' traits must be an array.");
                 ValidateCurve(unit.Hp, unit.Id, "hp", true);
                 ValidateCurve(unit.Atk, unit.Id, "atk", false);
                 ValidateCurve(unit.Range, unit.Id, "range", false);
+                ValidateCurve(unit.MinRange, unit.Id, "minRange", false);
                 ValidateCurve(unit.AtkSpeed, unit.Id, "atkSpeed", false);
                 ValidateCurve(unit.Cooldown, unit.Id, "cooldown", false);
                 ValidateCurve(unit.Armor, unit.Id, "armor", false);
                 ValidateCurve(unit.Pierce, unit.Id, "pierce", false);
                 ValidateCurve(unit.MoveSpeed, unit.Id, "moveSpeed", false);
+                for (int level = 1; level <= 4; level++)
+                {
+                    Require(Formula.StatAtLevel(unit.MinRange.Base, unit.MinRange.Growth, level)
+                            <= Formula.StatAtLevel(unit.Range.Base, unit.Range.Growth, level),
+                        $"Unit '{unit.Id}' minRange cannot exceed range at level {level}.");
+                }
+                ValidateBonuses(unit.BonusVs, $"Unit '{unit.Id}'");
+                ValidateTraits(unit);
                 ValidateEffectReferences(unit.Effects, $"Unit '{unit.Id}'");
             }
 
@@ -278,10 +303,14 @@ namespace HanziDefend.Data
                 RequireText(boss.Name, $"Boss '{boss.Id}' name");
                 RequireText(boss.DisplayName, $"Boss '{boss.Id}' displayName");
                 ValidateBase(boss, $"Boss '{boss.Id}'");
+                Require(boss.AtkType != AttackType.Unknown && boss.AtkType != AttackType.None,
+                    $"Boss '{boss.Id}' has invalid atkType.");
                 RequireFiniteNonNegative(boss.Atk, $"Boss '{boss.Id}' atk");
                 RequireFiniteNonNegative(boss.Range, $"Boss '{boss.Id}' range");
                 RequireFiniteNonNegative(boss.AtkSpeed, $"Boss '{boss.Id}' atkSpeed");
                 RequireFiniteNonNegative(boss.Pierce, $"Boss '{boss.Id}' pierce");
+                Require(boss.BonusVs != null, $"Boss '{boss.Id}' bonusVs must be an array.");
+                ValidateBonuses(boss.BonusVs, $"Boss '{boss.Id}'");
                 Require(boss.Effects != null, $"Boss '{boss.Id}' effects must be an array.");
                 ValidateEffectReferences(boss.Effects, $"Boss '{boss.Id}'");
             }
@@ -294,9 +323,20 @@ namespace HanziDefend.Data
                 Require(commander != null, "commanders.json contains a null commander entry.");
                 RequireId(commander.Id, "commander id");
                 RequireText(commander.Name, $"Commander '{commander.Id}' name");
-                RequireEffect(commander.PassiveEffectId, $"Commander '{commander.Id}' passiveEffectId");
-                RequireEffect(commander.ActiveEffectId, $"Commander '{commander.Id}' activeEffectId");
+                RequireText(commander.DisplayName, $"Commander '{commander.Id}' displayName");
+                Require(commander.Faction == UnitFaction.Ally || commander.Faction == UnitFaction.Enemy,
+                    $"Commander '{commander.Id}' faction must be Ally or Enemy.");
+                if (!string.IsNullOrEmpty(commander.PassiveEffectId))
+                {
+                    RequireEffect(commander.PassiveEffectId, $"Commander '{commander.Id}' passiveEffectId");
+                }
+                if (!string.IsNullOrEmpty(commander.ActiveEffectId))
+                {
+                    RequireEffect(commander.ActiveEffectId, $"Commander '{commander.Id}' activeEffectId");
+                }
                 RequireFiniteNonNegative(commander.ActiveCooldown, $"Commander '{commander.Id}' activeCooldown");
+                Require(!string.IsNullOrEmpty(commander.ActiveEffectId) || commander.ActiveCooldown == 0f,
+                    $"Commander '{commander.Id}' without an active effect must have zero activeCooldown.");
             }
         }
 
@@ -400,13 +440,19 @@ namespace HanziDefend.Data
 
             foreach (CommanderDef commander in Commanders)
             {
-                EffectDef passive = EffectsById[commander.PassiveEffectId];
-                EffectDef active = EffectsById[commander.ActiveEffectId];
-                Require(passive.Trigger == EffectTrigger.BattleStart,
-                    $"Commander '{commander.Id}' passive effect '{passive.Id}' must use trigger BattleStart.");
-                Require(active.Trigger == EffectTrigger.Manual,
-                    $"Commander '{commander.Id}' active effect '{active.Id}' must use trigger Manual.");
-                commanderPassiveEffects.Add(passive.Id);
+                if (!string.IsNullOrEmpty(commander.PassiveEffectId))
+                {
+                    EffectDef passive = EffectsById[commander.PassiveEffectId];
+                    Require(passive.Trigger == EffectTrigger.BattleStart,
+                        $"Commander '{commander.Id}' passive effect '{passive.Id}' must use trigger BattleStart.");
+                    commanderPassiveEffects.Add(passive.Id);
+                }
+                if (!string.IsNullOrEmpty(commander.ActiveEffectId))
+                {
+                    EffectDef active = EffectsById[commander.ActiveEffectId];
+                    Require(active.Trigger == EffectTrigger.Manual,
+                        $"Commander '{commander.Id}' active effect '{active.Id}' must use trigger Manual.");
+                }
             }
 
             foreach (EffectDef effect in Effects)
@@ -503,10 +549,16 @@ namespace HanziDefend.Data
                     $"Level '{level.Id}' references unknown wave set '{level.WaveSetId}'.");
                 RequireFinitePositive(level.BaseHp, $"Level '{level.Id}' baseHp");
                 Require(level.StartCoins >= 0, $"Level '{level.Id}' startCoins cannot be negative.");
-                Require(level.GridCols > 0 && level.GridRows > 0,
-                    $"Level '{level.Id}' starting grid must be positive.");
-                Require(level.GridMaxCols >= level.GridCols && level.GridMaxRows >= level.GridRows,
-                    $"Level '{level.Id}' max grid cannot be smaller than its starting grid.");
+                Require(level.GridWidth > 0 && level.GridHeight > 0,
+                    $"Level '{level.Id}' grid size must be positive.");
+                Require(level.InitialUnlock != null,
+                    $"Level '{level.Id}' initialUnlock is required.");
+                Require(level.InitialUnlock.Width > 0 && level.InitialUnlock.Height > 0,
+                    $"Level '{level.Id}' initialUnlock must unlock at least one cell.");
+                Require(level.InitialUnlock.Col >= 0 && level.InitialUnlock.Row >= 0
+                        && level.InitialUnlock.Col + level.InitialUnlock.Width <= level.GridWidth
+                        && level.InitialUnlock.Row + level.InitialUnlock.Height <= level.GridHeight,
+                    $"Level '{level.Id}' initialUnlock falls outside its {level.GridWidth}x{level.GridHeight} grid.");
             }
         }
 
@@ -515,9 +567,28 @@ namespace HanziDefend.Data
             Require(Economy != null, "economy.json must contain an object.");
             Require(Economy.RefreshBaseCost >= 0, "economy.refreshBaseCost cannot be negative.");
             Require(Economy.RefreshCostGrowth >= 0, "economy.refreshCostGrowth cannot be negative.");
+            Require(Economy.GridUnlock != null, "economy.gridUnlock is required.");
+            Require(Economy.GridUnlock.PurchaseBaseCost >= 0,
+                "economy.gridUnlock.purchaseBaseCost cannot be negative.");
+            Require(Economy.GridUnlock.PurchaseCostGrowth >= 0,
+                "economy.gridUnlock.purchaseCostGrowth cannot be negative.");
+            Require(Economy.GridUnlock.AutoUnlockPerMinorStage >= 0,
+                "economy.gridUnlock.autoUnlockPerMinorStage cannot be negative.");
+            Require(Economy.DeployUi != null, "economy.deployUi is required.");
+            RequireFinitePositive(Economy.DeployUi.HandCardScale, "economy.deployUi.handCardScale");
+            RequireFinitePositive(Economy.DeployUi.SnapRadiusCells, "economy.deployUi.snapRadiusCells");
+            RequireFinite(Economy.DeployUi.CellSpacingRatio, "economy.deployUi.cellSpacingRatio");
+            RequireFinite(Economy.DeployUi.DragLiftCells, "economy.deployUi.dragLiftCells");
+            Require(Economy.DeployUi.CellSpacingRatio >= 0f,
+                "economy.deployUi.cellSpacingRatio cannot be negative.");
+            Require(Economy.DeployUi.DragLiftCells >= 0f,
+                "economy.deployUi.dragLiftCells cannot be negative.");
             Require(Economy.DropCoins != null, "economy.dropCoins is required.");
             Require(Economy.Damage != null, "economy.damage is required.");
             Require(Economy.CardWeights != null, "economy.cardWeights is required.");
+            Require(Economy.CardOffer != null, "economy.cardOffer is required.");
+            Require(Economy.CardPool != null, "economy.cardPool is required.");
+            Require(Economy.SettlementReward != null, "economy.settlementReward is required.");
             Require(Economy.Battle != null, "economy.battle is required.");
 
             DropCoinsDef drops = Economy.DropCoins;
@@ -526,12 +597,25 @@ namespace HanziDefend.Data
             Require(drops.Boss >= drops.Elite, "economy.dropCoins.boss must be at least elite.");
             RequireFinitePositive(Economy.Damage.ArmorScale, "economy.damage.armorScale");
             Require(Economy.Damage.MinimumDamage >= 1, "economy.damage.minimumDamage must be positive.");
+            RequireFinitePositive(Economy.Damage.NeutralTypeMultiplier, "economy.damage.neutralTypeMultiplier");
+            ValidateTypeMultipliers(Economy.Damage.TypeMultipliers);
 
             CardWeightsDef weights = Economy.CardWeights;
-            Require(weights.Unit >= 0 && weights.Expand >= 0 && weights.Buff >= 0 && weights.Global >= 0,
+            Require(weights.Unit >= 0 && weights.Unlock >= 0 && weights.Buff >= 0 && weights.Global >= 0,
                 "economy.cardWeights values cannot be negative.");
-            int total = checked(weights.Unit + weights.Expand + weights.Buff + weights.Global);
+            int total = checked(weights.Unit + weights.Unlock + weights.Buff + weights.Global);
             Require(total == 100, $"economy.cardWeights must total 100, but total {total}.");
+
+            CardOfferRulesDef cardOffer = Economy.CardOffer;
+            Require(cardOffer.BaseCount > 0, "economy.cardOffer.baseCount must be positive.");
+            Require(cardOffer.LuckyExtraCount > 0,
+                "economy.cardOffer.luckyExtraCount must be positive.");
+            RequireFinite(cardOffer.LuckyChance, "economy.cardOffer.luckyChance");
+            Require(cardOffer.LuckyChance >= 0f && cardOffer.LuckyChance <= 1f,
+                "economy.cardOffer.luckyChance must be in [0,1].");
+
+            ValidateCardPool(Economy.CardPool);
+            ValidateSettlementReward(Economy.SettlementReward);
 
             BattleRulesDef battle = Economy.Battle;
             Require(battle.TickRateHz > 0, "economy.battle.tickRateHz must be positive.");
@@ -543,6 +627,10 @@ namespace HanziDefend.Data
             ValidatePosition(battle.AllyBasePosition, "economy.battle.allyBasePosition");
             ValidatePosition(battle.EnemyBasePosition, "economy.battle.enemyBasePosition");
             ValidatePosition(battle.EnemySpawnCenter, "economy.battle.enemySpawnCenter");
+            ValidatePosition(battle.DeploymentOriginOffset, "economy.battle.deploymentOriginOffset");
+            ValidatePosition(battle.DeploymentCellSize, "economy.battle.deploymentCellSize");
+            Require(battle.DeploymentCellSize.X > 0f && battle.DeploymentCellSize.Y > 0f,
+                "economy.battle.deploymentCellSize values must be positive.");
             Require(battle.AllyBasePosition.X != battle.EnemyBasePosition.X
                     || battle.AllyBasePosition.Y != battle.EnemyBasePosition.Y,
                 "economy.battle allyBasePosition and enemyBasePosition must be different.");
@@ -553,6 +641,53 @@ namespace HanziDefend.Data
             Require(position != null, $"{context} is required.");
             RequireFinite(position.X, $"{context}.x");
             RequireFinite(position.Y, $"{context}.y");
+        }
+
+        private void ValidateSettlementReward(SettlementRewardRulesDef rules)
+        {
+            Require(rules.SlotCount > 0, "economy.settlementReward.slotCount must be positive.");
+            Require(rules.BuffWeight >= 0 && rules.ActiveSkillWeight >= 0,
+                "economy.settlementReward weights cannot be negative.");
+            int totalWeight = checked(rules.BuffWeight + rules.ActiveSkillWeight);
+            Require(totalWeight == 100,
+                $"economy.settlementReward weights must total 100, but total {totalWeight}.");
+
+            var pooled = new HashSet<string>(StringComparer.Ordinal);
+            ValidateSettlementEffectPool(
+                rules.BuffEffectIds,
+                "buffEffectIds",
+                pooled);
+            ValidateSettlementEffectPool(
+                rules.ActiveSkillEffectIds,
+                "activeSkillEffectIds",
+                pooled);
+
+            Require(rules.UniqueEffectIds != null,
+                "economy.settlementReward.uniqueEffectIds must be an array.");
+            var unique = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string effectId in rules.UniqueEffectIds)
+            {
+                RequireEffect(effectId, "economy.settlementReward.uniqueEffectIds effect id");
+                Require(unique.Add(effectId),
+                    $"economy.settlementReward.uniqueEffectIds repeats effect '{effectId}'.");
+                Require(pooled.Contains(effectId),
+                    $"economy.settlementReward unique effect '{effectId}' is not in a reward pool.");
+            }
+        }
+
+        private void ValidateSettlementEffectPool(
+            string[] effectIds,
+            string fieldName,
+            ISet<string> pooled)
+        {
+            Require(effectIds != null && effectIds.Length > 0,
+                $"economy.settlementReward.{fieldName} must contain at least one effect id.");
+            foreach (string effectId in effectIds)
+            {
+                RequireEffect(effectId, $"economy.settlementReward.{fieldName} effect id");
+                Require(pooled.Add(effectId),
+                    $"economy.settlementReward effect '{effectId}' is duplicated across reward pools.");
+            }
         }
 
         private void ValidateEffectReferences(IEnumerable<string> effectIds, string owner)
@@ -584,8 +719,189 @@ namespace HanziDefend.Data
 
         private static void ValidateBase(BaseDef value, string context)
         {
+            RequireId(value.Id, $"{context} id");
+            RequireText(value.Name, $"{context} name");
+            RequireText(value.DisplayName, $"{context} displayName");
             RequireFinitePositive(value.Hp, $"{context} hp");
             RequireFiniteNonNegative(value.Armor, $"{context} armor");
+            Require(value.UnitType == UnitType.Building, $"{context} unitType must be Building.");
+            Require(value.ArmorType == ArmorType.Building, $"{context} armorType must be Building.");
+        }
+
+        private static void ValidateBonuses(IEnumerable<BonusVsDef> bonuses, string context)
+        {
+            var targets = new HashSet<BonusTarget>();
+            foreach (BonusVsDef bonus in bonuses)
+            {
+                Require(bonus != null, $"{context} bonusVs contains a null entry.");
+                Require(bonus.Target != BonusTarget.Unknown, $"{context} bonusVs has an invalid target.");
+                Require(targets.Add(bonus.Target), $"{context} repeats bonus target '{bonus.Target}'.");
+                RequireFiniteNonNegative(bonus.Value, $"{context} bonusVs {bonus.Target} value");
+            }
+        }
+
+        private void ValidateTraits(UnitDef unit)
+        {
+            var types = new HashSet<UnitTraitType>();
+            foreach (UnitTraitDef trait in unit.Traits)
+            {
+                Require(trait != null, $"Unit '{unit.Id}' traits contains a null entry.");
+                Require(trait.Type != UnitTraitType.Unknown, $"Unit '{unit.Id}' has an invalid trait type.");
+                Require(types.Add(trait.Type), $"Unit '{unit.Id}' repeats trait '{trait.Type}'.");
+                RequireFiniteNonNegative(trait.Multiplier, $"Unit '{unit.Id}' trait {trait.Type} multiplier");
+                RequireFiniteNonNegative(trait.DecayRate, $"Unit '{unit.Id}' trait {trait.Type} decayRate");
+                RequireFiniteNonNegative(trait.MinimumMultiplier,
+                    $"Unit '{unit.Id}' trait {trait.Type} minimumMultiplier");
+
+                switch (trait.Type)
+                {
+                    case UnitTraitType.Charge:
+                        Require(trait.Multiplier > 0f,
+                            $"Unit '{unit.Id}' Charge multiplier must be positive.");
+                        break;
+                    case UnitTraitType.PiercingShot:
+                        Require(trait.Multiplier > 0f,
+                            $"Unit '{unit.Id}' PiercingShot multiplier must be positive.");
+                        Require(trait.DecayRate > 0f && trait.DecayRate < 1f,
+                            $"Unit '{unit.Id}' PiercingShot decayRate must be in (0,1).");
+                        Require(trait.MinimumMultiplier > 0f,
+                            $"Unit '{unit.Id}' PiercingShot minimumMultiplier must be positive.");
+                        break;
+                    case UnitTraitType.FireAura:
+                        Require(trait.Multiplier > 0f && trait.Multiplier <= 1f,
+                            $"Unit '{unit.Id}' FireAura multiplier must be in (0,1].");
+                        Require(trait.MinimumMultiplier > 0f,
+                            $"Unit '{unit.Id}' FireAura radius must be positive.");
+                        break;
+                    case UnitTraitType.IceAura:
+                        Require(trait.Multiplier > 0f && trait.Multiplier < 1f,
+                            $"Unit '{unit.Id}' IceAura multiplier must be in (0,1).");
+                        Require(trait.DecayRate > 0f,
+                            $"Unit '{unit.Id}' IceAura duration must be positive.");
+                        Require(trait.MinimumMultiplier > 0f,
+                            $"Unit '{unit.Id}' IceAura radius must be positive.");
+                        break;
+                    case UnitTraitType.DeathSpawn:
+                        RequireId(trait.UnitId, $"Unit '{unit.Id}' DeathSpawn unitId");
+                        Require(UnitsById.ContainsKey(trait.UnitId),
+                            $"Unit '{unit.Id}' DeathSpawn references unknown unit '{trait.UnitId}'.");
+                        Require(trait.Count > 0, $"Unit '{unit.Id}' DeathSpawn count must be positive.");
+                        break;
+                }
+            }
+        }
+
+        private static void ValidateTypeMultipliers(TypeMultiplierDef[] entries)
+        {
+            Require(entries != null, "economy.damage.typeMultipliers is required.");
+            var seen = new HashSet<(ArmorType armor, AttackType attack)>();
+            foreach (TypeMultiplierDef entry in entries)
+            {
+                Require(entry != null, "economy.damage.typeMultipliers contains a null entry.");
+                Require(entry.ArmorType == ArmorType.Unarmored
+                        || entry.ArmorType == ArmorType.Light
+                        || entry.ArmorType == ArmorType.Heavy
+                        || entry.ArmorType == ArmorType.Building,
+                    $"economy.damage.typeMultipliers has invalid armorType '{entry.ArmorType}'.");
+                Require(entry.AtkType == AttackType.Slash
+                        || entry.AtkType == AttackType.Blunt
+                        || entry.AtkType == AttackType.Arrow
+                        || entry.AtkType == AttackType.Siege,
+                    $"economy.damage.typeMultipliers has invalid atkType '{entry.AtkType}'.");
+                Require(seen.Add((entry.ArmorType, entry.AtkType)),
+                    $"economy.damage.typeMultipliers repeats {entry.ArmorType}/{entry.AtkType}.");
+                RequireFinitePositive(entry.Value,
+                    $"economy.damage.typeMultipliers {entry.ArmorType}/{entry.AtkType} value");
+            }
+
+            ArmorType[] armorTypes = { ArmorType.Unarmored, ArmorType.Light, ArmorType.Heavy, ArmorType.Building };
+            AttackType[] attackTypes = { AttackType.Slash, AttackType.Blunt, AttackType.Arrow, AttackType.Siege };
+            foreach (ArmorType armorType in armorTypes)
+            foreach (AttackType attackType in attackTypes)
+            {
+                Require(seen.Contains((armorType, attackType)),
+                    $"economy.damage.typeMultipliers is missing {armorType}/{attackType}.");
+            }
+            Require(seen.Count == 16, "economy.damage.typeMultipliers must contain exactly 16 entries.");
+        }
+
+        private void ValidateCardPool(CardPoolRulesDef cardPool)
+        {
+            Require(cardPool.ShapeUnlocks != null, "economy.cardPool.shapeUnlocks is required.");
+            var expected = new HashSet<(int width, int height)>
+            {
+                (1, 1), (2, 1), (1, 2), (2, 2), (3, 1)
+            };
+            var seen = new HashSet<(int width, int height)>();
+            foreach (FootprintUnlockDef unlock in cardPool.ShapeUnlocks)
+            {
+                Require(unlock != null, "economy.cardPool.shapeUnlocks contains a null entry.");
+                Require(unlock.GridW > 0 && unlock.GridH > 0,
+                    "economy.cardPool.shapeUnlocks grid dimensions must be positive.");
+                Require(expected.Contains((unlock.GridW, unlock.GridH)),
+                    $"economy.cardPool.shapeUnlocks contains unsupported shape {unlock.GridW}x{unlock.GridH}.");
+                Require(seen.Add((unlock.GridW, unlock.GridH)),
+                    $"economy.cardPool.shapeUnlocks repeats shape {unlock.GridW}x{unlock.GridH}.");
+            }
+            Require(seen.SetEquals(expected),
+                "economy.cardPool.shapeUnlocks must define 1x1, 2x1, 1x2, 2x2 and 3x1 exactly once.");
+            foreach (UnitDef unit in AllyUnits)
+            {
+                Require(seen.Contains((unit.GridW, unit.GridH)),
+                    $"economy.cardPool.shapeUnlocks does not cover ally unit '{unit.Id}' shape {unit.GridW}x{unit.GridH}.");
+            }
+            Require(cardPool.GuaranteeBeforeStageIndex > 1,
+                "economy.cardPool.guaranteeBeforeStageIndex must be greater than 1.");
+            Require(cardPool.GuaranteeAttackType != AttackType.Unknown
+                    && cardPool.GuaranteeAttackType != AttackType.None,
+                "economy.cardPool.guaranteeAttackType must be a combat attack type.");
+            Require(AllyUnits.Any(unit => unit.AtkType == cardPool.GuaranteeAttackType),
+                $"economy.cardPool guarantee attack type '{cardPool.GuaranteeAttackType}' has no ally unit.");
+
+            var reservedEffectIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (UnitDef unit in Units)
+            {
+                reservedEffectIds.UnionWith(unit.Effects);
+            }
+            foreach (BossDef boss in Bosses)
+            {
+                reservedEffectIds.UnionWith(boss.Effects);
+            }
+            foreach (CommanderDef commander in Commanders)
+            {
+                if (!string.IsNullOrEmpty(commander.PassiveEffectId))
+                {
+                    reservedEffectIds.Add(commander.PassiveEffectId);
+                }
+                if (!string.IsNullOrEmpty(commander.ActiveEffectId))
+                {
+                    reservedEffectIds.Add(commander.ActiveEffectId);
+                }
+            }
+
+            var pooledEffectIds = new HashSet<string>(StringComparer.Ordinal);
+            ValidateEffectPool(cardPool.BuffEffectIds, "buffEffectIds", reservedEffectIds, pooledEffectIds);
+            ValidateEffectPool(cardPool.GlobalEffectIds, "globalEffectIds", reservedEffectIds, pooledEffectIds);
+        }
+
+        private void ValidateEffectPool(
+            string[] effectIds,
+            string fieldName,
+            ISet<string> reservedEffectIds,
+            ISet<string> pooledEffectIds)
+        {
+            Require(effectIds != null && effectIds.Length > 0,
+                $"economy.cardPool.{fieldName} must contain at least one effect id.");
+            foreach (string effectId in effectIds)
+            {
+                RequireId(effectId, $"economy.cardPool.{fieldName} effect id");
+                Require(EffectsById.ContainsKey(effectId),
+                    $"economy.cardPool.{fieldName} references unknown effect '{effectId}'.");
+                Require(!reservedEffectIds.Contains(effectId),
+                    $"economy.cardPool.{fieldName} effect '{effectId}' is reserved by a unit, boss or commander.");
+                Require(pooledEffectIds.Add(effectId),
+                    $"economy.cardPool effect '{effectId}' is duplicated across card effect pools.");
+            }
         }
 
         private static IReadOnlyDictionary<string, T> CreateIndex<T>(

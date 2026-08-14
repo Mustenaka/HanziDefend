@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05628e5aa9356e74388c9f9aac6d62d7, type: 3}
+  m_Name: HanziDefendFeedbackAudioCatalog
+  m_EditorClassIdentifier: HanziDefend.View::HanziDefend.View.Feedback.FeedbackAudioCatalog
+  Entries:
+  - ClipId: deploy
+    Clip: {fileID: 8300000, guid: b549b4d7224e42348bcee29a9bd594d9, type: 3}
+  - ClipId: merge
+    Clip: {fileID: 8300000, guid: ff56cde3e6c98cb4396c6d78350777c8, type: 3}
+  - ClipId: spawn
+    Clip: {fileID: 8300000, guid: 5ae3741d6d940304b8630a4843cfc8ef, type: 3}
+  - ClipId: hit
+    Clip: {fileID: 8300000, guid: 646f3fab08d39bb42aa2e739e1ee55d4, type: 3}
+  - ClipId: victory
+    Clip: {fileID: 8300000, guid: e0327d982685b85469de461e85d906c0, type: 3}
+  - ClipId: defeat
+    Clip: {fileID: 8300000, guid: 1e462b680edda984f927c25403f93b44, type: 3}
+  - ClipId: settlement
+    Clip: {fileID: 8300000, guid: c9a5513e9d9f4204281cf91cb87aa6ff, type: 3}

@@ -1,0 +1,164 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BattleUnits
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 0
+      compressionQuality: 0
+      maxTextureSize: 0
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 1024
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 4
+      m_TextureCompression: 0
+      m_CompressionQuality: 0
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 4
+      m_BuildTarget: WebGL
+      m_MaxTextureSize: 1024
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 4
+      m_TextureCompression: 0
+      m_CompressionQuality: 0
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 24f60bfc5fe0d7a4aabd91a726c882c1, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 53edd87026dba464ab755601599e288c: 21300000
+    - 70e5677124cc59b48ad2097fb4ca683f: 21300000
+    - 39218da111874a6419b65abd7318da6a: 21300000
+    - e7bbce838187f5c469781aff86e326d0: 21300000
+    - 488c6ed37e0060d4ab077ce96f409680: 21300000
+    - 9e8e7805c853e0f44bfddbdd61972e58: 21300000
+    - 8fb0f0258729bc842b75490cd61177d5: 21300000
+    - c8ee30458057bf64c8be3b656b31c318: 21300000
+    - 399333a5e2a5af742ab520e1b3dbf944: 21300000
+    - be724216fb30e084e84bdf1fea6dc09d: 21300000
+    - 3c732e7682a7a094fa51c73eae93d0d0: 21300000
+    - 0c7c9ed69bfbf2646a063fdfc2e7452c: 21300000
+    - 64f3ef474b900c941a506cb26dfc7a5f: 21300000
+    - 917a10972ea195847847e2e230d6fe0e: 21300000
+    - 512c71c7229bf124cbd45f47b7ced4fd: 21300000
+    - d3b8e80943d5671458ba02a6b917c9d2: 21300000
+    - 42156a09df7366241960204b9d0db091: 21300000
+    - 45bd158a922daf548a7cc0edf99675c2: 21300000
+    - a0f9c6aae4d4a0246ad0dee14bb9f074: 21300000
+    - 6ea4beabab38f884997b2678b7f841cd: 21300000
+    - 8faac4bbc1f56e1448f19226124f7e82: 21300000
+    - 2ddfbc4c7e6b98941881fd1da962629a: 21300000
+    - 0da3765c31ed529448fd09a6f93a38ff: 21300000
+    - 70f1c61d9f03a0a428b1f2a94fa13daf: 21300000
+    - 535ebc9d8d20a4b49b2062bd50126615: 21300000
+    - aa2f99cd64f9afb49987d4e21687aab4: 21300000
+    - 728e5ecd9a39bdb4d8619c57d7264165: 21300000
+    - 3fe6797eed3823147be1be54d5df90c3: 21300000
+    - 2518eeae5f3acd649acc42ed46e26f88: 21300000
+    - e103e93fea9f7ee4cace8b1e76a7a25d: 21300000
+    - ca5052af453b2b1488f2249083f67850: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 53edd87026dba464ab755601599e288c, type: 3}
+  - {fileID: 21300000, guid: 70e5677124cc59b48ad2097fb4ca683f, type: 3}
+  - {fileID: 21300000, guid: 39218da111874a6419b65abd7318da6a, type: 3}
+  - {fileID: 21300000, guid: e7bbce838187f5c469781aff86e326d0, type: 3}
+  - {fileID: 21300000, guid: 488c6ed37e0060d4ab077ce96f409680, type: 3}
+  - {fileID: 21300000, guid: 9e8e7805c853e0f44bfddbdd61972e58, type: 3}
+  - {fileID: 21300000, guid: 8fb0f0258729bc842b75490cd61177d5, type: 3}
+  - {fileID: 21300000, guid: c8ee30458057bf64c8be3b656b31c318, type: 3}
+  - {fileID: 21300000, guid: 399333a5e2a5af742ab520e1b3dbf944, type: 3}
+  - {fileID: 21300000, guid: be724216fb30e084e84bdf1fea6dc09d, type: 3}
+  - {fileID: 21300000, guid: 3c732e7682a7a094fa51c73eae93d0d0, type: 3}
+  - {fileID: 21300000, guid: 0c7c9ed69bfbf2646a063fdfc2e7452c, type: 3}
+  - {fileID: 21300000, guid: 64f3ef474b900c941a506cb26dfc7a5f, type: 3}
+  - {fileID: 21300000, guid: 917a10972ea195847847e2e230d6fe0e, type: 3}
+  - {fileID: 21300000, guid: 512c71c7229bf124cbd45f47b7ced4fd, type: 3}
+  - {fileID: 21300000, guid: d3b8e80943d5671458ba02a6b917c9d2, type: 3}
+  - {fileID: 21300000, guid: 42156a09df7366241960204b9d0db091, type: 3}
+  - {fileID: 21300000, guid: 45bd158a922daf548a7cc0edf99675c2, type: 3}
+  - {fileID: 21300000, guid: a0f9c6aae4d4a0246ad0dee14bb9f074, type: 3}
+  - {fileID: 21300000, guid: 6ea4beabab38f884997b2678b7f841cd, type: 3}
+  - {fileID: 21300000, guid: 8faac4bbc1f56e1448f19226124f7e82, type: 3}
+  - {fileID: 21300000, guid: 2ddfbc4c7e6b98941881fd1da962629a, type: 3}
+  - {fileID: 21300000, guid: 0da3765c31ed529448fd09a6f93a38ff, type: 3}
+  - {fileID: 21300000, guid: 70f1c61d9f03a0a428b1f2a94fa13daf, type: 3}
+  - {fileID: 21300000, guid: 535ebc9d8d20a4b49b2062bd50126615, type: 3}
+  - {fileID: 21300000, guid: aa2f99cd64f9afb49987d4e21687aab4, type: 3}
+  - {fileID: 21300000, guid: 728e5ecd9a39bdb4d8619c57d7264165, type: 3}
+  - {fileID: 21300000, guid: 3fe6797eed3823147be1be54d5df90c3, type: 3}
+  - {fileID: 21300000, guid: 2518eeae5f3acd649acc42ed46e26f88, type: 3}
+  - {fileID: 21300000, guid: e103e93fea9f7ee4cace8b1e76a7a25d, type: 3}
+  - {fileID: 21300000, guid: ca5052af453b2b1488f2249083f67850, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  - idle
+  m_RenderDataMap: {}
+  m_Tag: BattleUnits
+  m_IsVariant: 0

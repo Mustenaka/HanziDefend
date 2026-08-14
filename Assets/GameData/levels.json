@@ -4,66 +4,71 @@
       "id": "level_1_1",
       "stageIndex": 1,
       "waveSetId": "main_20",
-      "baseHp": 1000.0,
+      "baseHp": 4000.0,
       "startCoins": 45,
-      "gridCols": 3,
-      "gridRows": 3,
-      "gridMaxCols": 7,
-      "gridMaxRows": 3
+      "gridWidth": 7,
+      "gridHeight": 7,
+      "initialUnlock": { "col": 2, "row": 2, "width": 3, "height": 3 }
     },
     {
       "id": "level_1_2",
       "stageIndex": 2,
-      "waveSetId": "main_20",
-      "baseHp": 1100.0,
+      "waveSetId": "main_20_stage_2",
+      "baseHp": 4000.0,
       "startCoins": 45,
-      "gridCols": 3,
-      "gridRows": 3,
-      "gridMaxCols": 7,
-      "gridMaxRows": 3
+      "gridWidth": 7,
+      "gridHeight": 7,
+      "initialUnlock": { "col": 2, "row": 2, "width": 3, "height": 3 }
     },
     {
       "id": "level_1_3",
       "stageIndex": 3,
-      "waveSetId": "main_20",
-      "baseHp": 1200.0,
+      "waveSetId": "main_20_stage_3",
+      "baseHp": 4000.0,
       "startCoins": 45,
-      "gridCols": 3,
-      "gridRows": 3,
-      "gridMaxCols": 7,
-      "gridMaxRows": 3
+      "gridWidth": 7,
+      "gridHeight": 7,
+      "initialUnlock": { "col": 2, "row": 2, "width": 3, "height": 3 }
     },
     {
       "id": "level_1_4",
       "stageIndex": 4,
-      "waveSetId": "main_20",
-      "baseHp": 1300.0,
+      "waveSetId": "main_20_stage_4",
+      "baseHp": 4000.0,
       "startCoins": 45,
-      "gridCols": 3,
-      "gridRows": 3,
-      "gridMaxCols": 7,
-      "gridMaxRows": 3
+      "gridWidth": 7,
+      "gridHeight": 7,
+      "initialUnlock": { "col": 2, "row": 2, "width": 3, "height": 3 }
     },
     {
       "id": "level_1_5",
       "stageIndex": 5,
-      "waveSetId": "main_20",
-      "baseHp": 1500.0,
+      "waveSetId": "main_20_stage_5",
+      "baseHp": 4000.0,
       "startCoins": 45,
-      "gridCols": 3,
-      "gridRows": 3,
-      "gridMaxCols": 7,
-      "gridMaxRows": 3
+      "gridWidth": 7,
+      "gridHeight": 7,
+      "initialUnlock": { "col": 2, "row": 2, "width": 3, "height": 3 }
     }
   ],
   "bases": {
     "ally": {
-      "hp": 1000.0,
-      "armor": 20.0
+      "id": "bld_ying",
+      "name": "营",
+      "displayName": "我方营地",
+      "hp": 4000.0,
+      "armor": 30.0,
+      "unitType": "Building",
+      "armorType": "Building"
     },
     "enemy": {
+      "id": "base_enemy_anchor",
+      "name": "垒",
+      "displayName": "敌方出口锚点",
       "hp": 1200.0,
-      "armor": 15.0
+      "armor": 15.0,
+      "unitType": "Building",
+      "armorType": "Building"
     }
   }
 }

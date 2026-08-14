@@ -1,0 +1,1898 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-08-14T06:58:50.577998+00:00",
+  "summary": {
+    "records": 77,
+    "errors": 0,
+    "warnings": 1,
+    "placeholders": 2
+  },
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "quality_rejected",
+      "message": "L-corner que_you_shang foreground coverage is 8.18%; maximum is 8%.",
+      "path": "Docs/Art/_inbox/候选处理/角色图/unit_nu_che_idle_2x2_que_you_shang/unit_nu_che_idle_2x2_que_you_shang_dan_feng_v03.png"
+    }
+  ],
+  "records": [
+    {
+      "id": "bao_zha_01",
+      "source": "Docs/Art/_inbox/候选处理/FX/一团爆炸1.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/bao_zha_01.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.29846373582208385,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bao_zha_02",
+      "source": "Docs/Art/_inbox/候选处理/FX/一团爆炸2.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/bao_zha_02.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4653389854220879,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bao_zha_03",
+      "source": "Docs/Art/_inbox/候选处理/FX/一团爆炸3.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/bao_zha_03.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.45338362216982214,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bao_zha_04",
+      "source": "Docs/Art/_inbox/候选处理/FX/一团爆炸4.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/bao_zha_04.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4896878632713435,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bao_zha_05",
+      "source": "Docs/Art/_inbox/候选处理/FX/一团爆炸5.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/bao_zha_05.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.443989759086712,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shuang_dong_01",
+      "source": "Docs/Art/_inbox/候选处理/FX/冰霜结晶1.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shuang_dong_01.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3717030542137568,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shuang_dong_02",
+      "source": "Docs/Art/_inbox/候选处理/FX/冰霜结晶2.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shuang_dong_02.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3204813178371476,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shuang_dong_03",
+      "source": "Docs/Art/_inbox/候选处理/FX/冰霜结晶3.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shuang_dong_03.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3544326417028507,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shuang_dong_04",
+      "source": "Docs/Art/_inbox/候选处理/FX/冰霜结晶4.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shuang_dong_04.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.2626243548555309,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shuang_dong_05",
+      "source": "Docs/Art/_inbox/候选处理/FX/冰霜结晶5.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shuang_dong_05.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.31070653653126584,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "jian_shi",
+      "source": "Docs/Art/_inbox/候选处理/FX/弓箭.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/jian_shi.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.07657728124864867,
+        "borderCoverage": 0.00039872408293460925,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "dao_guang_01",
+      "source": "Docs/Art/_inbox/候选处理/FX/弧形刀光1.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/dao_guang_01.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3936564079475185,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "dao_guang_02",
+      "source": "Docs/Art/_inbox/候选处理/FX/弧形刀光2.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/dao_guang_02.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.38476556041401166,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "dao_guang_03",
+      "source": "Docs/Art/_inbox/候选处理/FX/弧形刀光3.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/dao_guang_03.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3749233712089416,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "dao_guang_04",
+      "source": "Docs/Art/_inbox/候选处理/FX/弧形刀光4.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/dao_guang_04.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.44306639805254766,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "dao_guang_05",
+      "source": "Docs/Art/_inbox/候选处理/FX/弧形刀光5.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/dao_guang_05.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.39128950039300076,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "nu_qiang",
+      "source": "Docs/Art/_inbox/候选处理/FX/弩箭.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/nu_qiang.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.20168697806572397,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "qiang_kou_01",
+      "source": "Docs/Art/_inbox/候选处理/FX/枪口闪光1.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/qiang_kou_01.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.1527660131915987,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "ran_shao_01",
+      "source": "Docs/Art/_inbox/候选处理/FX/火苗1.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/ran_shao_01.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.23845353560790478,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "ran_shao_02",
+      "source": "Docs/Art/_inbox/候选处理/FX/火苗2.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/ran_shao_02.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.20795845638454552,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "ran_shao_03",
+      "source": "Docs/Art/_inbox/候选处理/FX/火苗3.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/ran_shao_03.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.31994205464364117,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "ran_shao_04",
+      "source": "Docs/Art/_inbox/候选处理/FX/火苗4.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/ran_shao_04.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.19837000068679747,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "ran_shao_05",
+      "source": "Docs/Art/_inbox/候选处理/FX/火苗5.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/ran_shao_05.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.2374506841265844,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shi_dan_01",
+      "source": "Docs/Art/_inbox/候选处理/FX/石弹1.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shi_dan_01.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.21048370890979806,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "shi_dan_02",
+      "source": "Docs/Art/_inbox/候选处理/FX/石弹2.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/shi_dan_02.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.2077797618593388,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "ci_bao",
+      "source": "Docs/Art/_inbox/候选处理/FX/穿刺爆点.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/ci_bao.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.19929908503315705,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "chong_ji",
+      "source": "Docs/Art/_inbox/候选处理/FX/钝击冲击波.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/FX/chong_ji.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.6040593545630061,
+        "borderCoverage": 0.00039872408293460925,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_move_up",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_ben_xi_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_move_up.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.37530994415283203,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_slow_on_hit",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_bing_feng_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_slow_on_hit.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.31403160095214844,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_pierce_up",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_chuan_jia_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_pierce_up.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3755159378051758,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "expand_column",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_ge_zi_res_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/expand_column.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.358978271484375,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "skill_breach_base",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_gong_cheng_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/skill_breach_base.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4236116409301758,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_hp_up",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_gu_ben_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_hp_up.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.45847511291503906,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_aspd_up",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_ji_shi_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_aspd_up.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3271665573120117,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_front_shield",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_jian_zhen_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_front_shield.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.43053531646728516,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "currency_coin",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_jin_bi_res_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/currency_coin.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.45075416564941406,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "reward_coins",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_kao_shang_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/reward_coins.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.38079261779785156,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "skill_breakthrough",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_po_zhen_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/skill_breakthrough.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4424247741699219,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_burn_on_hit",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_ran_shao_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_burn_on_hit.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4362678527832031,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "cmd_bei_passive",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_ren_de_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/cmd_bei_passive.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3965158462524414,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "cmd_bei_active",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_ren_xin_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/cmd_bei_active.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.2879600524902344,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_atk_up",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_rui_yi_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_atk_up.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.45362186431884766,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_last_stand",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_si_zhan_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_last_stand.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.42487049102783203,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "skill_meteor",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_tian_lei_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/skill_meteor.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.446807861328125,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_coin_gain",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_tun_liang_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_coin_gain.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4220094680786133,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "skill_reinforce",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_yuan_jun_skill_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/skill_reinforce.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.47322845458984375,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "buff_armor_up",
+      "source": "Docs/Art/_inbox/候选处理/图标/icon_zhong_kai_buff_zhong_cai_v01.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×1024 RGBA",
+      "output": "Assets/Art/Icons/buff_armor_up.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.35764503479003906,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bld_cheng",
+      "source": "Docs/Art/_inbox/候选处理/基地/基地-反派.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Buildings/bld_cheng.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.45743127573900677,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bld_ying",
+      "source": "Docs/Art/_inbox/候选处理/基地/基地5.png",
+      "selector": "source_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Buildings/bld_ying.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.5291259357615439,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "bing",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_bing_idle_1x1/unit_bing_idle_1x1_shuang_gang_v01.png",
+      "selector": "shuang_gang_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/bing/idle.png, Assets/Art/Units/bing_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.21300069442854636,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "mao",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_chang_mao_idle_1x2/unit_chang_mao_idle_1x2_qing_jia_v02.png",
+      "selector": "qing_jia_v02",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "887×1774 RGBA",
+      "output": "Assets/Art/Units/mao/idle.png, Assets/Art/Units/mao_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.24361089468446265,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "chc",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_chong_che_idle_2x2_que_zuo_xia/unit_chong_che_idle_2x2_que_zuo_xia_dan_feng_mu_zhi_v03.png",
+      "selector": "dan_feng_mu_zhi_v03",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/chc/idle.png, Assets/Art/Units/chc_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.33783312856594144,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": 0.0428154626089655,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "dao",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_da_dao_idle_2x1/unit_da_dao_idle_2x1_jiao_gu_v02.png",
+      "selector": "jiao_gu_v02",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1774×887 RGBA",
+      "output": "Assets/Art/Units/dao/idle.png, Assets/Art/Units/dao_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.29406916134214744,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "gong",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_gong_idle_1x1/unit_gong_idle_1x1_dan_feng_v02.png",
+      "selector": "dan_feng_v02",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/gong/idle.png, Assets/Art/Units/gong_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3170301605834217,
+        "borderCoverage": 0.00039872408293460925,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "huo",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_huo_idle_1x1/unit_huo_idle_1x1_rong_yan_v01.png",
+      "selector": "rong_yan_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/huo/idle.png, Assets/Art/Units/huo_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.13297861516194429,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "e_lang",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_lang_idle_1x1/unit_lang_idle_1x1_dan_feng_v03.png",
+      "selector": "dan_feng_v03",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/e_lang/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.35300372142477404,
+        "borderCoverage": 0.0005980861244019139,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "e_lang",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_lang_idle_1x1/unit_lang_idle_1x1_jiao_gu_v01.png",
+      "selector": "jiao_gu_v01",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "1254×1254 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3783128438756744,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "e_lang",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_lang_idle_1x1/unit_lang_idle_1x1_xuan_qi_v02.png",
+      "selector": "xuan_qi_v02",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "1254×1254 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3163509942029207,
+        "borderCoverage": 0.000996810207336523,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "lia",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_lian_jia_bing_idle_2x2/unit_lian_jia_bing_idle_2x2_yun_bi_v01.png",
+      "selector": "yun_bi_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/lia/idle.png, Assets/Art/Units/lia_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.5010162058764426,
+        "borderCoverage": 0.18759968102073366,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "e_liu",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_liu_kou_idle_1x2/unit_liu_kou_idle_1x2_dan_feng_v02.png",
+      "selector": "dan_feng_v02",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "887×1774 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.48831613853621586,
+        "borderCoverage": 0.0003757985719654265,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "e_liu",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_liu_kou_idle_1x2/unit_liu_kou_idle_1x2_jiao_gu_v01.png",
+      "selector": "jiao_gu_v01",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "887×1774 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.434457254924889,
+        "borderCoverage": 0.0003757985719654265,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "e_liu",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_liu_kou_idle_1x2/unit_liu_kou_idle_1x2_xuan_qi_v03.png",
+      "selector": "xuan_qi_v03",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "887×1774 RGBA",
+      "output": "Assets/Art/Units/e_liu/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3917020116450953,
+        "borderCoverage": 0.0003757985719654265,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "cmd_lv",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_lv_bu_idle_2x2/unit_lv_bu_idle_2x2_dan_feng_v01.png",
+      "selector": "dan_feng_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Commanders/cmd_lv/card.png, Assets/Art/Commanders/cmd_lv/avatar.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3465376504913146,
+        "borderCoverage": 0.00039872408293460925,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "nub",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_nu_bing_idle_1x2/unit_nu_bing_idle_1x2_yun_bi_v01.png",
+      "selector": "yun_bi_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "887×1774 RGBA",
+      "output": "Assets/Art/Units/nub/idle.png, Assets/Art/Units/nub_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.36840864345188995,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "nuc",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_nu_che_idle_2x2_que_you_shang/unit_nu_che_idle_2x2_que_you_shang_dan_feng_v03.png",
+      "selector": "dan_feng_v03",
+      "selected": true,
+      "status": "warning",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/nuc/idle.png, Assets/Art/Units/nuc_enemy/idle.png",
+      "placeholder": false,
+      "metrics": null,
+      "messages": [
+        "L-corner que_you_shang foreground coverage is 8.18%; maximum is 8%."
+      ]
+    },
+    {
+      "id": "qqi",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_qing_qi_idle_2x1/unit_qing_qi_idle_2x1_dan_feng_v02.png",
+      "selector": "dan_feng_v02",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1774×887 RGBA",
+      "output": "Assets/Art/Units/qqi/idle.png, Assets/Art/Units/qqi_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.309885112402751,
+        "borderCoverage": 0.0003757985719654265,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "dun",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_rou_dun_idle_2x1/unit_rou_dun_idle_2x1_bao_lei_v04.png",
+      "selector": "bao_lei_v04",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "1024×512 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.5250225067138672,
+        "borderCoverage": 0.2099609375,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "dun",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_rou_dun_idle_2x1/unit_rou_dun_idle_2x1_cheng_men_v05.png",
+      "selector": "cheng_men_v05",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1024×512 RGBA",
+      "output": "Assets/Art/Units/dun/idle.png, Assets/Art/Units/dun_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.47887611389160156,
+        "borderCoverage": 0.23307291666666666,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "dun",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_rou_dun_idle_2x1/unit_rou_dun_idle_2x1_xuan_tie_v01.png",
+      "selector": "xuan_tie_v01",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "1024×512 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4055500030517578,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "e_shan",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_shan_zei_idle_2x1/unit_shan_zei_idle_2x1_jiao_gu_v01.png",
+      "selector": "jiao_gu_v01",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1774×887 RGBA",
+      "output": "Assets/Art/Units/e_shan/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.3487491245842172,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written"
+      ]
+    },
+    {
+      "id": "tie",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_tie_jia_bing_idle_2x2/unit_tie_jia_bing_idle_2x2_jiao_gu_v02.png",
+      "selector": "jiao_gu_v02",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/tie/idle.png, Assets/Art/Units/tie_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.5072520724749382,
+        "borderCoverage": 0.00518341307814992,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "zqi",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_zhong_qi_bing_idle_3x1/unit_zhong_qi_bing_idle_3x1_bai_gang_v03.png",
+      "selector": "bai_gang_v03",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "2172×724 RGBA",
+      "output": "Assets/Art/Units/zqi/idle.png, Assets/Art/Units/zqi_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4437351830937192,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "zqi",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_zhong_qi_bing_idle_3x1/unit_zhong_qi_bing_idle_3x1_chi_tong_v02.png",
+      "selector": "chi_tong_v02",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "2172×724 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4525324827284474,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "zqi",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_zhong_qi_bing_idle_3x1/unit_zhong_qi_bing_idle_3x1_xuan_tie_v01.png",
+      "selector": "xuan_tie_v01",
+      "selected": false,
+      "status": "unselected",
+      "originalSize": "2172×724 RGBA",
+      "output": null,
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.4064366421456406,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": []
+    },
+    {
+      "id": "zu",
+      "source": "Docs/Art/_inbox/候选处理/角色图/unit_zu_idle_1x1/unit_zu_idle_1x1_xuan_qi_v03.png",
+      "selector": "xuan_qi_v03",
+      "selected": true,
+      "status": "ok",
+      "originalSize": "1254×1254 RGBA",
+      "output": "Assets/Art/Units/zu/idle.png, Assets/Art/Units/zu_enemy/idle.png",
+      "placeholder": false,
+      "metrics": {
+        "selectedChannel": "precut",
+        "alphaDifference": 0.0,
+        "rembgScore": 0.0,
+        "floodScore": 0.0,
+        "foregroundCoverage": 0.16182474454949902,
+        "borderCoverage": 0.0,
+        "componentsRemoved": 0,
+        "holesFilled": 0,
+        "cornerCoverage": null,
+        "rembgProvider": null
+      },
+      "messages": [
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "nuc",
+      "source": null,
+      "selector": null,
+      "selected": true,
+      "status": "placeholder",
+      "originalSize": null,
+      "output": "Assets/Art/Units/nuc/idle.png, Assets/Art/Units/nuc_enemy/idle.png",
+      "placeholder": true,
+      "metrics": null,
+      "messages": [
+        "Selected candidate failed quality checks; placeholder emitted.",
+        "output actions: written, written"
+      ]
+    },
+    {
+      "id": "cmd_bei",
+      "source": null,
+      "selector": null,
+      "selected": true,
+      "status": "placeholder",
+      "originalSize": null,
+      "output": "Assets/Art/Commanders/cmd_bei/card.png, Assets/Art/Commanders/cmd_bei/avatar.png",
+      "placeholder": true,
+      "metrics": null,
+      "messages": [
+        "No selected candidate; placeholder emitted.",
+        "output actions: written, written"
+      ]
+    }
+  ]
+}

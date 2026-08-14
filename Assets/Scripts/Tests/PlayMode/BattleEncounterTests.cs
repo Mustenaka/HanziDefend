@@ -51,6 +51,9 @@ namespace HanziDefend.Tests.PlayMode
             BattleBaseSnapshot ally = system.GetBaseSnapshot(system.AllyBaseEntityId);
             BattleBaseSnapshot enemy = system.GetBaseSnapshot(system.EnemyBaseEntityId);
             Assert.That(ally.Team, Is.EqualTo(BattleTeam.Ally));
+            Assert.That(ally.DefinitionId, Is.EqualTo(config.Bases.Ally.Id));
+            Assert.That(ally.UnitType, Is.EqualTo(UnitType.Building));
+            Assert.That(ally.ArmorType, Is.EqualTo(ArmorType.Building));
             Assert.That(ally.MaxHp, Is.EqualTo(level.BaseHp));
             Assert.That(ally.CurrentHp, Is.EqualTo(level.BaseHp));
             Assert.That(ally.Armor, Is.EqualTo(config.Bases.Ally.Armor));
@@ -58,6 +61,9 @@ namespace HanziDefend.Tests.PlayMode
                 config.Economy.Battle.AllyBasePosition.X,
                 config.Economy.Battle.AllyBasePosition.Y)));
             Assert.That(enemy.Team, Is.EqualTo(BattleTeam.Enemy));
+            Assert.That(enemy.DefinitionId, Is.EqualTo(config.Bases.Enemy.Id));
+            Assert.That(enemy.UnitType, Is.EqualTo(UnitType.Building));
+            Assert.That(enemy.ArmorType, Is.EqualTo(ArmorType.Building));
             Assert.That(enemy.MaxHp, Is.EqualTo(config.Bases.Enemy.Hp));
             Assert.That(enemy.CurrentHp, Is.EqualTo(config.Bases.Enemy.Hp));
             Assert.That(enemy.Armor, Is.EqualTo(config.Bases.Enemy.Armor));
@@ -84,16 +90,30 @@ namespace HanziDefend.Tests.PlayMode
             DisableCombat(config);
             var recorder = new RecordingEncounterEvents();
             BattleSystem system = CreateEncounter(config, recorder);
+            // Wave 1's shape is read back from waves.json rather than hard-coded. WO-E1 rebuilt the
+            // timeline, so this fixture has to track the data source instead of a snapshot of it.
+            WaveDef firstWave = config.GetWaveSet(config.GetLevel(LevelId).WaveSetId).Waves[0];
+            string[] expectedSpawnIds = firstWave.Spawns.Select(value => value.UnitId).ToArray();
+            Assert.That(firstWave.DelaySec, Is.GreaterThan(0.05f),
+                "The first wave needs a measurable delay for this boundary to mean anything.");
 
-            system.Tick(1.99f);
+            system.Tick(firstWave.DelaySec - 0.01f);
             Assert.That(recorder.Waves, Is.Empty);
             Assert.That(recorder.Spawns, Is.Empty);
 
             system.Tick(0.02f);
-            Assert.That(recorder.Waves.Select(value => value.WaveIndex), Is.EqualTo(new[] { 1 }));
-            Assert.That(recorder.Spawns, Has.Count.EqualTo(1));
-            Assert.That(recorder.Spawns[0].DefinitionId, Is.EqualTo("e_zu"));
-            Assert.That(recorder.Kinds.Take(2), Is.EqualTo(new[] { "Wave", "Spawn" }));
+            Assert.That(recorder.Waves.Select(value => value.WaveIndex),
+                Is.EqualTo(new[] { firstWave.Index }));
+            // Groups run in parallel: every group emits its ordinal 0 at the wave start, and any
+            // further ordinals wait out intervalSec, so exactly one spawn per group is due here.
+            Assert.That(recorder.Spawns, Has.Count.EqualTo(expectedSpawnIds.Length));
+            Assert.That(recorder.Spawns.Select(value => value.DefinitionId),
+                Is.EqualTo(expectedSpawnIds));
+            Assert.That(recorder.Spawns.Select(value => value.Team),
+                Is.All.EqualTo(BattleTeam.Enemy),
+                "Shared-pool definitions spawned by a wave must use the wave's enemy team.");
+            Assert.That(recorder.Kinds.Take(1 + expectedSpawnIds.Length),
+                Is.EqualTo(new[] { "Wave" }.Concat(expectedSpawnIds.Select(_ => "Spawn"))));
         }
 
         [Test]
@@ -102,9 +122,9 @@ namespace HanziDefend.Tests.PlayMode
             GameConfig config = GameConfig.Load();
             DisableCombat(config);
             SetWaves(config,
-                Wave(1, 0.1f, Spawn("e_zu")),
-                Wave(2, 0.2f, Spawn("e_zu")),
-                Wave(3, 0.3f, Spawn("e_zu")));
+                Wave(1, 0.1f, Spawn("zu")),
+                Wave(2, 0.2f, Spawn("zu")),
+                Wave(3, 0.3f, Spawn("zu")));
             var recorder = new RecordingEncounterEvents();
             BattleSystem system = CreateEncounter(config, recorder);
 
@@ -123,7 +143,7 @@ namespace HanziDefend.Tests.PlayMode
         {
             GameConfig config = GameConfig.Load();
             DisableCombat(config);
-            SetWaves(config, Wave(1, 0f, Spawn("e_zu", 3, 0f, 0.5f)));
+            SetWaves(config, Wave(1, 0f, Spawn("zu", 3, 0f, 0.5f)));
             var recorder = new RecordingEncounterEvents();
             BattleSystem system = CreateEncounter(config, recorder);
 
@@ -142,7 +162,7 @@ namespace HanziDefend.Tests.PlayMode
             const float spreadX = 2f;
             GameConfig config = GameConfig.Load();
             DisableCombat(config);
-            SetWaves(config, Wave(1, 0f, Spawn("e_zu", 5, spreadX, 0f)));
+            SetWaves(config, Wave(1, 0f, Spawn("zu", 5, spreadX, 0f)));
             var recorder = new RecordingEncounterEvents();
             BattleSystem system = CreateEncounter(config, recorder);
 
@@ -163,8 +183,8 @@ namespace HanziDefend.Tests.PlayMode
             GameConfig secondConfig = GameConfig.Load();
             DisableCombat(firstConfig);
             DisableCombat(secondConfig);
-            SetWaves(firstConfig, Wave(1, 0f, Spawn("e_zu", 5, 2f, 0f)));
-            SetWaves(secondConfig, Wave(1, 0f, Spawn("e_zu", 5, 2f, 0f)));
+            SetWaves(firstConfig, Wave(1, 0f, Spawn("zu", 5, 2f, 0f)));
+            SetWaves(secondConfig, Wave(1, 0f, Spawn("zu", 5, 2f, 0f)));
             var firstRecorder = new RecordingEncounterEvents();
             var secondRecorder = new RecordingEncounterEvents();
             BattleSystem first = BattleSystem.CreateEncounter(firstConfig, LevelId, Seed, firstRecorder);
@@ -203,9 +223,9 @@ namespace HanziDefend.Tests.PlayMode
         public void BossSpawn_UsesBossDefinitionStatsAndPublishesBossEvent()
         {
             GameConfig config = GameConfig.Load();
-            BossDef definition = config.GetBoss("boss_lv");
+            BossDef definition = config.GetBoss("bld_cheng");
             definition.AtkSpeed = 0f;
-            SetWaves(config, Wave(20, 0f, Spawn("boss_lv")));
+            SetWaves(config, Wave(20, 0f, Spawn("bld_cheng")));
             var recorder = new RecordingEncounterEvents();
             BattleSystem system = CreateEncounter(config, recorder);
 
@@ -223,14 +243,18 @@ namespace HanziDefend.Tests.PlayMode
             Assert.That(spawned.Position, Is.EqualTo(new Vector2(
                 config.Economy.Battle.EnemySpawnCenter.X,
                 config.Economy.Battle.EnemySpawnCenter.Y)));
-            Assert.That(system.GetUnitSnapshot(spawned.EntityId).Team, Is.EqualTo(BattleTeam.Enemy));
+            BattleUnitSnapshot boss = system.GetUnitSnapshot(spawned.EntityId);
+            Assert.That(boss.Team, Is.EqualTo(BattleTeam.Enemy));
+            Assert.That(boss.UnitType, Is.EqualTo(UnitType.Building));
+            Assert.That(boss.ArmorType, Is.EqualTo(ArmorType.Building));
+            Assert.That(boss.AttackType, Is.EqualTo(definition.AtkType));
         }
 
         [Test]
         public void EnemyAttack_BaseIsLegalTargetAndDamageUsesFormula()
         {
             GameConfig config = GameConfig.Load();
-            UnitDef enemy = config.GetUnit("e_zu");
+            UnitDef enemy = config.GetUnit("zu");
             SetBaseKiller(enemy, config);
             SetWaves(config, Wave(1, 0f, Spawn(enemy.Id)));
             var recorder = new RecordingEncounterEvents();
@@ -242,7 +266,15 @@ namespace HanziDefend.Tests.PlayMode
             Assert.That(damage.BaseEntityId, Is.EqualTo(system.AllyBaseEntityId));
             Assert.That(damage.BaseTeam, Is.EqualTo(BattleTeam.Ally));
             Assert.That(damage.Amount,
-                Is.EqualTo(Formula.Damage(enemy.Atk.Base, config.Bases.Ally.Armor, enemy.Pierce.Base, config.Economy)));
+                Is.EqualTo(Formula.Damage(
+                    enemy.Atk.Base,
+                    enemy.AtkType,
+                    enemy.BonusVs,
+                    config.Bases.Ally.Armor,
+                    config.Bases.Ally.ArmorType,
+                    config.Bases.Ally.UnitType,
+                    enemy.Pierce.Base,
+                    config.Economy)));
             Assert.That(damage.HpAfter, Is.EqualTo(damage.HpBefore - damage.Amount));
         }
 
@@ -265,7 +297,7 @@ namespace HanziDefend.Tests.PlayMode
             GameConfig config = GameConfig.Load();
             config.GetLevel(LevelId).BaseHp = 1f;
             config.Bases.Ally.Armor = 0f;
-            BossDef boss = config.GetBoss("boss_lv");
+            BossDef boss = config.GetBoss("bld_cheng");
             boss.Atk = 100f;
             boss.Range = 100f;
             boss.AtkSpeed = 30f;
@@ -345,13 +377,37 @@ namespace HanziDefend.Tests.PlayMode
         public void FullMain20_CompletesUnderTwoSecondsWithTimelineAndRewardRanks()
         {
             GameConfig config = GameConfig.Load();
+            WaveDef[] configuredWaves = config
+                .GetWaveSet(config.GetLevel(LevelId).WaveSetId)
+                .Waves;
+            var waveStarts = new Dictionary<int, double>();
+            double waveStart = 0d;
+            foreach (WaveDef wave in configuredWaves)
+            {
+                waveStart += wave.DelaySec;
+                waveStarts.Add(wave.Index, waveStart);
+            }
+
+            double bossStart = waveStarts[configuredWaves.Single(value => value.RewardRank == EnemyRank.Boss).Index];
+            var expectedSpawns = new Dictionary<EnemyRank, int>();
+            foreach (WaveDef wave in configuredWaves)
+            foreach (WaveSpawnDef spawn in wave.Spawns)
+            for (int ordinal = 0; ordinal < spawn.Count; ordinal++)
+            {
+                double scheduledTime = waveStarts[wave.Index] + ordinal * spawn.IntervalSec;
+                if (scheduledTime <= bossStart + 0.000001d)
+                {
+                    expectedSpawns.TryGetValue(wave.RewardRank, out int count);
+                    expectedSpawns[wave.RewardRank] = count + 1;
+                }
+            }
             ConfigureFastFullEncounter(config);
             var recorder = new RecordingEncounterEvents();
             BattleSystem system = CreateEncounter(config, recorder);
             SpawnFastAllies(system, 3);
             var stopwatch = Stopwatch.StartNew();
 
-            TickUntilSettled(system, config.Economy.Battle.TickRateHz * 70);
+            TickUntilSettled(system, SettleTickBudget(config, bossStart));
             stopwatch.Stop();
 
             string timeline = string.Join(", ", recorder.Waves.Select(value => $"W{value.WaveIndex}@{value.SimulatedTimeSeconds:F3}s"));
@@ -362,8 +418,13 @@ namespace HanziDefend.Tests.PlayMode
             Assert.That(system.Result, Is.EqualTo(BattleResult.Win));
             Assert.That(recorder.Waves.Select(value => value.WaveIndex), Is.EqualTo(Enumerable.Range(1, 20)));
             Assert.That(recorder.Bosses, Has.Count.EqualTo(1));
-            Assert.That(recorder.Deaths.Count(value => value.RewardRank == EnemyRank.Normal), Is.EqualTo(225));
-            Assert.That(recorder.Deaths.Count(value => value.RewardRank == EnemyRank.Elite), Is.EqualTo(14));
+            foreach (KeyValuePair<EnemyRank, int> pair in expectedSpawns)
+            {
+                Assert.That(recorder.Spawns.Count(value =>
+                        value.WaveContext.HasValue && value.WaveContext.Value.RewardRank == pair.Key),
+                    Is.EqualTo(pair.Value), pair.Key.ToString());
+            }
+
             Assert.That(recorder.Deaths.Count(value => value.RewardRank == EnemyRank.Boss), Is.EqualTo(1));
         }
 
@@ -407,7 +468,7 @@ namespace HanziDefend.Tests.PlayMode
             SetCurve(ally.Pierce, 100f);
             SetCurve(ally.MoveSpeed, 0f);
 
-            BossDef boss = config.GetBoss("boss_lv");
+            BossDef boss = config.GetBoss("bld_cheng");
             boss.Hp = bossHp;
             boss.Armor = 0f;
             boss.Atk = bossAttack;
@@ -438,7 +499,7 @@ namespace HanziDefend.Tests.PlayMode
             BattleSystem system = BattleSystem.CreateEncounter(config, LevelId, seed, recorder);
             systems.Add(system);
             SpawnFastAllies(system, 3);
-            TickUntilSettled(system, config.Economy.Battle.TickRateHz * 70);
+            TickUntilSettled(system, SettleTickBudget(config, BossStartSeconds(config)));
             Assert.That(system.Result, Is.EqualTo(BattleResult.Win));
             string[] result = recorder.CanonicalEvents.ToArray();
             system.Dispose();
@@ -453,23 +514,31 @@ namespace HanziDefend.Tests.PlayMode
             config.Bases.Ally.Armor = 0f;
             config.Bases.Enemy.Hp = 1f;
             config.Bases.Enemy.Armor = 0f;
-            foreach (UnitDef enemy in config.EnemyUnits)
+            HashSet<string> waveUnitIds = config.GetWaveSet(config.GetLevel(LevelId).WaveSetId)
+                .Waves
+                .SelectMany(value => value.Spawns)
+                .Select(value => value.UnitId)
+                .Where(value => config.UnitsById.ContainsKey(value))
+                .ToHashSet();
+            foreach (string unitId in waveUnitIds)
             {
+                UnitDef enemy = config.GetUnit(unitId);
                 SetCurve(enemy.Hp, 1f);
                 SetCurve(enemy.Armor, 0f);
                 SetCurve(enemy.AtkSpeed, 0f);
                 SetCurve(enemy.MoveSpeed, 0f);
             }
 
-            UnitDef ally = config.GetUnit("gong");
+            UnitDef ally = config.GetUnit("nuc");
             SetCurve(ally.Hp, 1000000f);
             SetCurve(ally.Atk, 1000000f);
             SetCurve(ally.Range, 200f);
+            SetCurve(ally.MinRange, 0f);
             SetCurve(ally.AtkSpeed, 30f);
             SetCurve(ally.Pierce, 100f);
             SetCurve(ally.MoveSpeed, 0f);
 
-            BossDef boss = config.GetBoss("boss_lv");
+            BossDef boss = config.GetBoss("bld_cheng");
             boss.Hp = 1f;
             boss.Armor = 0f;
             boss.AtkSpeed = 0f;
@@ -480,8 +549,39 @@ namespace HanziDefend.Tests.PlayMode
             Vector2 basePosition = system.GetBaseSnapshot(system.AllyBaseEntityId).Position;
             for (int index = 0; index < count; index++)
             {
-                system.Spawn(new UnitSpawnRequest("gong", 1, basePosition + new Vector2(index * 0.7f, 0f)));
+                system.Spawn(new UnitSpawnRequest("nuc", 1, basePosition + new Vector2(index * 0.7f, 0f)));
             }
+        }
+
+        /// <summary>
+        /// Simulated seconds the encounter is allowed to take after the boss has appeared. The
+        /// tick ceiling is derived from waves.json rather than hard-coded, because WO-E1 moved the
+        /// main_20 boss from 62s to 94.4s and silently made the old fixed 2100-tick (70s) budget
+        /// mathematically unreachable. Only this grace window is a judgement call; the rest of the
+        /// budget is whatever the data source says.
+        /// </summary>
+        private const double SettleGraceSeconds = 15d;
+
+        private static double BossStartSeconds(GameConfig config)
+        {
+            double elapsed = 0d;
+            double bossStart = 0d;
+            foreach (WaveDef wave in config.GetWaveSet(config.GetLevel(LevelId).WaveSetId).Waves)
+            {
+                elapsed += wave.DelaySec;
+                if (wave.RewardRank == EnemyRank.Boss)
+                {
+                    bossStart = elapsed;
+                }
+            }
+
+            return bossStart;
+        }
+
+        private static int SettleTickBudget(GameConfig config, double bossStartSeconds)
+        {
+            return checked((int)Math.Ceiling(
+                (bossStartSeconds + SettleGraceSeconds) * config.Economy.Battle.TickRateHz));
         }
 
         private static void TickUntilSettled(BattleSystem system, int maximumTicks)
@@ -505,13 +605,13 @@ namespace HanziDefend.Tests.PlayMode
         private static void DisableCombat(GameConfig config)
         {
             config.GetLevel(LevelId).BaseHp = 1000000f;
-            foreach (UnitDef enemy in config.EnemyUnits)
+            foreach (UnitDef enemy in config.Units)
             {
                 SetCurve(enemy.AtkSpeed, 0f);
                 SetCurve(enemy.MoveSpeed, 0f);
             }
 
-            config.GetBoss("boss_lv").AtkSpeed = 0f;
+            config.GetBoss("bld_cheng").AtkSpeed = 0f;
         }
 
         private static void SetBaseKiller(UnitDef enemy, GameConfig config)

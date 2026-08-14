@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91a477b4b1c49084ea0e1c2ba13bdced, type: 3}
+  m_Name: HanziDefendArtCatalog
+  m_EditorClassIdentifier: HanziDefend.View::HanziDefend.View.BattleArtCatalog
+  Entries:
+  - Key: building/bld_cheng
+    Sprite: {fileID: 21300000, guid: 09cf25e6897d69c46805e339d03caa3c, type: 3}
+  - Key: building/bld_ying
+    Sprite: {fileID: 21300000, guid: fd8da9ac350c5c94cb41df3f39394dae, type: 3}
+  - Key: commander/cmd_bei/avatar
+    Sprite: {fileID: 21300000, guid: ae591efa3fbed594390d425234395c09, type: 3}
+  - Key: commander/cmd_bei/card
+    Sprite: {fileID: 21300000, guid: 1c65fa2bf765a6e4fb3bb81619ceca50, type: 3}
+  - Key: commander/cmd_lv/avatar
+    Sprite: {fileID: 21300000, guid: 7a24e05ddd435174c88faef79d581a47, type: 3}
+  - Key: commander/cmd_lv/card
+    Sprite: {fileID: 21300000, guid: e906d3a591a2d4b4a938a005dc581520, type: 3}
+  - Key: fx/bao_zha_01
+    Sprite: {fileID: 21300000, guid: 312a1826594325542835d2909b3e005c, type: 3}
+  - Key: fx/bao_zha_02
+    Sprite: {fileID: 21300000, guid: 03fe9b8b6e51c7c4993ee2d6041755ce, type: 3}
+  - Key: fx/bao_zha_03
+    Sprite: {fileID: 21300000, guid: 2cf214563365aec47912e8dfb81808b6, type: 3}
+  - Key: fx/bao_zha_04
+    Sprite: {fileID: 21300000, guid: 8834c78fcf1c1864db790dfd067e14be, type: 3}
+  - Key: fx/bao_zha_05
+    Sprite: {fileID: 21300000, guid: 1aeef9153c08dbf4987434bce5c2c03d, type: 3}
+  - Key: fx/chong_ji
+    Sprite: {fileID: 21300000, guid: 435bce4983c76d948a436a22d3b882e7, type: 3}
+  - Key: fx/ci_bao
+    Sprite: {fileID: 21300000, guid: 6fa07b8e0bfb1b24bb860ac151a37c96, type: 3}
+  - Key: fx/dao_guang_01
+    Sprite: {fileID: 21300000, guid: c47188f34b107a5448c7baa4df6aa25b, type: 3}
+  - Key: fx/dao_guang_02
+    Sprite: {fileID: 21300000, guid: 2afd9ce1cf97cbc409e92a926c413da9, type: 3}
+  - Key: fx/dao_guang_03
+    Sprite: {fileID: 21300000, guid: 1cdf39387f6161d4eba6250b40cd5eab, type: 3}
+  - Key: fx/dao_guang_04
+    Sprite: {fileID: 21300000, guid: df7e1ccf101833b42b265063496afa86, type: 3}
+  - Key: fx/dao_guang_05
+    Sprite: {fileID: 21300000, guid: 74a4ac1a7c0721d418f16077e4adfbab, type: 3}
+  - Key: fx/jian_shi
+    Sprite: {fileID: 21300000, guid: 01c69148541fe7f4dad97f8bf3399a39, type: 3}
+  - Key: fx/nu_qiang
+    Sprite: {fileID: 21300000, guid: 9cb5d02692c85ce4fb3df95e30679d32, type: 3}
+  - Key: fx/qiang_kou_01
+    Sprite: {fileID: 21300000, guid: 983d5f395e80db249836ea8dc8afa574, type: 3}
+  - Key: fx/ran_shao_01
+    Sprite: {fileID: 21300000, guid: 0c814db560b3a864cad894e90aad7b49, type: 3}
+  - Key: fx/ran_shao_02
+    Sprite: {fileID: 21300000, guid: 031d2e68b6a47be42b9c38d29f0f565e, type: 3}
+  - Key: fx/ran_shao_03
+    Sprite: {fileID: 21300000, guid: fb971169a321bf04eaf14487dfd5d665, type: 3}
+  - Key: fx/ran_shao_04
+    Sprite: {fileID: 21300000, guid: d5bf9145da756d944b547ecd3e047110, type: 3}
+  - Key: fx/ran_shao_05
+    Sprite: {fileID: 21300000, guid: d3f2669a33b07384882cf84c92bf14c2, type: 3}
+  - Key: fx/shi_dan_01
+    Sprite: {fileID: 21300000, guid: e74458893b5a23d48be332c02cdcb3a6, type: 3}
+  - Key: fx/shi_dan_02
+    Sprite: {fileID: 21300000, guid: fc224d44d61433b44adfd5b6189bd396, type: 3}
+  - Key: fx/shuang_dong_01
+    Sprite: {fileID: 21300000, guid: 7cd5e10434bd6b7449a6d09012ce360d, type: 3}
+  - Key: fx/shuang_dong_02
+    Sprite: {fileID: 21300000, guid: 7287a378f23d7dc479d045416135c3a1, type: 3}
+  - Key: fx/shuang_dong_03
+    Sprite: {fileID: 21300000, guid: c5476ac6ff610a7408e7a96316937c80, type: 3}
+  - Key: fx/shuang_dong_04
+    Sprite: {fileID: 21300000, guid: 997332cf834511845bd260d82b24f0e6, type: 3}
+  - Key: fx/shuang_dong_05
+    Sprite: {fileID: 21300000, guid: fe042a65b5fad504893c3b1583e565da, type: 3}
+  - Key: icon/buff_armor_up
+    Sprite: {fileID: 21300000, guid: f35330dc2e74e144594a9553d549ca00, type: 3}
+  - Key: icon/buff_aspd_up
+    Sprite: {fileID: 21300000, guid: b67d9eb06e1404a4bb1cd3d141698e34, type: 3}
+  - Key: icon/buff_atk_up
+    Sprite: {fileID: 21300000, guid: ad84b4dc2fa574e4982b4672ddfa229d, type: 3}
+  - Key: icon/buff_burn_on_hit
+    Sprite: {fileID: 21300000, guid: 19fd6f9969ac8634289a5eabee63908d, type: 3}
+  - Key: icon/buff_coin_gain
+    Sprite: {fileID: 21300000, guid: 45c060f365b925f479a12c8ff9b73b9b, type: 3}
+  - Key: icon/buff_front_shield
+    Sprite: {fileID: 21300000, guid: 3f44b4fd5ed7f28489274e22949650de, type: 3}
+  - Key: icon/buff_hp_up
+    Sprite: {fileID: 21300000, guid: da5f17acbac0ee44dbc2f52ace403df3, type: 3}
+  - Key: icon/buff_last_stand
+    Sprite: {fileID: 21300000, guid: eb8bfedd76aff2347ae6a406817043b9, type: 3}
+  - Key: icon/buff_move_up
+    Sprite: {fileID: 21300000, guid: 4c811afc4a8cf9048818c45d0c5c86e0, type: 3}
+  - Key: icon/buff_pierce_up
+    Sprite: {fileID: 21300000, guid: f0996a86152a80e489fb3a7cc60fccfc, type: 3}
+  - Key: icon/buff_slow_on_hit
+    Sprite: {fileID: 21300000, guid: 772000ac1c680654a846d71df4aa98f1, type: 3}
+  - Key: icon/cmd_bei_active
+    Sprite: {fileID: 21300000, guid: 962df520a9b5d6547a749b150b9250ba, type: 3}
+  - Key: icon/cmd_bei_passive
+    Sprite: {fileID: 21300000, guid: 92058913ae46df34f994dc1ab79b2da3, type: 3}
+  - Key: icon/currency_coin
+    Sprite: {fileID: 21300000, guid: fece149439585094c866da0dd4a1f4c5, type: 3}
+  - Key: icon/expand_column
+    Sprite: {fileID: 21300000, guid: ba84145d56f5c61428c6646fc477b918, type: 3}
+  - Key: icon/reward_coins
+    Sprite: {fileID: 21300000, guid: 3df81eed8687c65438096163286c3707, type: 3}
+  - Key: icon/skill_breach_base
+    Sprite: {fileID: 21300000, guid: 60270ba2e3c20e64e82efc914fd038a8, type: 3}
+  - Key: icon/skill_breakthrough
+    Sprite: {fileID: 21300000, guid: 965bd8199a733d142905a99d4ad8b807, type: 3}
+  - Key: icon/skill_meteor
+    Sprite: {fileID: 21300000, guid: 9707d55f626971843ab9ed5479d6cff2, type: 3}
+  - Key: icon/skill_reinforce
+    Sprite: {fileID: 21300000, guid: 6742d125f44269c43893951ed38a2636, type: 3}
+  - Key: unit/bing/idle
+    Sprite: {fileID: 21300000, guid: 3c732e7682a7a094fa51c73eae93d0d0, type: 3}
+  - Key: unit/bing_enemy/idle
+    Sprite: {fileID: 21300000, guid: 42156a09df7366241960204b9d0db091, type: 3}
+  - Key: unit/chc/idle
+    Sprite: {fileID: 21300000, guid: e103e93fea9f7ee4cace8b1e76a7a25d, type: 3}
+  - Key: unit/chc_enemy/idle
+    Sprite: {fileID: 21300000, guid: 917a10972ea195847847e2e230d6fe0e, type: 3}
+  - Key: unit/dao/idle
+    Sprite: {fileID: 21300000, guid: 0da3765c31ed529448fd09a6f93a38ff, type: 3}
+  - Key: unit/dao_enemy/idle
+    Sprite: {fileID: 21300000, guid: a0f9c6aae4d4a0246ad0dee14bb9f074, type: 3}
+  - Key: unit/dun/idle
+    Sprite: {fileID: 21300000, guid: 728e5ecd9a39bdb4d8619c57d7264165, type: 3}
+  - Key: unit/dun_enemy/idle
+    Sprite: {fileID: 21300000, guid: ca5052af453b2b1488f2249083f67850, type: 3}
+  - Key: unit/e_lang/idle
+    Sprite: {fileID: 21300000, guid: 512c71c7229bf124cbd45f47b7ced4fd, type: 3}
+  - Key: unit/e_liu/idle
+    Sprite: {fileID: 21300000, guid: 45bd158a922daf548a7cc0edf99675c2, type: 3}
+  - Key: unit/e_shan/idle
+    Sprite: {fileID: 21300000, guid: 70f1c61d9f03a0a428b1f2a94fa13daf, type: 3}
+  - Key: unit/gong/idle
+    Sprite: {fileID: 21300000, guid: 64f3ef474b900c941a506cb26dfc7a5f, type: 3}
+  - Key: unit/gong_enemy/idle
+    Sprite: {fileID: 21300000, guid: 0c7c9ed69bfbf2646a063fdfc2e7452c, type: 3}
+  - Key: unit/huo/idle
+    Sprite: {fileID: 21300000, guid: aa2f99cd64f9afb49987d4e21687aab4, type: 3}
+  - Key: unit/huo_enemy/idle
+    Sprite: {fileID: 21300000, guid: 535ebc9d8d20a4b49b2062bd50126615, type: 3}
+  - Key: unit/lia/idle
+    Sprite: {fileID: 21300000, guid: 488c6ed37e0060d4ab077ce96f409680, type: 3}
+  - Key: unit/lia_enemy/idle
+    Sprite: {fileID: 21300000, guid: d3b8e80943d5671458ba02a6b917c9d2, type: 3}
+  - Key: unit/mao/idle
+    Sprite: {fileID: 21300000, guid: 8fb0f0258729bc842b75490cd61177d5, type: 3}
+  - Key: unit/mao_enemy/idle
+    Sprite: {fileID: 21300000, guid: e7bbce838187f5c469781aff86e326d0, type: 3}
+  - Key: unit/nub/idle
+    Sprite: {fileID: 21300000, guid: 2ddfbc4c7e6b98941881fd1da962629a, type: 3}
+  - Key: unit/nub_enemy/idle
+    Sprite: {fileID: 21300000, guid: 9e8e7805c853e0f44bfddbdd61972e58, type: 3}
+  - Key: unit/nuc/idle
+    Sprite: {fileID: 21300000, guid: 53edd87026dba464ab755601599e288c, type: 3}
+  - Key: unit/nuc_enemy/idle
+    Sprite: {fileID: 21300000, guid: c8ee30458057bf64c8be3b656b31c318, type: 3}
+  - Key: unit/qqi/idle
+    Sprite: {fileID: 21300000, guid: 399333a5e2a5af742ab520e1b3dbf944, type: 3}
+  - Key: unit/qqi_enemy/idle
+    Sprite: {fileID: 21300000, guid: 3fe6797eed3823147be1be54d5df90c3, type: 3}
+  - Key: unit/tie/idle
+    Sprite: {fileID: 21300000, guid: be724216fb30e084e84bdf1fea6dc09d, type: 3}
+  - Key: unit/tie_enemy/idle
+    Sprite: {fileID: 21300000, guid: 39218da111874a6419b65abd7318da6a, type: 3}
+  - Key: unit/zqi/idle
+    Sprite: {fileID: 21300000, guid: 2518eeae5f3acd649acc42ed46e26f88, type: 3}
+  - Key: unit/zqi_enemy/idle
+    Sprite: {fileID: 21300000, guid: 70e5677124cc59b48ad2097fb4ca683f, type: 3}
+  - Key: unit/zu/idle
+    Sprite: {fileID: 21300000, guid: 8faac4bbc1f56e1448f19226124f7e82, type: 3}
+  - Key: unit/zu_enemy/idle
+    Sprite: {fileID: 21300000, guid: 6ea4beabab38f884997b2678b7f841cd, type: 3}

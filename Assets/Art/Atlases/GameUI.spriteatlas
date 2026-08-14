@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameUI
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 0
+      compressionQuality: 0
+      maxTextureSize: 0
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 1024
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 4
+      m_TextureCompression: 0
+      m_CompressionQuality: 0
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 4
+      m_BuildTarget: WebGL
+      m_MaxTextureSize: 1024
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 4
+      m_TextureCompression: 0
+      m_CompressionQuality: 0
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 31d596a4dedf3f24f824eed9bfdef0de, type: 3}
+    - {fileID: 102900000, guid: 0d6f1b53190c79244aab317eb67143e5, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 962df520a9b5d6547a749b150b9250ba: 21300000
+    - b67d9eb06e1404a4bb1cd3d141698e34: 21300000
+    - 60270ba2e3c20e64e82efc914fd038a8: 21300000
+    - 92058913ae46df34f994dc1ab79b2da3: 21300000
+    - 45c060f365b925f479a12c8ff9b73b9b: 21300000
+    - fece149439585094c866da0dd4a1f4c5: 21300000
+    - 6742d125f44269c43893951ed38a2636: 21300000
+    - f0996a86152a80e489fb3a7cc60fccfc: 21300000
+    - 965bd8199a733d142905a99d4ad8b807: 21300000
+    - 19fd6f9969ac8634289a5eabee63908d: 21300000
+    - 772000ac1c680654a846d71df4aa98f1: 21300000
+    - da5f17acbac0ee44dbc2f52ace403df3: 21300000
+    - f35330dc2e74e144594a9553d549ca00: 21300000
+    - ad84b4dc2fa574e4982b4672ddfa229d: 21300000
+    - 4c811afc4a8cf9048818c45d0c5c86e0: 21300000
+    - ba84145d56f5c61428c6646fc477b918: 21300000
+    - eb8bfedd76aff2347ae6a406817043b9: 21300000
+    - 3df81eed8687c65438096163286c3707: 21300000
+    - 3f44b4fd5ed7f28489274e22949650de: 21300000
+    - 9707d55f626971843ab9ed5479d6cff2: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 962df520a9b5d6547a749b150b9250ba, type: 3}
+  - {fileID: 21300000, guid: b67d9eb06e1404a4bb1cd3d141698e34, type: 3}
+  - {fileID: 21300000, guid: 60270ba2e3c20e64e82efc914fd038a8, type: 3}
+  - {fileID: 21300000, guid: 92058913ae46df34f994dc1ab79b2da3, type: 3}
+  - {fileID: 21300000, guid: 45c060f365b925f479a12c8ff9b73b9b, type: 3}
+  - {fileID: 21300000, guid: fece149439585094c866da0dd4a1f4c5, type: 3}
+  - {fileID: 21300000, guid: 6742d125f44269c43893951ed38a2636, type: 3}
+  - {fileID: 21300000, guid: f0996a86152a80e489fb3a7cc60fccfc, type: 3}
+  - {fileID: 21300000, guid: 965bd8199a733d142905a99d4ad8b807, type: 3}
+  - {fileID: 21300000, guid: 19fd6f9969ac8634289a5eabee63908d, type: 3}
+  - {fileID: 21300000, guid: 772000ac1c680654a846d71df4aa98f1, type: 3}
+  - {fileID: 21300000, guid: da5f17acbac0ee44dbc2f52ace403df3, type: 3}
+  - {fileID: 21300000, guid: f35330dc2e74e144594a9553d549ca00, type: 3}
+  - {fileID: 21300000, guid: ad84b4dc2fa574e4982b4672ddfa229d, type: 3}
+  - {fileID: 21300000, guid: 4c811afc4a8cf9048818c45d0c5c86e0, type: 3}
+  - {fileID: 21300000, guid: ba84145d56f5c61428c6646fc477b918, type: 3}
+  - {fileID: 21300000, guid: eb8bfedd76aff2347ae6a406817043b9, type: 3}
+  - {fileID: 21300000, guid: 3df81eed8687c65438096163286c3707, type: 3}
+  - {fileID: 21300000, guid: 3f44b4fd5ed7f28489274e22949650de, type: 3}
+  - {fileID: 21300000, guid: 9707d55f626971843ab9ed5479d6cff2, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - cmd_bei_active
+  - buff_aspd_up
+  - skill_breach_base
+  - cmd_bei_passive
+  - buff_coin_gain
+  - currency_coin
+  - skill_reinforce
+  - buff_pierce_up
+  - skill_breakthrough
+  - buff_burn_on_hit
+  - buff_slow_on_hit
+  - buff_hp_up
+  - buff_armor_up
+  - buff_atk_up
+  - buff_move_up
+  - expand_column
+  - buff_last_stand
+  - reward_coins
+  - buff_front_shield
+  - skill_meteor
+  m_RenderDataMap: {}
+  m_Tag: GameUI
+  m_IsVariant: 0

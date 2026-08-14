@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace HanziDefend.Data
 {
@@ -28,23 +29,6 @@ namespace HanziDefend.Data
 
             float effectiveArmor = EffectiveArmor(armor, pierce);
             return effectiveArmor / (effectiveArmor + armorScale);
-        }
-
-        public static int Damage(
-            float atk,
-            float armor,
-            float pierce,
-            float armorScale,
-            int minimumDamage)
-        {
-            if (minimumDamage < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(minimumDamage), "Minimum damage must be positive.");
-            }
-
-            double rawDamage = atk * (1d - Mitigation(armor, pierce, armorScale));
-            int roundedDamage = (int)Math.Round(rawDamage, MidpointRounding.AwayFromZero);
-            return Math.Max(minimumDamage, roundedDamage);
         }
 
         public static float StatAtLevel(float baseValue, float growth, int level)
@@ -103,19 +87,121 @@ namespace HanziDefend.Data
 
         public static int Damage(float atk, float armor, float pierce, EconomyDef economy)
         {
-            RequireEconomy(economy);
             return Damage(
                 atk,
+                AttackType.None,
+                Array.Empty<BonusVsDef>(),
                 armor,
+                ArmorType.Unarmored,
+                UnitType.Infantry,
                 pierce,
-                economy.Damage.ArmorScale,
-                economy.Damage.MinimumDamage);
+                economy);
+        }
+
+        /// <summary>
+        /// M1-04 two-layer damage: armor/attack multiplier, then additive matchup bonus,
+        /// then numeric armor mitigation.
+        /// </summary>
+        public static int Damage(
+            float atk,
+            AttackType atkType,
+            IReadOnlyList<BonusVsDef> bonusVs,
+            float armor,
+            ArmorType armorType,
+            UnitType targetUnitType,
+            float pierce,
+            EconomyDef economy)
+        {
+            RequireEconomy(economy);
+            if (bonusVs == null)
+            {
+                throw new ArgumentNullException(nameof(bonusVs));
+            }
+
+            float typeMultiplier = TypeMultiplier(atkType, armorType, economy);
+            double bonus = 0d;
+            for (int index = 0; index < bonusVs.Count; index++)
+            {
+                BonusVsDef entry = bonusVs[index]
+                    ?? throw new ArgumentException("A bonusVs entry cannot be null.", nameof(bonusVs));
+                if (Matches(entry.Target, armorType, targetUnitType))
+                {
+                    bonus += entry.Value;
+                }
+            }
+
+            double rawDamage = (atk * typeMultiplier + bonus)
+                               * (1d - Mitigation(armor, pierce, economy));
+            int roundedDamage = (int)Math.Round(rawDamage, MidpointRounding.AwayFromZero);
+            return Math.Max(economy.Damage.MinimumDamage, roundedDamage);
+        }
+
+        public static float TypeMultiplier(AttackType atkType, ArmorType armorType, EconomyDef economy)
+        {
+            RequireEconomy(economy);
+            if (atkType == AttackType.None)
+            {
+                return economy.Damage.NeutralTypeMultiplier;
+            }
+
+            if (atkType == AttackType.Unknown)
+            {
+                throw new ArgumentOutOfRangeException(nameof(atkType), atkType, "Attack type is unknown.");
+            }
+
+            if (armorType == ArmorType.Unknown)
+            {
+                throw new ArgumentOutOfRangeException(nameof(armorType), armorType, "Armor type is unknown.");
+            }
+
+            if (economy.Damage.TryGetTypeMultiplier(atkType, armorType, out float multiplier))
+            {
+                return multiplier;
+            }
+
+            throw new ArgumentException(
+                $"No type multiplier is configured for {armorType} armor versus {atkType} attack.",
+                nameof(economy));
         }
 
         public static int RefreshCost(int refreshCount, EconomyDef economy)
         {
             RequireEconomy(economy);
             return RefreshCost(refreshCount, economy.RefreshBaseCost, economy.RefreshCostGrowth);
+        }
+
+        /// <summary>Price of the next coin-bought unlock card. Same linear shape as the refresh cost.</summary>
+        public static int UnlockPurchaseCost(int purchaseCount, int baseCost, int growthPerPurchase)
+        {
+            if (purchaseCount < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(purchaseCount),
+                    "Unlock purchase count must be non-negative.");
+            }
+
+            if (baseCost < 0 || growthPerPurchase < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(baseCost),
+                    "Unlock purchase cost parameters must be non-negative.");
+            }
+
+            return checked(baseCost + growthPerPurchase * purchaseCount);
+        }
+
+        public static int UnlockPurchaseCost(int purchaseCount, EconomyDef economy)
+        {
+            RequireEconomy(economy);
+            if (economy.GridUnlock == null)
+            {
+                throw new ArgumentException("economy.gridUnlock is required.", nameof(economy));
+            }
+
+            return UnlockPurchaseCost(
+                purchaseCount,
+                economy.GridUnlock.PurchaseBaseCost,
+                economy.GridUnlock.PurchaseCostGrowth);
         }
 
         public static int DropCoins(EnemyRank rank, EconomyDef economy)
@@ -138,6 +224,27 @@ namespace HanziDefend.Data
             if (economy.Damage == null || economy.DropCoins == null)
             {
                 throw new ArgumentException("Economy formula configuration is incomplete.", nameof(economy));
+            }
+
+            if (economy.Damage.TypeMultipliers == null)
+            {
+                throw new ArgumentException("Economy damage type multipliers are missing.", nameof(economy));
+            }
+        }
+
+        private static bool Matches(BonusTarget target, ArmorType armorType, UnitType unitType)
+        {
+            switch (target)
+            {
+                case BonusTarget.Cavalry:
+                    return unitType == UnitType.Cavalry;
+                case BonusTarget.HeavyArmor:
+                    return armorType == ArmorType.Heavy;
+                case BonusTarget.Building:
+                    return armorType == ArmorType.Building || unitType == UnitType.Building;
+                case BonusTarget.Unknown:
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(target), target, "Unknown bonus target.");
             }
         }
 

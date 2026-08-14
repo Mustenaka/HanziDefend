@@ -1,0 +1,22 @@
+{
+  "name": "HanziDefend.Tests.PlayMode.Performance",
+  "rootNamespace": "HanziDefend.Tests.PlayMode.Performance",
+    "references": [
+    "HanziDefend.Data",
+    "HanziDefend.Gameplay",
+    "HanziDefend.View",
+    "Unity.PerformanceTesting"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

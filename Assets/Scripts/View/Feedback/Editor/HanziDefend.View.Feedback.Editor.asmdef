@@ -1,0 +1,19 @@
+{
+  "name": "HanziDefend.View.Feedback.Editor",
+  "rootNamespace": "HanziDefend.View.Feedback.Editor",
+  "references": [
+    "HanziDefend.Data",
+    "HanziDefend.View"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

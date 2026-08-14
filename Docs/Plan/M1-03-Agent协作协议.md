@@ -94,7 +94,7 @@
 | 3 | `git diff` | 只看结构：契约有没有被偷改、规则有没有漏进 View 层、胜负判定是不是单一出口、数值有没有硬编码 |
 | 4 | JSON diff | 数值是否落在合理量级 |
 | 5 | `manage_editor play` + `HanziDefend/Screenshot` | 读截图核对布局、阵营辨识度、UI 安全区 |
-| 6 | contact sheet（美术单） | 按 `M1-02` §5 的 8 条逐条看 |
+| 6 | ~~美术单~~ | 美术不再由 agent 产出或验收，见 `Docs/Art/README.md` |
 | 7 | DECISIONS / TECH_DEBT | 有没有把重要决定藏起来不写 |
 
 **审核报告格式**（`Docs/Plan/REVIEW/WO-xx.md`）

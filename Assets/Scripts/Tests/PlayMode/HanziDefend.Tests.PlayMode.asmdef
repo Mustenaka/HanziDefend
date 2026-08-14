@@ -3,7 +3,8 @@
   "rootNamespace": "HanziDefend.Tests.PlayMode",
   "references": [
     "HanziDefend.Data",
-    "HanziDefend.Gameplay"
+    "HanziDefend.Gameplay",
+    "HanziDefend.View"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

@@ -24,7 +24,7 @@ namespace HanziDefend.Editor
 
         private static readonly string[] UnitStatNames =
         {
-            "hp", "atk", "range", "atkSpeed", "cooldown", "armor", "pierce", "moveSpeed"
+            "hp", "atk", "range", "minRange", "atkSpeed", "cooldown", "armor", "pierce", "moveSpeed"
         };
 
         private static readonly string[] BossNumberNames =
@@ -311,7 +311,16 @@ namespace HanziDefend.Editor
             }
 
             bool changed = false;
+            UnitDef[] units = catalog.Units ?? Array.Empty<UnitDef>();
+            int bonusSlotCount = Math.Max(
+                1,
+                units.Where(unit => unit != null)
+                    .Select(unit => unit.BonusVs?.Length ?? 0)
+                    .DefaultIfEmpty(0)
+                    .Max());
             float totalWidth = IdColumnWidth + NameColumnWidth
+                + 4f * numericColumnWidth
+                + bonusSlotCount * numericColumnWidth * 2f
                 + UnitStatNames.Length * numericColumnWidth * 2f
                 + 64f;
 
@@ -323,12 +332,12 @@ namespace HanziDefend.Editor
                 GUILayout.ExpandHeight(true));
 
             GUILayout.Label("Units — base / growth", EditorStyles.boldLabel);
-            DrawUnitHeader(totalWidth);
-            foreach (UnitDef unit in catalog.Units ?? Array.Empty<UnitDef>())
+            DrawUnitHeader(totalWidth, bonusSlotCount);
+            foreach (UnitDef unit in units)
             {
                 if (unit != null)
                 {
-                    changed |= DrawUnitRow(document, unit, totalWidth);
+                    changed |= DrawUnitRow(document, unit, totalWidth, bonusSlotCount);
                 }
             }
 
@@ -351,11 +360,22 @@ namespace HanziDefend.Editor
             }
         }
 
-        private void DrawUnitHeader(float totalWidth)
+        private void DrawUnitHeader(float totalWidth, int bonusSlotCount)
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(totalWidth));
             GUILayout.Label("id", GUILayout.Width(IdColumnWidth));
             GUILayout.Label("name", GUILayout.Width(NameColumnWidth));
+            GUILayout.Label("unit type", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
+            GUILayout.Label("armor type", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
+            GUILayout.Label("attack type", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
+            GUILayout.Label("footprint", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
+            for (int index = 0; index < bonusSlotCount; index++)
+            {
+                string prefix = bonusSlotCount == 1 ? "bonus" : $"bonus {index + 1}";
+                GUILayout.Label(prefix + " target", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
+                GUILayout.Label(prefix + " value", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
+            }
+
             foreach (string stat in UnitStatNames)
             {
                 GUILayout.Label(stat + " base", EditorStyles.miniBoldLabel, GUILayout.Width(numericColumnWidth));
@@ -365,12 +385,35 @@ namespace HanziDefend.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private bool DrawUnitRow(DataEditorDocument document, UnitDef unit, float totalWidth)
+        private bool DrawUnitRow(
+            DataEditorDocument document,
+            UnitDef unit,
+            float totalWidth,
+            int bonusSlotCount)
         {
             bool changed = false;
             EditorGUILayout.BeginHorizontal(GUILayout.Width(totalWidth));
             GUILayout.Label(unit.Id, GUILayout.Width(IdColumnWidth));
             GUILayout.Label(unit.Name, GUILayout.Width(NameColumnWidth));
+
+            changed |= DrawUnitEnum(document, unit.Id, "unitType", unit.UnitType);
+            changed |= DrawUnitEnum(document, unit.Id, "armorType", unit.ArmorType);
+            changed |= DrawUnitEnum(document, unit.Id, "atkType", unit.AtkType);
+            changed |= DrawUnitEnum(document, unit.Id, "footprint", unit.Footprint);
+
+            BonusVsDef[] bonuses = unit.BonusVs ?? Array.Empty<BonusVsDef>();
+            for (int index = 0; index < bonusSlotCount; index++)
+            {
+                if (index >= bonuses.Length || bonuses[index] == null)
+                {
+                    GUILayout.Label("-", GUILayout.Width(numericColumnWidth));
+                    GUILayout.Label("-", GUILayout.Width(numericColumnWidth));
+                    continue;
+                }
+
+                changed |= DrawUnitBonusTarget(document, unit.Id, index, bonuses[index].Target);
+                changed |= DrawUnitBonusValue(document, unit.Id, index, bonuses[index].Value);
+            }
 
             foreach (string statName in UnitStatNames)
             {
@@ -387,6 +430,54 @@ namespace HanziDefend.Editor
 
             EditorGUILayout.EndHorizontal();
             return changed;
+        }
+
+        private bool DrawUnitEnum<T>(DataEditorDocument document, string unitId, string field, T value)
+            where T : Enum
+        {
+            EditorGUI.BeginChangeCheck();
+            T next = (T)EditorGUILayout.EnumPopup(value, GUILayout.Width(numericColumnWidth));
+            if (!EditorGUI.EndChangeCheck())
+            {
+                return false;
+            }
+
+            document.SetUnitString(unitId, field, next.ToString());
+            return true;
+        }
+
+        private bool DrawUnitBonusTarget(
+            DataEditorDocument document,
+            string unitId,
+            int bonusIndex,
+            BonusTarget value)
+        {
+            EditorGUI.BeginChangeCheck();
+            BonusTarget next = (BonusTarget)EditorGUILayout.EnumPopup(value, GUILayout.Width(numericColumnWidth));
+            if (!EditorGUI.EndChangeCheck())
+            {
+                return false;
+            }
+
+            document.SetUnitBonusTarget(unitId, bonusIndex, next);
+            return true;
+        }
+
+        private bool DrawUnitBonusValue(
+            DataEditorDocument document,
+            string unitId,
+            int bonusIndex,
+            float value)
+        {
+            EditorGUI.BeginChangeCheck();
+            float next = EditorGUILayout.FloatField(value, GUILayout.Width(numericColumnWidth));
+            if (!EditorGUI.EndChangeCheck())
+            {
+                return false;
+            }
+
+            document.SetUnitBonusValue(unitId, bonusIndex, next);
+            return true;
         }
 
         private bool DrawUnitNumber(

@@ -11,12 +11,18 @@ namespace HanziDefend.Tests.EditMode
     {
         private static readonly string[] ExpectedAllyIds =
         {
-            "dun", "gong", "huo", "mao", "nu", "qi"
+            "bing", "chc", "dao", "dun", "gong", "huo", "lia", "mao", "nub", "nuc",
+            "qqi", "tie", "zqi", "zu"
         };
 
         private static readonly string[] ExpectedEnemyIds =
         {
-            "e_jia", "e_lang", "e_she", "e_zu"
+            "e_lang", "e_liu", "e_shan"
+        };
+
+        private static readonly string[] ExpectedWaveSetIds =
+        {
+            "main_20", "main_20_stage_2", "main_20_stage_3", "main_20_stage_4", "main_20_stage_5"
         };
 
         [Test]
@@ -24,10 +30,10 @@ namespace HanziDefend.Tests.EditMode
         {
             GameConfig config = GameConfig.Load();
 
-            Assert.That(config.AllyUnits.Count, Is.EqualTo(6), "ally unit count");
-            Assert.That(config.EnemyUnits.Count, Is.EqualTo(4), "enemy unit count");
+            Assert.That(config.AllyUnits.Count, Is.EqualTo(14), "shared unit count");
+            Assert.That(config.EnemyUnits.Count, Is.EqualTo(3), "enemy-exclusive unit count");
             Assert.That(config.Bosses.Count, Is.EqualTo(1), "boss count");
-            Assert.That(config.Commanders.Count, Is.EqualTo(1), "commander count");
+            Assert.That(config.Commanders.Count, Is.EqualTo(2), "commander count");
         }
 
         [Test]
@@ -41,8 +47,8 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(
                 config.EnemyUnits.Select(value => value.Id).OrderBy(value => value).ToArray(),
                 Is.EqualTo(ExpectedEnemyIds));
-            Assert.That(config.Bosses.Select(value => value.Id).ToArray(), Is.EqualTo(new[] { "boss_lv" }));
-            Assert.That(config.Commanders.Select(value => value.Id).ToArray(), Is.EqualTo(new[] { "cmd_bei" }));
+            Assert.That(config.Bosses.Select(value => value.Id).ToArray(), Is.EqualTo(new[] { "bld_cheng" }));
+            Assert.That(config.Commanders.Select(value => value.Id).ToArray(), Is.EqualTo(new[] { "cmd_bei", "cmd_lv" }));
         }
 
         [Test]
@@ -50,11 +56,12 @@ namespace HanziDefend.Tests.EditMode
         {
             GameConfig config = GameConfig.Load();
 
-            Assert.That(config.GetUnit("gong").DisplayName, Is.EqualTo("弓箭手"));
+            Assert.That(config.GetUnit("gong").DisplayName, Is.EqualTo("弓"));
             Assert.That(config.GetUnit("e_lang").Faction, Is.EqualTo(UnitFaction.Enemy));
-            Assert.That(config.GetBoss("boss_lv").Name, Is.EqualTo("吕"));
-            Assert.That(config.GetBoss("boss_lv").DisplayName, Is.EqualTo("吕布"));
-            Assert.That(config.GetCommander("cmd_bei").Name, Is.EqualTo("刘备"));
+            Assert.That(config.GetBoss("bld_cheng").Name, Is.EqualTo("城"));
+            Assert.That(config.GetBoss("bld_cheng").DisplayName, Is.EqualTo("敌方城堡"));
+            Assert.That(config.GetCommander("cmd_bei").DisplayName, Is.EqualTo("刘备"));
+            Assert.That(config.GetCommander("cmd_lv").DisplayName, Is.EqualTo("吕布"));
             Assert.That(config.GetWaveSet("main_20").Waves.Length, Is.EqualTo(20));
             Assert.That(config.GetLevel("level_1_5").StageIndex, Is.EqualTo(5));
             Assert.That(config.GetEffect("cmd_bei_active").Ops[0].Op, Is.EqualTo(EffectOpCode.Heal));
@@ -68,7 +75,7 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(waves.Length, Is.EqualTo(20));
             Assert.That(waves.Select(value => value.Index).ToArray(), Is.EqualTo(Enumerable.Range(1, 20).ToArray()));
             Assert.That(waves[19].Spawns.Length, Is.EqualTo(1));
-            Assert.That(waves[19].Spawns[0].UnitId, Is.EqualTo("boss_lv"));
+            Assert.That(waves[19].Spawns[0].UnitId, Is.EqualTo("bld_cheng"));
             Assert.That(waves[19].Spawns[0].Count, Is.EqualTo(1));
             Assert.That(waves.Take(18).All(value => value.RewardRank == EnemyRank.Normal), Is.True);
             Assert.That(waves[18].RewardRank, Is.EqualTo(EnemyRank.Elite));
@@ -81,15 +88,137 @@ namespace HanziDefend.Tests.EditMode
         {
             GameConfig config = GameConfig.Load();
 
-            Assert.That(config.WaveSets.Count, Is.EqualTo(1));
+            Assert.That(config.WaveSets.Select(value => value.Id), Is.EqualTo(ExpectedWaveSetIds));
             Assert.That(config.Levels.Count, Is.EqualTo(5));
             Assert.That(config.Levels.Select(value => value.StageIndex).ToArray(), Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
-            Assert.That(config.Levels[0].GridCols, Is.EqualTo(3));
-            Assert.That(config.Levels[0].GridRows, Is.EqualTo(3));
-            Assert.That(config.Levels.All(value => value.GridCols == 3), Is.True);
+            Assert.That(config.Levels.Select(value => value.WaveSetId).ToArray(), Is.EqualTo(ExpectedWaveSetIds));
+            Assert.That(config.Levels[0].GridWidth, Is.EqualTo(7));
+            Assert.That(config.Levels[0].GridHeight, Is.EqualTo(7));
+            Assert.That(config.Levels.All(value => value.GridWidth == 7 && value.GridHeight == 7), Is.True);
             Assert.That(config.Levels.All(value => value.StartCoins == 45), Is.True);
-            Assert.That(config.Levels.All(value => value.GridMaxCols == 7), Is.True);
-            Assert.That(config.Levels.All(value => value.GridMaxRows == 3), Is.True);
+            Assert.That(config.Levels.All(value =>
+                value.InitialUnlock.Col == 2 && value.InitialUnlock.Row == 2
+                && value.InitialUnlock.Width == 3 && value.InitialUnlock.Height == 3), Is.True,
+                "every level starts from the centred 3x3");
+            Assert.That(config.Levels.All(value => value.BaseHp == 4000f), Is.True);
+            Assert.That(config.Bases.Ally.Id, Is.EqualTo("bld_ying"));
+            Assert.That(config.Bases.Ally.Hp, Is.EqualTo(4000f));
+            Assert.That(config.Bases.Ally.Armor, Is.EqualTo(30f));
+        }
+
+        [Test]
+        public void Load_DefaultSource_LocksM104ClassificationBonusesTraitsAndCardPool()
+        {
+            GameConfig config = GameConfig.Load();
+
+            Assert.That(config.GetUnit("nub").GridW, Is.EqualTo(1));
+            Assert.That(config.GetUnit("nub").GridH, Is.EqualTo(2));
+            Assert.That(config.GetUnit("nuc").Footprint, Is.EqualTo(UnitFootprintShape.MissingUpperRight));
+            Assert.That(config.GetUnit("chc").Footprint, Is.EqualTo(UnitFootprintShape.MissingLowerLeft));
+            Assert.That(config.Units.Where(value => value.Id != "nuc" && value.Id != "chc")
+                .All(value => value.Footprint == UnitFootprintShape.Rectangle), Is.True);
+            Assert.That(config.GetUnit("nuc").MinRange.Base, Is.EqualTo(2.5f));
+            Assert.That(config.GetUnit("mao").BonusVs.Single().Target, Is.EqualTo(BonusTarget.Cavalry));
+            Assert.That(config.GetUnit("mao").BonusVs.Single().Value, Is.EqualTo(60f));
+            Assert.That(config.GetUnit("nub").BonusVs.Single().Value, Is.EqualTo(40f));
+            Assert.That(config.GetUnit("nuc").BonusVs.Single().Value, Is.EqualTo(400f));
+            Assert.That(config.GetUnit("chc").BonusVs.Single().Value, Is.EqualTo(900f));
+            Assert.That(config.GetUnit("qqi").Traits.Single().Type, Is.EqualTo(UnitTraitType.Charge));
+            Assert.That(config.GetUnit("zqi").Traits.Single().Type, Is.EqualTo(UnitTraitType.Trample));
+            Assert.That(config.GetUnit("huo").Traits.Single().Type, Is.EqualTo(UnitTraitType.FireAura));
+            Assert.That(config.GetUnit("bing").Traits.Single().Type, Is.EqualTo(UnitTraitType.IceAura));
+            Assert.That(config.GetUnit("chc").Traits.Single().Type, Is.EqualTo(UnitTraitType.DeathSpawn));
+            Assert.That(config.GetUnit("huo").Effects, Is.Empty);
+            Assert.That(config.GetUnit("bing").Effects, Is.Empty);
+            Assert.That(config.Units.All(value => value.Tier == UnitTier.Green), Is.True);
+            Assert.That(config.Units.SelectMany(value => new[]
+            {
+                value.Hp, value.Atk, value.Range, value.MinRange, value.AtkSpeed,
+                value.Cooldown, value.Armor, value.Pierce, value.MoveSpeed
+            }).All(value => value.Growth == 0f), Is.True);
+            Assert.That(config.Economy.Damage.TypeMultipliers, Has.Length.EqualTo(16));
+            Assert.That(config.Economy.CardPool.ShapeUnlocks, Has.Length.EqualTo(5));
+            Assert.That(config.Economy.CardPool.GuaranteeBeforeStageIndex, Is.EqualTo(5));
+            Assert.That(config.Economy.CardPool.GuaranteeAttackType, Is.EqualTo(AttackType.Siege));
+            Assert.That(config.Economy.CardOffer.BaseCount, Is.EqualTo(3));
+            Assert.That(config.Economy.CardOffer.LuckyExtraCount, Is.EqualTo(1));
+            Assert.That(config.Economy.CardOffer.LuckyChance, Is.EqualTo(0.10f));
+            Assert.That(config.Economy.GridUnlock.PurchaseBaseCost, Is.EqualTo(40));
+            Assert.That(config.Economy.GridUnlock.PurchaseCostGrowth, Is.EqualTo(20));
+            Assert.That(config.Economy.GridUnlock.BaseAnchorRowOffset, Is.EqualTo(-1f));
+            Assert.That(config.Economy.GridUnlock.AutoUnlockPerMinorStage, Is.EqualTo(1));
+            Assert.That(config.Economy.CardPool.BuffEffectIds,
+                Is.EqualTo(new[] { "buff_front_shield" }));
+            Assert.That(config.Economy.CardPool.GlobalEffectIds,
+                Is.EqualTo(new[]
+                {
+                    "buff_atk_up", "skill_reinforce", "skill_breakthrough",
+                    "skill_breach_base", "reward_coins"
+                }));
+        }
+
+        [TestCase(-0.01f)]
+        [TestCase(1.01f)]
+        public void Load_CardOfferLuckyChanceOutsideProbabilityRangeIsRejected(float invalidChance)
+        {
+            string economy = ReplaceFirst(
+                new JsonConfigSource().ReadText("economy.json"),
+                "\"luckyChance\": 0.10",
+                $"\"luckyChance\": {invalidChance.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+            ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(
+                new OverrideSource(new JsonConfigSource(), "economy.json", economy)));
+
+            Assert.That(exception.Message, Does.Contain("cardOffer.luckyChance"));
+            Assert.That(exception.Message, Does.Contain("[0,1]"));
+        }
+
+        [Test]
+        public void Load_CardEffectPoolCannotReuseCommanderOwnedEffect()
+        {
+            string economy = ReplaceFirst(
+                new JsonConfigSource().ReadText("economy.json"),
+                "\"buffEffectIds\": [\"buff_front_shield\"]",
+                "\"buffEffectIds\": [\"cmd_bei_active\"]");
+
+            ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(
+                new OverrideSource(new JsonConfigSource(), "economy.json", economy)));
+
+            Assert.That(exception.Message, Does.Contain("cmd_bei_active"));
+            Assert.That(exception.Message, Does.Contain("reserved"));
+        }
+
+        [Test]
+        public void Load_LShapedFootprintOutsideTwoByTwoBoundingBoxIsRejected()
+        {
+            string units = ReplaceFirst(
+                new JsonConfigSource().ReadText("units.json"),
+                "\"gridW\": 1, \"gridH\": 1, \"footprint\": \"Rectangle\"",
+                "\"gridW\": 1, \"gridH\": 1, \"footprint\": \"MissingUpperRight\"");
+            var source = new OverrideSource(new JsonConfigSource(), "units.json", units);
+
+            ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(source));
+
+            Assert.That(exception.Message, Does.Contain("MissingUpperRight"));
+            Assert.That(exception.Message, Does.Contain("2x2"));
+        }
+
+        [Test]
+        public void Load_DefaultSource_WaveArmorDistributionUsesTunedLowCountApproximation()
+        {
+            GameConfig config = GameConfig.Load();
+            foreach (string waveSetId in ExpectedWaveSetIds.Take(4))
+            {
+                WaveDef[] waves = config.GetWaveSet(waveSetId).Waves;
+                AssertArmorCounts(config, waves.Take(6), 4, 2, 0);
+                AssertArmorCounts(config, waves.Skip(6).Take(6), 3, 2, 1);
+                AssertArmorCounts(config, waves.Skip(12).Take(7), 4, 2, 2);
+            }
+
+            WaveDef[] stageFive = config.GetWaveSet("main_20_stage_5").Waves;
+            AssertArmorCounts(config, stageFive.Take(6), 4, 2, 0);
+            AssertArmorCounts(config, stageFive.Skip(6).Take(6), 3, 2, 1);
+            AssertArmorCounts(config, stageFive.Skip(12).Take(7), 5, 2, 3);
         }
 
         [Test]
@@ -140,8 +269,7 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(config.GetEffect("cmd_bei_passive").Trigger, Is.EqualTo(EffectTrigger.BattleStart));
             Assert.That(config.GetEffect("cmd_bei_passive").Stacking, Is.EqualTo(EffectStackingRule.Refresh));
             Assert.That(config.GetEffect("cmd_bei_active").Trigger, Is.EqualTo(EffectTrigger.Manual));
-            Assert.That(config.GetEffect("unit_huo_blast").Trigger, Is.EqualTo(EffectTrigger.SuicideContact));
-            Assert.That(config.GetEffect("boss_lv_fury").Trigger, Is.EqualTo(EffectTrigger.UnitSpawn));
+            Assert.That(config.GetEffect("unit_huo_blast").Trigger, Is.EqualTo(EffectTrigger.Manual));
         }
 
         [TestCase("\"trigger\": \"Manual\"", "\"trigger\": \"EveryTick\"", "EveryTick")]
@@ -175,8 +303,6 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [TestCase("\"trigger\": \"BattleStart\"", "\"trigger\": \"Manual\"", "passive effect", "BattleStart")]
-        [TestCase("\"trigger\": \"SuicideContact\"", "\"trigger\": \"Manual\"", "unit_huo_blast", "SuicideContact")]
-        [TestCase("\"trigger\": \"UnitSpawn\"", "\"trigger\": \"Manual\"", "boss_lv_fury", "UnitSpawn")]
         public void Load_EffectTriggerOwnerMismatch_ReportsExpectedOwnership(
             string original,
             string replacement,
@@ -237,9 +363,10 @@ namespace HanziDefend.Tests.EditMode
         [Test]
         public void Load_MissingWaveRewardRank_ReportsWaveAndField()
         {
-            string waves = new JsonConfigSource().ReadText("waves.json")
-                .Replace("          \"rewardRank\": \"Normal\",\r\n", string.Empty)
-                .Replace("          \"rewardRank\": \"Normal\",\n", string.Empty);
+            string waves = ReplaceFirst(
+                new JsonConfigSource().ReadText("waves.json"),
+                "\"rewardRank\": \"Normal\",",
+                string.Empty);
             var source = new OverrideSource(new JsonConfigSource(), "waves.json", waves);
 
             ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(source));
@@ -273,7 +400,7 @@ namespace HanziDefend.Tests.EditMode
             ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(source));
 
             Assert.That(exception.Message, Does.Contain("rewardRank Boss requires a BossDef"));
-            Assert.That(exception.Message, Does.Contain("e_zu"));
+            Assert.That(exception.Message, Does.Contain("zu"));
         }
 
         [TestCase(0)]
@@ -288,7 +415,7 @@ namespace HanziDefend.Tests.EditMode
 
             ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(source));
 
-            Assert.That(exception.Message, Does.Contain("spawn 'e_zu' level"));
+            Assert.That(exception.Message, Does.Contain("spawn 'zu' level"));
             Assert.That(exception.Message, Does.Contain("[1,4]"));
         }
 
@@ -409,12 +536,12 @@ namespace HanziDefend.Tests.EditMode
         public void Load_BossMissingDisplayName_ReportsBossAndField()
         {
             string units = new JsonConfigSource().ReadText("units.json")
-                .Replace("\"displayName\": \"吕布\"", "\"displayName\": \"\"");
+                .Replace("\"displayName\": \"敌方城堡\"", "\"displayName\": \"\"");
             var source = new OverrideSource(new JsonConfigSource(), "units.json", units);
 
             ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(source));
 
-            Assert.That(exception.Message, Does.Contain("Boss 'boss_lv' displayName"));
+            Assert.That(exception.Message, Does.Contain("Boss 'bld_cheng' displayName"));
         }
 
         [Test]
@@ -433,7 +560,7 @@ namespace HanziDefend.Tests.EditMode
         public void Load_DanglingWaveUnit_ReportsOwnerAndBadId()
         {
             string waves = new JsonConfigSource().ReadText("waves.json")
-                .Replace("\"unitId\": \"e_zu\"", "\"unitId\": \"missing_unit\"");
+                .Replace("\"unitId\": \"zu\"", "\"unitId\": \"missing_unit\"");
             var source = new OverrideSource(new JsonConfigSource(), "waves.json", waves);
 
             ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(source));
@@ -480,6 +607,25 @@ namespace HanziDefend.Tests.EditMode
             return source.Substring(0, index)
                    + replacement
                    + source.Substring(index + original.Length);
+        }
+
+        private static void AssertArmorCounts(
+            GameConfig config,
+            IEnumerable<WaveDef> waves,
+            int expectedUnarmored,
+            int expectedLight,
+            int expectedHeavy)
+        {
+            var counts = new Dictionary<ArmorType, int>();
+            foreach (WaveSpawnDef spawn in waves.SelectMany(value => value.Spawns))
+            {
+                ArmorType armorType = config.GetUnit(spawn.UnitId).ArmorType;
+                counts[armorType] = counts.TryGetValue(armorType, out int count) ? count + spawn.Count : spawn.Count;
+            }
+
+            Assert.That(counts.GetValueOrDefault(ArmorType.Unarmored), Is.EqualTo(expectedUnarmored));
+            Assert.That(counts.GetValueOrDefault(ArmorType.Light), Is.EqualTo(expectedLight));
+            Assert.That(counts.GetValueOrDefault(ArmorType.Heavy), Is.EqualTo(expectedHeavy));
         }
 
         private sealed class RecordingSource : IConfigSource

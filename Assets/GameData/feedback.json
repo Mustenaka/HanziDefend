@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "audio": {
+    "poolSize": 8,
+    "sampleRateHz": 22050,
+    "masterVolume": 0.75,
+    "cues": [
+      {
+        "cue": "Deploy",
+        "clipId": "deploy",
+        "volume": 0.62,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 440.0,
+          "durationSeconds": 0.10,
+          "amplitude": 0.34,
+          "attackSeconds": 0.008,
+          "releaseSeconds": 0.05
+        }
+      },
+      {
+        "cue": "Merge",
+        "clipId": "merge",
+        "volume": 0.78,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 660.0,
+          "durationSeconds": 0.18,
+          "amplitude": 0.38,
+          "attackSeconds": 0.01,
+          "releaseSeconds": 0.10
+        }
+      },
+      {
+        "cue": "Spawn",
+        "clipId": "spawn",
+        "volume": 0.48,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 330.0,
+          "durationSeconds": 0.08,
+          "amplitude": 0.26,
+          "attackSeconds": 0.006,
+          "releaseSeconds": 0.04
+        }
+      },
+      {
+        "cue": "Hit",
+        "clipId": "hit",
+        "volume": 0.72,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 120.0,
+          "durationSeconds": 0.07,
+          "amplitude": 0.42,
+          "attackSeconds": 0.002,
+          "releaseSeconds": 0.055
+        }
+      },
+      {
+        "cue": "Victory",
+        "clipId": "victory",
+        "volume": 0.90,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 784.0,
+          "durationSeconds": 0.42,
+          "amplitude": 0.34,
+          "attackSeconds": 0.02,
+          "releaseSeconds": 0.20
+        }
+      },
+      {
+        "cue": "Defeat",
+        "clipId": "defeat",
+        "volume": 0.85,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 146.8,
+          "durationSeconds": 0.42,
+          "amplitude": 0.38,
+          "attackSeconds": 0.02,
+          "releaseSeconds": 0.24
+        }
+      },
+      {
+        "cue": "Settlement",
+        "clipId": "settlement",
+        "volume": 0.70,
+        "pitch": 1.0,
+        "synthesis": {
+          "frequencyHz": 523.3,
+          "durationSeconds": 0.24,
+          "amplitude": 0.30,
+          "attackSeconds": 0.015,
+          "releaseSeconds": 0.13
+        }
+      }
+    ]
+  },
+  "hitStop": {
+    "enabled": true,
+    "durationSeconds": 0.045,
+    "cooldownSeconds": 0.055
+  },
+  "shake": {
+    "enabled": true,
+    "durationSeconds": 0.12,
+    "cooldownSeconds": 0.025,
+    "amplitude": 0.075,
+    "frequencyHz": 25.0,
+    "verticalFrequencyMultiplier": 1.37,
+    "phaseStepRadians": 0.7548777
+  }
+}

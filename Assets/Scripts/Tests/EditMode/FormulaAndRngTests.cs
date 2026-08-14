@@ -21,7 +21,148 @@ namespace HanziDefend.Tests.EditMode
             float pierce,
             int expected)
         {
-            Assert.That(Formula.Damage(atk, armor, pierce, 100f, 1), Is.EqualTo(expected));
+            EconomyDef economy = GameConfig.Load().Economy;
+            Assert.That(
+                Formula.Damage(
+                    atk,
+                    AttackType.None,
+                    Array.Empty<BonusVsDef>(),
+                    armor,
+                    ArmorType.Unarmored,
+                    UnitType.Infantry,
+                    pierce,
+                    economy),
+                Is.EqualTo(expected));
+        }
+
+        /// <summary>
+        /// Every locked attacker/defender pair from M1-04. Expected damage is derived by hand from
+        /// M1-04 §2.1 (counter matrix), §2.2 (bonusVs) and §2.3 (damage formula) against the stat
+        /// tables in M1-04 §3 — never read back from this implementation.
+        ///
+        /// The first nine rows are the original M1-04 §3.4 counter relationships. The rest exist so
+        /// that <b>every combatant that owns an atk value appears at least once as the ATTACKER</b>.
+        /// That invariant is enforced by
+        /// <see cref="Damage_EveryAttackCapableCombatantIsCoveredAsAnAttacker"/>: before WO-C6 the
+        /// nine rows only ever used zqi as a defender, so changing zqi's atk from 105 to 45 turned
+        /// nothing red. Any atk edit must now break a test.
+        /// </summary>
+        private static readonly (string Attacker, string Defender, int Damage, float Net)[]
+            LockedCounterRelationships =
+            {
+                // --- M1-04 §3.4, the nine original relationships (values unchanged) ---
+                ("gong", "mao", 42, 2.000f),
+                ("gong", "tie", 8, 0.500f),
+                ("nub", "tie", 297, 4.471f),
+                ("nub", "zqi", 322, 4.471f),
+                ("nuc", "tie", 904, 4.000f),
+                ("qqi", "gong", 124, 2.000f),
+                ("mao", "qqi", 104, 3.318f),
+                ("mao", "zqi", 61, 2.318f),
+                ("gong", "nub", 43, 2.000f),
+
+                // --- WO-C6: attacker-side coverage for everything the nine rows missed ---
+                ("zu", "gong", 27, 2.000f),          // Slash vs Unarmored 2.0x
+                ("dun", "zqi", 37, 2.000f),          // Blunt vs Heavy 2.0x
+                ("dao", "qqi", 140, 1.500f),         // Slash vs Light 1.5x
+                ("zqi", "gong", 90, 2.000f),         // the blind spot WO-C6 closes
+                ("tie", "zqi", 59, 0.500f),          // Slash vs Heavy 0.5x
+                ("lia", "tie", 217, 2.000f),         // Blunt vs Heavy 2.0x
+                ("nuc", "bld_cheng", 800, 3.538f),   // Siege 2.0x + 400 vs Building
+                ("chc", "bld_cheng", 1500, 5.000f),  // Siege 2.0x + 900 vs Building
+                ("e_lang", "gong", 294, 2.000f),
+                ("e_liu", "mao", 47, 2.000f),
+                ("e_shan", "zqi", 54, 2.000f),
+                ("bld_cheng", "nuc", 30, 0.500f)     // the castle's own return fire
+            };
+
+        /// <summary>
+        /// Aura units carry no atk at all (M1-04 §3.1 lists their ATK as "—", and units.json stores
+        /// 0), so they have no attacker-side damage to lock. They are the only exemptions.
+        /// </summary>
+        private static readonly string[] AtkFreeAuraUnits = { "huo", "bing" };
+
+        private static System.Collections.Generic.IEnumerable<TestCaseData> CounterRelationshipCases()
+        {
+            foreach ((string attacker, string defender, int damage, float net) in LockedCounterRelationships)
+            {
+                yield return new TestCaseData(attacker, defender, damage, net)
+                    .SetName($"Damage_M104LockedCounter({attacker}->{defender})");
+            }
+        }
+
+        [TestCaseSource(nameof(CounterRelationshipCases))]
+        public void Damage_M104LockedCounterRelationships(
+            string attackerId,
+            string defenderId,
+            int expectedDamage,
+            float expectedNetMultiplier)
+        {
+            GameConfig config = GameConfig.Load();
+            Combatant attacker = ResolveCombatant(config, attackerId);
+            Combatant defender = ResolveCombatant(config, defenderId);
+
+            int actual = Formula.Damage(
+                attacker.Atk,
+                attacker.AtkType,
+                attacker.BonusVs,
+                defender.Armor,
+                defender.ArmorType,
+                defender.UnitType,
+                attacker.Pierce,
+                config.Economy);
+            float netMultiplier = NetCounterMultiplier(attacker, defender, config.Economy);
+
+            Assert.That(actual, Is.EqualTo(expectedDamage),
+                $"{attackerId}->{defenderId} damage drifted from the M1-04 derivation.");
+            Assert.That(netMultiplier, Is.EqualTo(expectedNetMultiplier).Within(0.01f),
+                $"{attackerId}->{defenderId} net counter multiplier drifted from M1-04 §2.1/§2.2.");
+        }
+
+        /// <summary>
+        /// The coverage guard itself: if a new unit or boss gains an atk value, or an existing one
+        /// is retuned, it must be represented on the attacker side of the locked table above.
+        /// Without this, the locked table can silently stop covering the roster.
+        /// </summary>
+        [Test]
+        public void Damage_EveryAttackCapableCombatantIsCoveredAsAnAttacker()
+        {
+            GameConfig config = GameConfig.Load();
+            var covered = LockedCounterRelationships
+                .Select(value => value.Attacker)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var attackCapable = config.Units
+                .Where(unit => unit.Atk.Base > 0f)
+                .Select(unit => unit.Id)
+                .Concat(config.Bosses.Where(boss => boss.Atk > 0f).Select(boss => boss.Id))
+                .ToArray();
+
+            Assert.That(attackCapable, Is.Not.Empty);
+            Assert.That(
+                attackCapable.Where(id => !covered.Contains(id)),
+                Is.Empty,
+                "Every combatant with an atk value must appear as an attacker in "
+                + "LockedCounterRelationships, otherwise retuning its atk turns no test red.");
+
+            foreach (string auraId in AtkFreeAuraUnits)
+            {
+                Assert.That(config.GetUnit(auraId).Atk.Base, Is.Zero,
+                    $"'{auraId}' is exempt from attacker coverage only while it carries no atk.");
+            }
+
+            Assert.That(covered.Count, Is.EqualTo(attackCapable.Length),
+                "The locked table must not name an attacker that no longer exists.");
+        }
+
+        [Test]
+        public void Damage_NoneAttackType_UsesJsonNeutralMultiplier()
+        {
+            EconomyDef economy = GameConfig.Load().Economy;
+            Assert.That(
+                Formula.Damage(100f, AttackType.None, Array.Empty<BonusVsDef>(),
+                    0f, ArmorType.Building, UnitType.Building, 0f, economy),
+                Is.EqualTo(100));
         }
 
         [TestCase(1, 100f)]
@@ -59,9 +200,37 @@ namespace HanziDefend.Tests.EditMode
         [Test]
         public void Formula_UsesProvidedEconomyConstants()
         {
+            EconomyDef economy = GameConfig.Load().Economy;
+
             Assert.That(Formula.RefreshCost(2, 100, 7), Is.EqualTo(114));
-            Assert.That(Formula.Damage(100f, 100f, 0f, 200f, 1), Is.EqualTo(67));
-            Assert.That(Formula.Damage(0f, 0f, 0f, 100f, 4), Is.EqualTo(4));
+
+            economy.Damage.ArmorScale = 200f;
+            economy.Damage.MinimumDamage = 1;
+            Assert.That(
+                Formula.Damage(
+                    100f,
+                    AttackType.None,
+                    Array.Empty<BonusVsDef>(),
+                    100f,
+                    ArmorType.Unarmored,
+                    UnitType.Infantry,
+                    0f,
+                    economy),
+                Is.EqualTo(67));
+
+            economy.Damage.ArmorScale = 100f;
+            economy.Damage.MinimumDamage = 4;
+            Assert.That(
+                Formula.Damage(
+                    0f,
+                    AttackType.None,
+                    Array.Empty<BonusVsDef>(),
+                    0f,
+                    ArmorType.Unarmored,
+                    UnitType.Infantry,
+                    0f,
+                    economy),
+                Is.EqualTo(4));
             Assert.That(Formula.DropCoins(EnemyRank.Normal, 9, 11, 27), Is.EqualTo(9));
         }
 
@@ -77,6 +246,76 @@ namespace HanziDefend.Tests.EditMode
         public void RefreshCost_RejectsNegativeRefreshCount()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Formula.RefreshCost(-1, 15, 5));
+        }
+
+        /// <summary>
+        /// Flattens <see cref="UnitDef"/> and <see cref="BossDef"/> into the fields the damage
+        /// formula actually reads, so the castle can be locked as both attacker and defender.
+        /// </summary>
+        private readonly struct Combatant
+        {
+            internal Combatant(
+                float atk,
+                AttackType atkType,
+                float pierce,
+                BonusVsDef[] bonusVs,
+                float armor,
+                ArmorType armorType,
+                UnitType unitType)
+            {
+                Atk = atk;
+                AtkType = atkType;
+                Pierce = pierce;
+                BonusVs = bonusVs ?? Array.Empty<BonusVsDef>();
+                Armor = armor;
+                ArmorType = armorType;
+                UnitType = unitType;
+            }
+
+            internal float Atk { get; }
+            internal AttackType AtkType { get; }
+            internal float Pierce { get; }
+            internal BonusVsDef[] BonusVs { get; }
+            internal float Armor { get; }
+            internal ArmorType ArmorType { get; }
+            internal UnitType UnitType { get; }
+        }
+
+        private static Combatant ResolveCombatant(GameConfig config, string id)
+        {
+            if (config.UnitsById.TryGetValue(id, out UnitDef unit))
+            {
+                return new Combatant(
+                    unit.Atk.Base,
+                    unit.AtkType,
+                    unit.Pierce.Base,
+                    unit.BonusVs,
+                    unit.Armor.Base,
+                    unit.ArmorType,
+                    unit.UnitType);
+            }
+
+            BossDef boss = config.GetBoss(id);
+            return new Combatant(
+                boss.Atk,
+                boss.AtkType,
+                boss.Pierce,
+                boss.BonusVs,
+                boss.Armor,
+                boss.ArmorType,
+                boss.UnitType);
+        }
+
+        private static float NetCounterMultiplier(Combatant attacker, Combatant defender, EconomyDef economy)
+        {
+            float bonus = attacker.BonusVs
+                .Where(value => value.Target == BonusTarget.Cavalry && defender.UnitType == UnitType.Cavalry
+                                || value.Target == BonusTarget.HeavyArmor && defender.ArmorType == ArmorType.Heavy
+                                || value.Target == BonusTarget.Building
+                                   && (defender.UnitType == UnitType.Building || defender.ArmorType == ArmorType.Building))
+                .Sum(value => value.Value);
+            return (attacker.Atk * Formula.TypeMultiplier(attacker.AtkType, defender.ArmorType, economy) + bonus)
+                   / attacker.Atk;
         }
     }
 

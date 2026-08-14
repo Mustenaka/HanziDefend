@@ -49,16 +49,69 @@ namespace HanziDefend.Data
         Suicide
     }
 
-    [Serializable]
-    public class BaseDef
+    /// <summary>
+    /// Logical deployment occupancy inside the GridW x GridH bounding box.
+    /// Row zero is the lower edge; columns increase from left to right.
+    /// </summary>
+    public enum UnitFootprintShape
     {
-        public float Hp { get; set; }
+        Unknown = 0,
+        Rectangle,
+        MissingUpperRight,
+        MissingLowerLeft
+    }
 
-        public float Armor { get; set; }
+    public enum UnitType
+    {
+        Unknown = 0,
+        Infantry,
+        Cavalry,
+        Naval,
+        Air,
+        Building,
+        Special
+    }
+
+    public enum ArmorType
+    {
+        Unknown = 0,
+        Unarmored,
+        Light,
+        Heavy,
+        Building
+    }
+
+    public enum AttackType
+    {
+        Unknown = 0,
+        None,
+        Slash,
+        Blunt,
+        Arrow,
+        Siege
+    }
+
+    /// <summary>
+    /// Union of the defender classifications addressable by M1 positional bonuses.
+    /// </summary>
+    public enum BonusTarget
+    {
+        Unknown = 0,
+        Cavalry,
+        HeavyArmor,
+        Building
     }
 
     [Serializable]
-    public sealed class BossDef : BaseDef
+    public sealed class BonusVsDef
+    {
+        public BonusTarget Target { get; set; }
+
+        public float Value { get; set; }
+    }
+
+    [Serializable]
+    public class BaseDef
     {
         public string Id { get; set; } = string.Empty;
 
@@ -66,6 +119,18 @@ namespace HanziDefend.Data
 
         public string DisplayName { get; set; } = string.Empty;
 
+        public float Hp { get; set; }
+
+        public float Armor { get; set; }
+
+        public UnitType UnitType { get; set; }
+
+        public ArmorType ArmorType { get; set; }
+    }
+
+    [Serializable]
+    public sealed class BossDef : BaseDef
+    {
         public float Atk { get; set; }
 
         public float Range { get; set; }
@@ -73,6 +138,10 @@ namespace HanziDefend.Data
         public float AtkSpeed { get; set; }
 
         public float Pierce { get; set; }
+
+        public AttackType AtkType { get; set; }
+
+        public BonusVsDef[] BonusVs { get; set; } = Array.Empty<BonusVsDef>();
 
         public string[] Effects { get; set; } = Array.Empty<string>();
     }

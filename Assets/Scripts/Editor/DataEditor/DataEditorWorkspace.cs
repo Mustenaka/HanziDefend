@@ -344,7 +344,7 @@ namespace HanziDefend.Editor
 
             foreach (string field in new[]
                      {
-                         "refreshBaseCost", "refreshCostGrowth", "gridUnlock", "dropCoins", "damage",
+                         "refreshBaseCost", "refreshCostGrowth", "gridUnlock", "deployUi", "dropCoins", "damage",
                          "cardWeights", "cardOffer", "cardPool", "settlementReward", "battle"
                      })
             {
@@ -372,6 +372,8 @@ namespace HanziDefend.Editor
                 new[] { "armorScale", "minimumDamage", "neutralTypeMultiplier", "typeMultipliers" }, errors);
             RequireObjectFields(economy["gridUnlock"] as JObject, "economy.json", "gridUnlock",
                 new[] { "purchaseBaseCost", "purchaseCostGrowth", "baseAnchorRowOffset", "autoUnlockPerMinorStage" }, errors);
+            RequireObjectFields(economy["deployUi"] as JObject, "economy.json", "deployUi",
+                new[] { "cellSpacingRatio", "handCardScale", "snapRadiusCells", "dragLiftCells" }, errors);
             RequireObjectFields(economy["cardWeights"] as JObject, "economy.json", "cardWeights",
                 new[] { "unit", "unlock", "buff", "global" }, errors);
             RequireObjectFields(economy["cardOffer"] as JObject, "economy.json", "cardOffer",
@@ -683,6 +685,11 @@ namespace HanziDefend.Editor
             RequireNonNegativeNumber(gridUnlock["purchaseBaseCost"], "economy.json", "gridUnlock.purchaseBaseCost", errors);
             RequireNonNegativeNumber(gridUnlock["purchaseCostGrowth"], "economy.json", "gridUnlock.purchaseCostGrowth", errors);
             RequireNonNegativeNumber(gridUnlock["autoUnlockPerMinorStage"], "economy.json", "gridUnlock.autoUnlockPerMinorStage", errors);
+            JObject deployUi = (JObject)economy["deployUi"];
+            RequireNonNegativeNumber(deployUi["cellSpacingRatio"], "economy.json", "deployUi.cellSpacingRatio", errors);
+            RequirePositiveNumber(deployUi["handCardScale"], "economy.json", "deployUi.handCardScale", errors);
+            RequirePositiveNumber(deployUi["snapRadiusCells"], "economy.json", "deployUi.snapRadiusCells", errors);
+            RequireNonNegativeNumber(deployUi["dragLiftCells"], "economy.json", "deployUi.dragLiftCells", errors);
             foreach (string field in new[] { "normal", "elite", "boss" })
             {
                 RequirePositiveNumber(economy["dropCoins"][field], "economy.json", "dropCoins." + field, errors);

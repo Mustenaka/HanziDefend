@@ -128,6 +128,167 @@ namespace HanziDefend.Tests.PlayMode
             Assert.That(flow.RunState.RngStreamsState.battle.state, Is.EqualTo(battleState));
         }
 
+        /// <summary>
+        /// A full round trip: deploy, fight, take a reward, and arrive in the NEXT stage's deploy
+        /// phase ready to play.
+        ///
+        /// <para>The other flow tests all verify that RunState is inherited correctly, and every one
+        /// of them passed while stage 2 was unplayable: nobody dealt its free hand, so the hand was
+        /// empty and refreshing threw. Inheritance was never the broken part — <b>arriving</b> was.
+        /// This asserts the arrival: a hand exists, refresh works, and the reward is on the books.</para>
+        /// </summary>
+        [Test]
+        public void SecondMinorStage_ArrivesPlayableWithAHandRefreshAndTheChosenReward()
+        {
+            GameFlow flow = CreateFlow(FastWinConfig());
+            AddDeployment(flow, "gong", "round-trip", 1, 3, 2);
+
+            Assert.That(flow.Economy.CurrentOffer, Is.Not.Null, "stage 1 is dealt its free hand");
+            int stageOneCards = flow.Economy.CurrentOffer.Cards.Count;
+
+            flow.StartBattle();
+            TickUntilPhaseChanges(flow, GameFlowPhase.Battle, 20);
+            Assert.That(flow.Phase, Is.EqualTo(GameFlowPhase.Reward));
+
+            string chosen = flow.Reward.CurrentOffer.Cards[0].EffectId;
+            flow.Reward.Select(0);
+            flow.BeginNextStage();
+
+            Assert.That(flow.Phase, Is.EqualTo(GameFlowPhase.Deploy));
+            Assert.That(flow.StageNumber, Is.EqualTo(2));
+
+            // 1. The new stage has a hand of its own.
+            Assert.That(flow.Economy.CurrentOffer, Is.Not.Null,
+                "stage 2 must be dealt its own free hand on arrival");
+            Assert.That(flow.Economy.CurrentOffer.Cards, Is.Not.Empty, "stage 2's hand must not be empty");
+            Assert.That(stageOneCards, Is.GreaterThan(0));
+
+            // 2. Refresh works instead of throwing the free-offer guard.
+            flow.RunState.Coins = 1000;
+            Assert.DoesNotThrow(() => flow.Economy.TryRefresh(out _),
+                "refreshing in stage 2 must not hit the 'draw the free offer first' guard");
+            Assert.That(flow.Economy.CurrentOffer.Cards, Is.Not.Empty);
+
+            // Buying an unlock card runs through the same guard.
+            flow.RunState.Coins = 1000;
+            Assert.DoesNotThrow(() => flow.Economy.TryPurchaseUnlockCard(out _));
+
+            // 3. The reward chosen at settlement is carried and nameable.
+            Assert.That(flow.RunState.OwnedEffects, Does.Contain(chosen));
+        }
+
+        /// <summary>
+        /// The same deploy screen instance carried from stage 1 into stage 2, exactly as the
+        /// bootstrap does it.
+        ///
+        /// <para>Reuse is the whole point. Building a fresh screen for stage 2 hides the bug,
+        /// because <c>Initialize</c> would deal the hand on the way in — which is precisely why the
+        /// shipped build broke and the tests did not: the real bootstrap keeps one screen and only
+        /// calls <c>RefreshAll</c> on each phase change.</para>
+        /// </summary>
+        [Test]
+        public void SecondMinorStage_ReusedDeployScreenShowsTheHandAndTheOwnedEffects()
+        {
+            GameConfig config = FastWinConfig();
+            GameFlow flow = CreateFlow(config);
+
+            // Stage 1: the screen is built once and kept for the rest of the run.
+            DeployScreen screen = HostDeployScreen(config, flow);
+            Assert.That(screen.RenderedHandCount, Is.GreaterThan(0), "stage 1 renders a hand");
+
+            AddDeployment(flow, "gong", "round-trip-ui", 1, 3, 2);
+            flow.StartBattle();
+            TickUntilPhaseChanges(flow, GameFlowPhase.Battle, 20);
+            string chosen = flow.Reward.CurrentOffer.Cards[0].EffectId;
+            flow.Reward.Select(0);
+            flow.BeginNextStage();
+
+            // What the bootstrap does on re-entering Deploy: no rebuild, just a refresh.
+            screen.RefreshAll();
+
+            Assert.That(flow.StageNumber, Is.EqualTo(2));
+            Assert.That(screen.RenderedHandCount, Is.GreaterThan(0),
+                "the reused deploy screen must render stage 2's hand");
+            Assert.That(flow.RunState.OwnedEffects, Does.Contain(chosen));
+            Assert.That(screen.OwnedEffectChipCount, Is.GreaterThan(0),
+                "effects won at settlement must be visible on the deploy screen");
+            Assert.That(
+                screen.OwnedEffectChipCount,
+                Is.EqualTo(flow.RunState.OwnedEffects.Distinct().Count()),
+                "one chip per distinct owned effect");
+
+            // The refresh button goes through the same guard that used to throw.
+            flow.RunState.Coins = 1000;
+            Assert.DoesNotThrow(() => screen.RefreshOffer());
+        }
+
+        /// <summary>
+        /// Units come out as a line across the base, and the card you put on the left is the one
+        /// that comes out on the left.
+        ///
+        /// <para>The ordering half of that is not decoration — it is the strategic dimension the
+        /// deploy grid buys, and the reason the spread is a mapping rather than a random scatter.
+        /// The width half is the bug: a fixed 1.2-per-column step spanned 2.4 world units on the
+        /// three columns that start unlocked, against a battlefield some 10.8 wide, so everyone
+        /// spawned in a heap.</para>
+        /// </summary>
+        [Test]
+        public void StartBattle_SpreadsSpawnsAcrossTheBaseAndKeepsTheLeftCardOnTheLeft()
+        {
+            GameConfig config = FastWinConfig();
+            GameFlow flow = CreateFlow(config);
+
+            // The three columns that start unlocked, left to right.
+            AddDeployment(flow, "zu", "spread-left", 1, 2, 2);
+            AddDeployment(flow, "gong", "spread-middle", 1, 3, 2);
+            AddDeployment(flow, "huo", "spread-right", 1, 4, 2);
+
+            flow.StartBattle();
+            Dictionary<string, float> x = AllySpawnX(flow);
+
+            Assert.That(x["zu"], Is.LessThan(x["gong"]), "the card placed on the left spawns on the left");
+            Assert.That(x["gong"], Is.LessThan(x["huo"]), "and the one placed on the right, on the right");
+            Assert.That(
+                x["huo"] - x["zu"],
+                Is.EqualTo(config.Economy.Battle.DeploymentSpreadWidth).Within(0.01f),
+                "three unlocked columns still fill the base");
+        }
+
+        /// <summary>
+        /// The line fills the base whether three columns are unlocked or seven: more columns pack
+        /// tighter, they do not reach further. Locking the total width to the configured value —
+        /// rather than to the column count — is what keeps the formation readable all run.
+        /// </summary>
+        [Test]
+        public void StartBattle_SpreadWidthDoesNotChangeWhenMoreColumnsUnlock()
+        {
+            GameConfig config = FastWinConfig();
+            float spreadWidth = config.Economy.Battle.DeploymentSpreadWidth;
+
+            GameFlow narrow = CreateFlow(config);
+            AddDeployment(narrow, "zu", "narrow-left", 1, 2, 2);
+            AddDeployment(narrow, "huo", "narrow-right", 1, 4, 2);
+            narrow.StartBattle();
+            Dictionary<string, float> narrowX = AllySpawnX(narrow);
+
+            GameFlow wide = CreateFlow(config);
+            wide.Economy.Grid.ApplyUnlock(
+                UnlockCardFactory.Create(UnlockCardShape.ThreeByOne), new GridCoordinate(0, 2));
+            wide.Economy.Grid.ApplyUnlock(
+                UnlockCardFactory.Create(UnlockCardShape.ThreeByOne), new GridCoordinate(4, 2));
+            wide.Economy.SnapshotToRunState();
+            AddDeployment(wide, "zu", "wide-left", 1, 0, 2);
+            AddDeployment(wide, "huo", "wide-right", 1, 6, 2);
+            wide.StartBattle();
+            Dictionary<string, float> wideX = AllySpawnX(wide);
+
+            Assert.That(
+                UnlockedColumnCount(wide), Is.GreaterThan(UnlockedColumnCount(narrow)),
+                "the wide run must really have unlocked more columns, or this proves nothing");
+            Assert.That(narrowX["huo"] - narrowX["zu"], Is.EqualTo(spreadWidth).Within(0.01f));
+            Assert.That(wideX["huo"] - wideX["zu"], Is.EqualTo(spreadWidth).Within(0.01f));
+        }
+
         [Test]
         public void FiveWins_ReachMajorVictoryAndRestartClearsRunState()
         {
@@ -203,6 +364,29 @@ namespace HanziDefend.Tests.PlayMode
             return flow;
         }
 
+        /// <summary>Builds a deploy screen over a live flow, the way the bootstrap does.</summary>
+        private DeployScreen HostDeployScreen(GameConfig config, GameFlow flow)
+        {
+            var canvasObject = new GameObject(
+                "Flow Deploy Canvas",
+                typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            objects.Add(canvasObject);
+            canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObject.GetComponent<RectTransform>().sizeDelta = new Vector2(1080f, 1920f);
+
+            var screenObject = new GameObject("DeployRoot", typeof(RectTransform));
+            screenObject.transform.SetParent(canvasObject.transform, false);
+            objects.Add(screenObject);
+            DeployScreen screen = screenObject.AddComponent<DeployScreen>();
+            screen.Initialize(config, flow.Economy, new FlowNullArtSource(), null);
+            return screen;
+        }
+
+        private sealed class FlowNullArtSource : IBattleArtSource
+        {
+            public Sprite Find(string assetKey) => null;
+        }
+
         private RewardScreen CreateRewardScreen()
         {
             var canvasObject = new GameObject("Flow Test Canvas", typeof(RectTransform), typeof(Canvas));
@@ -212,6 +396,23 @@ namespace HanziDefend.Tests.PlayMode
             objects.Add(screenObject);
             screenObject.transform.SetParent(canvasObject.transform, false);
             return screenObject.AddComponent<RewardScreen>();
+        }
+
+        /// <summary>Spawn X of each ally unit in a just-started battle, keyed by unit id.</summary>
+        private static Dictionary<string, float> AllySpawnX(GameFlow flow)
+        {
+            return flow.Battle.CaptureSnapshot()
+                .Where(value => value.Team == BattleTeam.Ally)
+                .ToDictionary(value => value.DefinitionId, value => value.Position.x);
+        }
+
+        private static int UnlockedColumnCount(GameFlow flow)
+        {
+            bool[] mask = flow.RunState.UnlockedCells;
+            int width = flow.RunState.GridWidth;
+            return Enumerable.Range(0, width).Count(
+                column => Enumerable.Range(0, flow.RunState.GridHeight)
+                    .Any(row => mask[(row * width) + column]));
         }
 
         private static void AddDeployment(

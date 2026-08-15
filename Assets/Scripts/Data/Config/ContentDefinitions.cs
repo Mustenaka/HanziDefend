@@ -362,6 +362,49 @@ namespace HanziDefend.Data
 
         /// <summary>How far above the cursor the drag ghost sits, in cell edges.</summary>
         public float DragLiftCells { get; set; }
+
+        /// <summary>
+        /// How far a cell's floor is inset inside its own tile, as a fraction of one cell edge. The
+        /// tile rim left showing is what makes an empty slot read as a slot rather than as flat
+        /// background, and it is also what stays visible around a unit card sitting in that slot.
+        /// </summary>
+        public float CellInsetRatio { get; set; }
+
+        /// <summary>How far a deployed unit's card sits inside its footprint, in cell edges.</summary>
+        public float UnitCardInsetRatio { get; set; }
+
+        /// <summary>Thickness of a unit card's outline, in cell edges.</summary>
+        public float UnitCardOutlineRatio { get; set; }
+
+        /// <summary>Edge of the level badge in a card's bottom-left corner, in cell edges.</summary>
+        public float LevelBadgeRatio { get; set; }
+
+        /// <summary>
+        /// Per-level palette, ordered by level. Deliberately longer than the merge ceiling: level 5
+        /// is reserved for units obtained some other way later, so the table can grow without the
+        /// merge rules moving. See <c>DeploymentGrid.MaximumUnitLevel</c> for the ceiling that
+        /// actually binds.
+        /// </summary>
+        public TierColorDef[] TierColors { get; set; } = Array.Empty<TierColorDef>();
+    }
+
+    /// <summary>
+    /// One level's colours, as <c>#RRGGBB</c> strings. They stay strings here because
+    /// <c>Assets/Scripts/Data/</c> is engine-free by architecture rule; the view parses them.
+    /// </summary>
+    [Serializable]
+    public sealed class TierColorDef
+    {
+        public int Level { get; set; }
+
+        /// <summary>Display name of the colour, e.g. 绿 / 蓝 / 紫 / 金 / 红.</summary>
+        public string Name { get; set; } = string.Empty;
+
+        public string Fill { get; set; } = string.Empty;
+
+        public string Border { get; set; } = string.Empty;
+
+        public string Text { get; set; } = string.Empty;
     }
 
     /// <summary>Rules for the three cell-unlock channels and for the per-stage automatic unlock.</summary>
@@ -430,6 +473,12 @@ namespace HanziDefend.Data
         public Position2Def DeploymentOriginOffset { get; set; }
 
         public Position2Def DeploymentCellSize { get; set; }
+
+        /// <summary>
+        /// World width the unlocked deployment columns fan out across at spawn time. Independent of
+        /// how many columns are unlocked, so the front line always fills the base.
+        /// </summary>
+        public float DeploymentSpreadWidth { get; set; }
     }
 
     [Serializable]

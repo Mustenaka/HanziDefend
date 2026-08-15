@@ -33,7 +33,27 @@ namespace HanziDefend.View
         Placed,
         Merged,
         Unlocked,
-        Rejected
+        Rejected,
+
+        /// <summary>Dropped over the hand: the placement was taken back and its card returned.</summary>
+        ReturnedToHand
+    }
+
+    /// <summary>One level's palette, parsed once from <c>economy.deployUi.tierColors</c>.</summary>
+    internal readonly struct TierPalette
+    {
+        internal TierPalette(string name, Color fill, Color border, Color text)
+        {
+            Name = name;
+            Fill = fill;
+            Border = border;
+            Text = text;
+        }
+
+        internal string Name { get; }
+        internal Color Fill { get; }
+        internal Color Border { get; }
+        internal Color Text { get; }
     }
 
     /// <summary>
@@ -50,6 +70,8 @@ namespace HanziDefend.View
         private const float BounceDurationSeconds = 0.20f;
         private const float BounceScale = 1.14f;
         private const float MergePulseHz = 2.4f;
+        private const float GhostAlpha = 0.5f;
+        private const float GhostArtAlpha = 0.85f;
 
         private static readonly Color PageColor = new Color(0.055f, 0.07f, 0.105f, 0.98f);
         private static readonly Color PanelColor = new Color(0.09f, 0.12f, 0.17f, 0.96f);
@@ -60,10 +82,22 @@ namespace HanziDefend.View
         private static readonly Color InvalidPreviewColor = new Color(0.86f, 0.16f, 0.18f, 1f);
         private static readonly Color MergePreviewColor = new Color(0.97f, 0.78f, 0.18f, 1f);
 
+        private static readonly Color CellFloorColor = new Color(0f, 0f, 0f, 0.42f);
+
+        private readonly List<TierPalette> tierPalettes = new List<TierPalette>();
+        private readonly Dictionary<string, DeployUnitCard> unitCards =
+            new Dictionary<string, DeployUnitCard>(StringComparer.Ordinal);
+
         private readonly Dictionary<GridCoordinate, CellVisual> cells =
             new Dictionary<GridCoordinate, CellVisual>();
         private readonly List<HandCard> handCards = new List<HandCard>();
         private readonly List<GridCoordinate> mergePulseCells = new List<GridCoordinate>();
+
+        /// <summary>
+        /// Cells currently carrying a preview colour. A drag frame restores exactly these and paints
+        /// exactly the new footprint, so canvas writes scale with the card, never with the field.
+        /// </summary>
+        private readonly List<GridCoordinate> highlightedCells = new List<GridCoordinate>();
 
         private GameConfig config;
         private CardEconomy economy;
@@ -75,7 +109,12 @@ namespace HanziDefend.View
         private Action<DeployDragCue> dragCue;
         private Font font;
         private RectTransform handRoot;
+        private RectTransform handPanel;
         private RectTransform gridRoot;
+        private RectTransform unitLayer;
+        private DeployUnitInfoPanel infoPanel;
+        private RectTransform ownedEffectsRoot;
+        private readonly List<GameObject> ownedEffectChips = new List<GameObject>();
         private RectTransform dragLayer;
         private Text coinText;
         private Text refreshText;
@@ -100,6 +139,48 @@ namespace HanziDefend.View
 
         /// <summary>Edge of one grid cell. Hand cards and the drag ghost are measured against it.</summary>
         public float CellEdge => metrics.CellEdge;
+
+        /// <summary>Gap between grid cells; part of the one shared measure, not a card-only value.</summary>
+        public float CellSpacing => metrics.Spacing;
+
+        /// <summary>Edge of one hand-card cell: <see cref="CellEdge"/> times the configured scale.</summary>
+        public float HandCellEdge => handMetrics.CellEdge;
+
+        public float HandCellSpacing => handMetrics.Spacing;
+
+        /// <summary>Cursor-to-centre distance, in cell edges, that engages snapping.</summary>
+        public float SnapRadiusCells => uiRules == null ? 0f : uiRules.SnapRadiusCells;
+
+        /// <summary>
+        /// Grid-cell <c>Image.color</c> writes this screen has actually performed. Every write
+        /// dirties the canvas, so this is the cost that matters for drag smoothness. Counting is
+        /// deliberate: wall-clock timings on this project have twice been polluted by concurrent
+        /// sessions (TECH_DEBT rows 28-29), while a count is machine-independent.
+        /// </summary>
+        public int CellColorWriteCount { get; private set; }
+
+        /// <summary>
+        /// Rule-layer questions this screen has asked (<c>IsUnlocked</c>, <c>TryGetPlacementAt</c>,
+        /// <c>Evaluate</c>, <c>EvaluateUnlock</c>). A drag frame must ask O(1) of these, not one per cell.
+        /// </summary>
+        public int GridQueryCount { get; private set; }
+
+        /// <summary>
+        /// Grid cells this screen has walked over while repainting. Unlike
+        /// <see cref="CellColorWriteCount"/> this counts cells <i>touched</i>, not cells whose colour
+        /// happened to change — so a full-field pass shows up here even when most cells already hold
+        /// the right colour. This is the number that must never scale with field size during a drag.
+        /// </summary>
+        public int CellVisitCount { get; private set; }
+
+        /// <summary>Cells the live preview is currently colouring.</summary>
+        public int HighlightedCellCount => highlightedCells.Count;
+
+        /// <summary>Total cells the field renders; the number a drag frame must NOT scale with.</summary>
+        public int FieldCellCount => cells.Count;
+
+        /// <summary>Chips shown for effects won this run — one per distinct effect id.</summary>
+        public int OwnedEffectChipCount => ownedEffectChips.Count;
 
         public bool IsDragging => drag != null;
 
@@ -131,6 +212,70 @@ namespace HanziDefend.View
             }
         }
 
+        /// <summary>Whole cards drawn on the grid — one per deployed unit, not one per occupied cell.</summary>
+        public int DeployedUnitCardCount => unitCards.Count;
+
+        /// <summary>Levels the palette defines. Longer than the merge ceiling on purpose.</summary>
+        public int TierColorCount => tierPalettes.Count;
+
+        /// <summary>Tiles a deployed unit's card actually draws, so a notch can be asserted.</summary>
+        public IReadOnlyList<GridCoordinate> DeployedCardCellOffsets(string deploymentId)
+        {
+            return unitCards.TryGetValue(deploymentId, out DeployUnitCard card)
+                ? card.Visual.CellOffsets
+                : Array.Empty<GridCoordinate>();
+        }
+
+        /// <summary>Bounding-box size of a deployed unit's card.</summary>
+        public Vector2 DeployedCardSize(string deploymentId)
+        {
+            return unitCards.TryGetValue(deploymentId, out DeployUnitCard card) ? card.Visual.Size : Vector2.zero;
+        }
+
+        /// <summary>The name written across a deployed unit's card. One label, not one per cell.</summary>
+        public string DeployedCardName(string deploymentId)
+        {
+            return unitCards.TryGetValue(deploymentId, out DeployUnitCard card) && card.NameLabel != null
+                ? card.NameLabel.text
+                : string.Empty;
+        }
+
+        /// <summary>Text of a deployed unit's level badge.</summary>
+        public string DeployedCardLevelBadge(string deploymentId)
+        {
+            return unitCards.TryGetValue(deploymentId, out DeployUnitCard card) && card.LevelLabel != null
+                ? card.LevelLabel.text
+                : string.Empty;
+        }
+
+        /// <summary>Fill colour a deployed unit's card is painted with, which encodes its level.</summary>
+        public Color DeployedCardFillColor(string deploymentId)
+        {
+            return unitCards.TryGetValue(deploymentId, out DeployUnitCard card) ? card.Fill : Color.clear;
+        }
+
+        public Color DeployedCardBorderColor(string deploymentId)
+        {
+            return unitCards.TryGetValue(deploymentId, out DeployUnitCard card) ? card.Border : Color.clear;
+        }
+
+        /// <summary>Palette for a level, clamped to the table. Level 1 is index 0.</summary>
+        public Color TierFillColor(int level) => Palette(level).Fill;
+
+        public Color TierBorderColor(int level) => Palette(level).Border;
+
+        public string TierColorName(int level) => Palette(level).Name;
+
+        public bool IsInfoPanelOpen => infoPanel != null && infoPanel.IsOpen;
+
+        public string InfoPanelUnitId => infoPanel == null ? string.Empty : infoPanel.ShownUnitId;
+
+        public int InfoPanelLevel => infoPanel == null ? 0 : infoPanel.ShownLevel;
+
+        /// <summary>Rows the info sheet is showing, "label    value" per entry.</summary>
+        public IReadOnlyList<string> InfoPanelRows =>
+            infoPanel == null ? Array.Empty<string>() : infoPanel.Rows;
+
         public void Initialize(
             GameConfig gameConfig,
             CardEconomy cardEconomy,
@@ -156,6 +301,7 @@ namespace HanziDefend.View
             dragCue = onDragCue;
             uiRules = config.Economy.DeployUi
                 ?? throw new InvalidOperationException("economy.deployUi is required by the deploy screen.");
+            BuildTierPalettes();
             font = RuntimeUiFactory.LoadFont();
 
             BuildHierarchy();
@@ -166,6 +312,48 @@ namespace HanziDefend.View
             }
             initialized = true;
             RefreshAll();
+        }
+
+        /// <summary>
+        /// Parses <c>economy.deployUi.tierColors</c> once. The table lives in JSON rather than in a
+        /// constant here because red line 3 puts tunable values in data, and because the palette is
+        /// the only thing that tells a player a level-3 unit from a level-1 one at a glance.
+        /// </summary>
+        private void BuildTierPalettes()
+        {
+            tierPalettes.Clear();
+            TierColorDef[] table = uiRules.TierColors;
+            if (table == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < table.Length; index++)
+            {
+                TierColorDef entry = table[index];
+                tierPalettes.Add(new TierPalette(
+                    entry.Name, ParseColor(entry.Fill), ParseColor(entry.Border), ParseColor(entry.Text)));
+            }
+        }
+
+        private static Color ParseColor(string hex)
+        {
+            return ColorUtility.TryParseHtmlString(hex, out Color parsed) ? parsed : Color.magenta;
+        }
+
+        /// <summary>
+        /// Palette for a level. Clamped rather than throwing: the merge ceiling is a rule and the
+        /// palette length is presentation, so a unit arriving from somewhere the table has not caught
+        /// up with should still render — in the nearest colour — not crash the deploy screen.
+        /// </summary>
+        private TierPalette Palette(int level)
+        {
+            if (tierPalettes.Count == 0)
+            {
+                return new TierPalette("—", OccupiedCellColor, UnlockedCellColor, Color.white);
+            }
+            int index = Mathf.Clamp(level - 1, 0, tierPalettes.Count - 1);
+            return tierPalettes[index];
         }
 
         // ------------------------------------------------------------------ hand shape queries
@@ -229,11 +417,14 @@ namespace HanziDefend.View
                     "Drag Ghost", dragLayer, footprint, metrics, CardColor(card.Category))
             };
             drag.Ghost.SetRaycastTarget(false);
+            // Semi-transparent so the landing preview underneath stays readable.
+            drag.Ghost.SetAlpha(GhostAlpha);
+            // The ghost carries the card's own artwork, not just a coloured block — otherwise the
+            // picture appears to vanish the instant you pick a card up.
+            Image ghostArt = drag.Ghost.AddArt(ResolveCardSprite(card));
+            ghostArt.color = new Color(1f, 1f, 1f, GhostArtAlpha);
             drag.Ghost.AddLabel(font, CardLabel(card), metrics.CellEdge);
-            if (source?.Root != null)
-            {
-                source.Root.gameObject.SetActive(false);
-            }
+            HideSourceForDrag(source);
 
             LastDragOutcome = DeployDragOutcome.None;
             dragCue?.Invoke(DeployDragCue.Pickup);
@@ -259,7 +450,11 @@ namespace HanziDefend.View
                     "Drag Ghost", dragLayer, placement.Footprint, metrics, OccupiedCellColor)
             };
             drag.Ghost.SetRaycastTarget(false);
+            drag.Ghost.SetAlpha(GhostAlpha);
+            Image placementArt = drag.Ghost.AddArt(artSource.Find($"unit/{placement.UnitId}/idle"));
+            placementArt.color = new Color(1f, 1f, 1f, GhostArtAlpha);
             drag.Ghost.AddLabel(font, config.GetUnit(placement.UnitId).Name, metrics.CellEdge);
+            FadeUnitCardForDrag(deploymentId);
 
             LastDragOutcome = DeployDragOutcome.None;
             dragCue?.Invoke(DeployDragCue.Pickup);
@@ -278,12 +473,18 @@ namespace HanziDefend.View
                 return;
             }
 
+            drag.ReleasePoint = screenPoint;
+            drag.HasReleasePoint = true;
             Vector2 local = ScreenToLocal(dragLayer, screenPoint);
             Vector2 lifted = local + new Vector2(0f, uiRules.DragLiftCells * metrics.CellEdge);
 
             bool hadAnchor = TryResolveAnchor(lifted, drag.Footprint, out GridCoordinate anchor, out float distance);
             DeployCellHighlight highlight = DeployCellHighlight.Invalid;
-            string message = "拖出了部署区";
+            // Over the hand with a deployed unit in hand is the undo gesture, so say so rather than
+            // reporting it as having left the board — the player is not making a mistake.
+            string message = !string.IsNullOrEmpty(drag.DeploymentId) && IsReleaseOverHand(drag)
+                ? "松开以撤回手牌"
+                : "拖出了部署区";
             bool legal = false;
 
             if (hadAnchor)
@@ -303,10 +504,15 @@ namespace HanziDefend.View
                 ? FieldToDragLayer(GhostCentreForAnchor(anchor, drag.Footprint))
                 : lifted;
 
-            RefreshCells();
+            // Incremental only. RefreshCells() here would re-query the rule layer 98 times and
+            // rewrite all 49 images every frame, forcing a full canvas rebuild — the WO-C4 regression.
             if (hadAnchor)
             {
                 PaintFootprint(drag.Footprint, anchor, highlight);
+            }
+            else
+            {
+                ClearHighlights();
             }
             SetFeedback(message);
         }
@@ -324,7 +530,14 @@ namespace HanziDefend.View
 
             DragSession session = drag;
             DeployDragOutcome outcome = DeployDragOutcome.Rejected;
-            if (session.HasAnchor)
+            if (IsReleaseOverHand(session) && !string.IsNullOrEmpty(session.DeploymentId))
+            {
+                // Dragging a deployed unit onto the hand is the undo gesture. Checked before the
+                // anchor because the hand sits below the grid: a unit dragged that far down has left
+                // the board on purpose, and treating it as "dropped outside" would just bounce back.
+                outcome = ReturnPlacementToHand(session.DeploymentId);
+            }
+            else if (session.HasAnchor)
             {
                 outcome = Commit(session, session.Anchor);
             }
@@ -336,8 +549,17 @@ namespace HanziDefend.View
             LastDragOutcome = outcome;
             drag = null;
 
+            if (outcome == DeployDragOutcome.ReturnedToHand)
+            {
+                dragCue?.Invoke(DeployDragCue.Placed);
+                DestroyGhost(session);
+                RestoreHandCard(session);
+                return outcome;
+            }
+
             if (outcome == DeployDragOutcome.Rejected)
             {
+                RestoreUnitCardAfterDrag(session.DeploymentId);
                 dragCue?.Invoke(DeployDragCue.Rejected);
                 returnRoutine = StartCoroutine(ReturnGhostToHand(session));
             }
@@ -352,6 +574,82 @@ namespace HanziDefend.View
             return outcome;
         }
 
+        /// <summary>
+        /// Dims a unit's card while it is being carried, so the board shows the slot emptying.
+        ///
+        /// <para>A <see cref="CanvasGroup"/>, never <c>SetActive(false)</c>: the drag handle lives on
+        /// this very object, and <c>ExecuteEvents</c> silently skips components on inactive objects —
+        /// which is exactly how WO-C4's drag froze mid-gesture.</para>
+        /// </summary>
+        private void FadeUnitCardForDrag(string deploymentId)
+        {
+            if (!unitCards.TryGetValue(deploymentId, out DeployUnitCard card) || card.Visual == null)
+            {
+                return;
+            }
+
+            var group = card.Visual.GetComponent<CanvasGroup>();
+            if (group == null)
+            {
+                group = card.Visual.gameObject.AddComponent<CanvasGroup>();
+            }
+            group.alpha = 0.22f;
+        }
+
+        /// <summary>Brings a carried card back to full strength when the drag ends without a commit.</summary>
+        private void RestoreUnitCardAfterDrag(string deploymentId)
+        {
+            if (string.IsNullOrEmpty(deploymentId)
+                || !unitCards.TryGetValue(deploymentId, out DeployUnitCard card)
+                || card.Visual == null)
+            {
+                return;
+            }
+
+            var group = card.Visual.GetComponent<CanvasGroup>();
+            if (group != null)
+            {
+                group.alpha = 1f;
+            }
+        }
+
+        /// <summary>
+        /// Was the drag released over the hand panel? Screen space rather than the grid's own
+        /// coordinates, because the question is "did the player let go on the hand", which the grid
+        /// has no opinion about.
+        /// </summary>
+        private bool IsReleaseOverHand(DragSession session)
+        {
+            if (handPanel == null || !session.HasReleasePoint)
+            {
+                return false;
+            }
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Camera camera = canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay
+                ? null
+                : canvas.worldCamera;
+            return RectTransformUtility.RectangleContainsScreenPoint(handPanel, session.ReleasePoint, camera);
+        }
+
+        /// <summary>
+        /// Undoes a placement through the economy, which owns the rule. The view only reports what it
+        /// was told — including the refusal to dissolve a merged unit.
+        /// </summary>
+        private DeployDragOutcome ReturnPlacementToHand(string deploymentId)
+        {
+            if (economy.TryReturnUnitToHand(deploymentId, out string reason))
+            {
+                SetFeedback("已撤回到手牌");
+                deploymentCommitted?.Invoke(DeploymentActionKind.Place);
+                RefreshAll();
+                return DeployDragOutcome.ReturnedToHand;
+            }
+
+            SetFeedback(reason);
+            return DeployDragOutcome.Rejected;
+        }
+
         public void CancelDrag()
         {
             if (drag == null)
@@ -362,7 +660,8 @@ namespace HanziDefend.View
             drag = null;
             DestroyGhost(session);
             RestoreHandCard(session);
-            RefreshCells();
+            RestoreUnitCardAfterDrag(session.DeploymentId);
+            ClearHighlights();
         }
 
         /// <summary>
@@ -399,8 +698,8 @@ namespace HanziDefend.View
         public DeploymentEvaluation PreviewCard(CardOfferItem card, GridCoordinate anchor)
         {
             DeploymentUnit preview = CreatePreviewUnit(card);
+            GridQueryCount++;
             DeploymentEvaluation evaluation = economy.Grid.Evaluate(preview, anchor);
-            RefreshCells();
             PaintFootprint(preview.Footprint, anchor, HighlightFor(evaluation));
             SetFeedback(DescribeEvaluation(evaluation));
             return evaluation;
@@ -415,8 +714,8 @@ namespace HanziDefend.View
                 throw new ArgumentException("Only an unlock card has an unlock preview.", nameof(card));
             }
 
+            GridQueryCount++;
             UnlockEvaluation evaluation = economy.Grid.EvaluateUnlock(card.Unlock, anchor);
-            RefreshCells();
             PaintFootprint(
                 card.Unlock.Footprint,
                 anchor,
@@ -435,8 +734,8 @@ namespace HanziDefend.View
                 return true;
             }
 
+            GridQueryCount++;
             SetFeedback(DescribeUnlock(economy.Grid.EvaluateUnlock(card.Unlock, anchor)));
-            RefreshCells();
             PaintFootprint(card.Unlock.Footprint, anchor, DeployCellHighlight.Invalid);
             return false;
         }
@@ -444,11 +743,11 @@ namespace HanziDefend.View
         public bool CommitCard(CardOfferItem card, GridCoordinate anchor)
         {
             DeploymentUnit preview = CreatePreviewUnit(card);
+            GridQueryCount++;
             DeploymentEvaluation evaluation = economy.Grid.Evaluate(preview, anchor);
             if (!evaluation.IsValid)
             {
                 SetFeedback(DescribeEvaluation(evaluation));
-                RefreshCells();
                 PaintFootprint(preview.Footprint, anchor, DeployCellHighlight.Invalid);
                 return false;
             }
@@ -464,14 +763,12 @@ namespace HanziDefend.View
             catch (InvalidOperationException exception)
             {
                 SetFeedback(exception.Message);
-                RefreshCells();
                 PaintFootprint(preview.Footprint, anchor, DeployCellHighlight.Invalid);
                 return false;
             }
             catch (ArgumentException exception)
             {
                 SetFeedback(exception.Message);
-                RefreshCells();
                 PaintFootprint(preview.Footprint, anchor, DeployCellHighlight.Invalid);
                 return false;
             }
@@ -487,8 +784,8 @@ namespace HanziDefend.View
 
             var preview = new DeploymentUnit(
                 PreviewDeploymentId, placement.UnitId, placement.Level, placement.Footprint);
+            GridQueryCount++;
             DeploymentEvaluation evaluation = economy.Grid.Evaluate(preview, anchor);
-            RefreshCells();
             PaintFootprint(preview.Footprint, anchor, HighlightFor(evaluation));
             SetFeedback(evaluation.IsValid
                 ? evaluation.Action == DeploymentActionKind.Merge ? "松开以合成" : "松开以移动"
@@ -510,7 +807,7 @@ namespace HanziDefend.View
             catch (InvalidOperationException exception)
             {
                 SetFeedback(exception.Message);
-                RefreshCells();
+                ClearHighlights();
                 PaintSingleCell(anchor, InvalidPreviewColor);
                 return false;
             }
@@ -518,7 +815,7 @@ namespace HanziDefend.View
 
         public void CancelPreview()
         {
-            RefreshCells();
+            ClearHighlights();
         }
 
         public bool ActivateCard(CardOfferItem card)
@@ -539,7 +836,9 @@ namespace HanziDefend.View
                     return true;
                 }
 
-                SetFeedback("拖动兵器卡到网格");
+                // Tapping a unit card is a request to read it, not to place it — placing is a drag.
+                UnitDef definition = config.GetUnit(card.ContentId);
+                ShowUnitInfo(definition.Id, (int)definition.Tier);
                 return false;
             }
             catch (InvalidOperationException exception)
@@ -599,6 +898,7 @@ namespace HanziDefend.View
             RefreshHeader();
             RefreshCells();
             RebuildHand();
+            RefreshOwnedEffects();
         }
 
         // ------------------------------------------------------------------------------- internals
@@ -614,6 +914,7 @@ namespace HanziDefend.View
 
             if (session.Card != null)
             {
+                GridQueryCount++;
                 DeploymentEvaluation evaluation = economy.Grid.Evaluate(CreatePreviewUnit(session.Card), anchor);
                 bool merge = evaluation.IsValid && evaluation.Action == DeploymentActionKind.Merge;
                 return CommitCard(session.Card, anchor)
@@ -650,6 +951,7 @@ namespace HanziDefend.View
         {
             if (drag.Card != null && drag.Card.Category == CardCategory.Unlock)
             {
+                GridQueryCount++;
                 UnlockEvaluation unlock = economy.Grid.EvaluateUnlock(drag.Card.Unlock, anchor);
                 message = DescribeUnlock(unlock);
                 legal = unlock.IsValid;
@@ -673,6 +975,8 @@ namespace HanziDefend.View
                 return DeployCellHighlight.Invalid;
             }
 
+            // The one rule-layer question a drag frame is allowed to ask.
+            GridQueryCount++;
             DeploymentEvaluation evaluation = economy.Grid.Evaluate(preview, anchor);
             message = DescribeEvaluation(evaluation);
             legal = evaluation.IsValid;
@@ -847,11 +1151,56 @@ namespace HanziDefend.View
             }
         }
 
+        /// <summary>
+        /// Makes the source card invisible and click-through for the duration of the drag, while
+        /// keeping its GameObject active.
+        ///
+        /// <para><b>It must stay active.</b> Unity routes OnDrag/OnEndDrag to the object that
+        /// accepted OnBeginDrag (<c>PointerEventData.pointerDrag</c>), and <c>ExecuteEvents</c>
+        /// silently skips components on an inactive object. Deactivating the card here — which is
+        /// what the previous pass did — dropped every subsequent drag event including OnEndDrag, so
+        /// the drag session never ended and the ghost froze mid-flight.</para>
+        /// </summary>
+        private static void HideSourceForDrag(HandCard source)
+        {
+            if (source?.Root == null)
+            {
+                return;
+            }
+
+            // Not `GetComponent() ?? AddComponent()`: a missing Unity component is a fake-null that
+            // `??` does not treat as null, so that form silently hands back the missing component.
+            CanvasGroup group = source.Root.GetComponent<CanvasGroup>();
+            if (group == null)
+            {
+                group = source.Root.gameObject.AddComponent<CanvasGroup>();
+            }
+
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+        }
+
         private void RestoreHandCard(DragSession session)
         {
-            if (session.SourceHandCard?.Root != null)
+            RectTransform root = session.SourceHandCard?.Root;
+            if (root == null)
             {
-                session.SourceHandCard.Root.gameObject.SetActive(true);
+                return;
+            }
+
+            // A hand rebuild during the drag parks the card off the hand row instead of destroying
+            // it, so the drag handle stays alive. Once the drag is over it has no owner: bin it.
+            if (session.SourceDetached)
+            {
+                Destroy(root.gameObject);
+                return;
+            }
+
+            CanvasGroup group = root.GetComponent<CanvasGroup>();
+            if (group != null)
+            {
+                group.alpha = 1f;
+                group.blocksRaycasts = true;
             }
         }
 
@@ -867,9 +1216,14 @@ namespace HanziDefend.View
             RectTransform ghostRect = session.Ghost.Rect;
             Vector2 from = ghostRect.anchoredPosition;
             Vector2 to = from;
-            if (session.SourceHandCard?.Root != null)
+            // A card parked by a mid-drag rebuild no longer has a slot to fly back to, so aim at the
+            // hand row itself rather than at wherever the parked object happens to sit.
+            Transform target = session.SourceDetached
+                ? handRoot
+                : session.SourceHandCard?.Root;
+            if (target != null)
             {
-                Vector3 world = session.SourceHandCard.Root.TransformPoint(Vector3.zero);
+                Vector3 world = target.TransformPoint(Vector3.zero);
                 to = dragLayer.InverseTransformPoint(world);
             }
 
@@ -886,7 +1240,7 @@ namespace HanziDefend.View
 
             DestroyGhost(session);
             RestoreHandCard(session);
-            RefreshCells();
+            ClearHighlights();
             returnRoutine = null;
         }
 
@@ -1006,9 +1360,16 @@ namespace HanziDefend.View
         {
             RectTransform panel = RuntimeUiFactory.CreatePanel("Deployment Grid Panel", root, PanelColor);
             RuntimeUiFactory.SetAnchors(panel, new Vector2(0.035f, 0.365f), new Vector2(0.965f, 0.835f));
-            Text title = RuntimeUiFactory.CreateText("Grid Title", panel, font, 30, FontStyle.Bold, TextAnchor.MiddleLeft);
+            Text title = RuntimeUiFactory.CreateText("Grid Title", panel, font, 26, FontStyle.Bold, TextAnchor.MiddleLeft);
             title.text = "部署阵地 · 拖动兵器卡落位";
-            RuntimeUiFactory.SetAnchors(title.rectTransform, new Vector2(0.025f, 0.9f), new Vector2(0.975f, 0.985f));
+            RuntimeUiFactory.SetAnchors(title.rectTransform, new Vector2(0.025f, 0.9f), new Vector2(0.40f, 0.985f));
+
+            // Effects won this run live in the title row's spare width, so adding them costs the
+            // grid no height and leaves the shared cell metric untouched.
+            var effectsObject = new GameObject("Owned Effects", typeof(RectTransform));
+            ownedEffectsRoot = effectsObject.GetComponent<RectTransform>();
+            ownedEffectsRoot.SetParent(panel, false);
+            RuntimeUiFactory.SetAnchors(ownedEffectsRoot, new Vector2(0.41f, 0.895f), new Vector2(0.975f, 0.99f));
 
             var fieldObject = new GameObject("Deployment Grid", typeof(RectTransform));
             gridRoot = fieldObject.GetComponent<RectTransform>();
@@ -1041,6 +1402,16 @@ namespace HanziDefend.View
                     cellRect.anchoredPosition = metrics.CellCentreInField(
                         coordinate, economy.Grid.Width, economy.Grid.Height);
 
+                    // The slot's floor, inset so the tile's own rim always shows. That rim is what
+                    // makes an empty cell read as a socket rather than as background, and it is what
+                    // stays visible as a coloured ring around a unit card or a drag preview.
+                    Image floor = RuntimeUiFactory.CreateImage("Cell Floor", image.transform, CellFloorColor);
+                    floor.raycastTarget = false;
+                    float inset = uiRules.CellInsetRatio * metrics.CellEdge;
+                    RuntimeUiFactory.Stretch(floor.rectTransform);
+                    floor.rectTransform.offsetMin = new Vector2(inset, inset);
+                    floor.rectTransform.offsetMax = new Vector2(-inset, -inset);
+
                     Text label = RuntimeUiFactory.CreateText(
                         "Cell Label", image.transform, font,
                         Mathf.Max(10, Mathf.RoundToInt(metrics.CellEdge * 0.22f)),
@@ -1052,15 +1423,27 @@ namespace HanziDefend.View
                     cells.Add(coordinate, new CellVisual(image, label));
                 }
             }
+
+            // Deployed units live above the slots, so a unit reads as one card lying on the board
+            // rather than as a set of recoloured cells. Same rect as the field, so the two share the
+            // one metric and cannot drift apart.
+            var unitObject = new GameObject("Deployed Units", typeof(RectTransform));
+            unitLayer = unitObject.GetComponent<RectTransform>();
+            unitLayer.SetParent(gridRoot.parent, false);
+            unitLayer.anchorMin = gridRoot.anchorMin;
+            unitLayer.anchorMax = gridRoot.anchorMax;
+            unitLayer.offsetMin = gridRoot.offsetMin;
+            unitLayer.offsetMax = gridRoot.offsetMax;
         }
 
         private void BuildHand(RectTransform root)
         {
             RectTransform panel = RuntimeUiFactory.CreatePanel("Hand Panel", root, PanelColor);
+            handPanel = panel;
             RuntimeUiFactory.SetAnchors(panel, new Vector2(0.035f, 0.13f), new Vector2(0.965f, 0.335f));
             Text title = RuntimeUiFactory.CreateText("Hand Title", panel, font, 28, FontStyle.Bold, TextAnchor.MiddleLeft);
-            title.text = "手 牌";
-            RuntimeUiFactory.SetAnchors(title.rectTransform, new Vector2(0.025f, 0.82f), new Vector2(0.3f, 0.98f));
+            title.text = "手 牌 · 拖回此处可撤回部署";
+            RuntimeUiFactory.SetAnchors(title.rectTransform, new Vector2(0.025f, 0.82f), new Vector2(0.86f, 0.98f));
 
             var handObject = new GameObject("Cards", typeof(RectTransform));
             handRoot = handObject.GetComponent<RectTransform>();
@@ -1102,6 +1485,9 @@ namespace HanziDefend.View
         /// <summary>Topmost layer the drag ghost lives on, so it is never occluded by panels.</summary>
         private void BuildDragLayer(RectTransform root)
         {
+            // The info sheet is built first so the ghost still passes over it during a drag.
+            infoPanel = DeployUnitInfoPanel.Create(root, font, () => SetFeedback("已关闭资料"));
+
             var layerObject = new GameObject("Drag Layer", typeof(RectTransform));
             dragLayer = layerObject.GetComponent<RectTransform>();
             dragLayer.SetParent(root, false);
@@ -1109,11 +1495,41 @@ namespace HanziDefend.View
             dragLayer.SetAsLastSibling();
         }
 
+        /// <summary>Opens the stat sheet for a unit id at a level. Every number comes from GameConfig.</summary>
+        public bool ShowUnitInfo(string unitId, int level)
+        {
+            if (infoPanel == null || string.IsNullOrEmpty(unitId))
+            {
+                return false;
+            }
+
+            UnitDef definition = config.GetUnit(unitId);
+            infoPanel.Show(definition, Mathf.Max(1, level));
+            SetFeedback($"{definition.Name} 资料");
+            return true;
+        }
+
+        /// <summary>Opens the stat sheet for a deployed unit, at the level it actually stands at.</summary>
+        public bool ShowDeployedUnitInfo(string deploymentId)
+        {
+            if (!economy.Grid.TryGetPlacement(deploymentId, out DeploymentPlacement placement))
+            {
+                return false;
+            }
+            return ShowUnitInfo(placement.UnitId, placement.Level);
+        }
+
+        public void CloseUnitInfo()
+        {
+            infoPanel?.Close();
+        }
+
         private void Subscribe()
         {
             economy.CoinsChanged += HandleCoinsChanged;
             economy.HandChanged += HandleHandChanged;
             economy.DeploymentsChanged += RefreshCells;
+            economy.EffectsChanged += HandleEffectsChanged;
         }
 
         private void OnDestroy()
@@ -1125,6 +1541,7 @@ namespace HanziDefend.View
             economy.CoinsChanged -= HandleCoinsChanged;
             economy.HandChanged -= HandleHandChanged;
             economy.DeploymentsChanged -= RefreshCells;
+            economy.EffectsChanged -= HandleEffectsChanged;
         }
 
         private void HandleCoinsChanged(int value)
@@ -1135,6 +1552,11 @@ namespace HanziDefend.View
         private void HandleHandChanged(CardOffer value)
         {
             RebuildHand();
+        }
+
+        private void HandleEffectsChanged(IReadOnlyList<string> value)
+        {
+            RefreshOwnedEffects();
         }
 
         private void RefreshHeader()
@@ -1148,40 +1570,277 @@ namespace HanziDefend.View
             refreshText.text = $"刷新  {economy.NextRefreshCost}";
         }
 
+        /// <summary>
+        /// Rebuilds every cell's cached base appearance from the rule layer. This is the expensive
+        /// pass — it asks the grid about all 49 cells and can rewrite all 49 images.
+        ///
+        /// <para><b>It must never run inside a drag frame.</b> Call it only when the board actually
+        /// changed: placement, merge, unlock, hand refresh, or entering the deploy phase. WO-C4's
+        /// first pass called it from <c>DragTo</c>, which forced a full canvas rebuild every frame
+        /// and is what made dragging unusable.</para>
+        /// </summary>
         private void RefreshCells()
         {
-            mergePulseCells.Clear();
+            ClearHighlights();
             foreach (KeyValuePair<GridCoordinate, CellVisual> pair in cells)
             {
                 GridCoordinate coordinate = pair.Key;
                 CellVisual cell = pair.Value;
                 cell.Highlight = DeployCellHighlight.None;
+                CellVisitCount++;
+                GridQueryCount++;
                 cell.IsUnlocked = economy.Grid.IsUnlocked(coordinate);
                 if (!cell.IsUnlocked)
                 {
-                    cell.Image.color = LockedCellColor;
-                    cell.Label.text = "锁";
+                    // Locked cells are plain dark tiles. The old per-cell "锁" glyph put 40 labels on
+                    // screen and drowned the playable centre (see 部署页实测-2026-08-15 item 1).
+                    cell.BaseColor = LockedCellColor;
+                    cell.BaseLabel = string.Empty;
+                    ApplyBaseAppearance(cell);
                     cell.DragHandle?.Clear();
                     continue;
                 }
 
-                if (economy.Grid.TryGetPlacementAt(coordinate, out DeploymentPlacement placement))
+                // Occupancy no longer changes how the cell itself looks. The slot stays a slot; the
+                // unit that stands in it is a card on the layer above, drawn once across its whole
+                // footprint. Painting occupancy here is what wrote a 2x2 unit's name four times and
+                // gave every unit the same blue.
+                cell.BaseColor = UnlockedCellColor;
+                cell.BaseLabel = string.Empty;
+                ApplyBaseAppearance(cell);
+                cell.DragHandle?.Clear();
+            }
+
+            RefreshUnitCards();
+        }
+
+        /// <summary>
+        /// Draws one card per deployed unit, spanning its whole footprint.
+        ///
+        /// <para>Deliberately outside the per-cell path: cards are rebuilt only when the deployment
+        /// set changes, never on a drag frame, so the WO-C4 bound — a drag frame touches at most
+        /// twice the dragged card's footprint — still holds with nothing added to it.</para>
+        /// </summary>
+        private void RefreshUnitCards()
+        {
+            if (unitLayer == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, DeployUnitCard> pair in unitCards)
+            {
+                GameObject host = pair.Value.Visual == null ? null : pair.Value.Visual.gameObject;
+                if (host == null)
                 {
-                    cell.Image.color = OccupiedCellColor;
-                    cell.Label.text = $"{config.GetUnit(placement.UnitId).Name}\n{TierLabel(placement.Level)}";
-                    if (cell.DragHandle == null)
-                    {
-                        cell.DragHandle = cell.Image.gameObject.AddComponent<DeployPlacementDragHandle>();
-                    }
-                    cell.DragHandle.Initialize(this, placement.DeploymentId);
+                    continue;
+                }
+
+                // Play-mode Destroy() runs at end of frame, so a card discarded here would keep
+                // rendering and keep answering pointer events until then. Detach first.
+                host.transform.SetParent(null, false);
+                host.SetActive(false);
+                Destroy(host);
+            }
+            unitCards.Clear();
+
+            IReadOnlyList<DeploymentPlacement> placements = economy.Grid.Placements;
+            for (int index = 0; index < placements.Count; index++)
+            {
+                CreateUnitCard(placements[index]);
+            }
+        }
+
+        private void CreateUnitCard(DeploymentPlacement placement)
+        {
+            UnitDef definition = config.GetUnit(placement.UnitId);
+            TierPalette palette = Palette(placement.Level);
+            float inset = uiRules.UnitCardInsetRatio * metrics.CellEdge;
+            float outline = Mathf.Max(1f, uiRules.UnitCardOutlineRatio * metrics.CellEdge);
+            float badge = uiRules.LevelBadgeRatio * metrics.CellEdge;
+
+            DeployCardVisual visual = DeployCardVisual.CreateSolid(
+                $"Unit {placement.DeploymentId}", unitLayer, placement.Footprint, metrics, palette.Fill, inset);
+            visual.Rect.anchoredPosition = metrics.FootprintCentreInField(
+                placement.Footprint, placement.Anchor, economy.Grid.Width, economy.Grid.Height);
+            visual.SetRaycastTarget(true);
+            visual.AddOutline(palette.Border, outline);
+            visual.AddArt(artSource.Find($"unit/{placement.UnitId}/idle")).color =
+                new Color(1f, 1f, 1f, 0.30f);
+            Text name = visual.AddBigName(font, definition.Name, palette.Text);
+            Text level = visual.AddLevelBadge(font, placement.Level, palette.Border, Color.black, badge);
+
+            var handle = visual.gameObject.AddComponent<DeployPlacementDragHandle>();
+            handle.Initialize(this, placement.DeploymentId);
+            unitCards.Add(
+                placement.DeploymentId,
+                new DeployUnitCard(visual, name, level, palette.Fill, palette.Border));
+        }
+
+        private void ApplyBaseAppearance(CellVisual cell)
+        {
+            SetCellColor(cell, cell.BaseColor);
+            if (!string.Equals(cell.Label.text, cell.BaseLabel, StringComparison.Ordinal))
+            {
+                cell.Label.text = cell.BaseLabel;
+            }
+        }
+
+        /// <summary>
+        /// The single funnel for grid-cell colour writes. Skipping no-op writes keeps the canvas
+        /// clean and makes <see cref="CellColorWriteCount"/> an honest measure of real repaint cost.
+        /// </summary>
+        private void SetCellColor(CellVisual cell, Color color)
+        {
+            if (cell.Image == null || cell.Image.color == color)
+            {
+                return;
+            }
+
+            cell.Image.color = color;
+            CellColorWriteCount++;
+        }
+
+        /// <summary>Restores the cached base colour of every previously highlighted cell.</summary>
+        private void ClearHighlights()
+        {
+            for (int index = 0; index < highlightedCells.Count; index++)
+            {
+                if (cells.TryGetValue(highlightedCells[index], out CellVisual cell))
+                {
+                    CellVisitCount++;
+                    cell.Highlight = DeployCellHighlight.None;
+                    SetCellColor(cell, cell.BaseColor);
+                }
+            }
+            highlightedCells.Clear();
+            mergePulseCells.Clear();
+        }
+
+        /// <summary>
+        /// Shows the effects won so far this run. The run state already carried them across minor
+        /// stages; the deploy screen simply never displayed them, so a player could not tell what
+        /// they had picked at settlement. Duplicates of a stacking effect collapse into one chip
+        /// with a count, and tapping a chip prints its description into the feedback line.
+        /// </summary>
+        private void RefreshOwnedEffects()
+        {
+            if (ownedEffectsRoot == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < ownedEffectChips.Count; index++)
+            {
+                if (ownedEffectChips[index] != null)
+                {
+                    ownedEffectChips[index].transform.SetParent(null, false);
+                    Destroy(ownedEffectChips[index]);
+                }
+            }
+            ownedEffectChips.Clear();
+
+            string[] owned = economy.State.OwnedEffects ?? Array.Empty<string>();
+            var order = new List<string>();
+            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int index = 0; index < owned.Length; index++)
+            {
+                string id = owned[index];
+                if (string.IsNullOrEmpty(id))
+                {
+                    continue;
+                }
+                if (counts.TryGetValue(id, out int seen))
+                {
+                    counts[id] = seen + 1;
                 }
                 else
                 {
-                    cell.Image.color = UnlockedCellColor;
-                    cell.Label.text = string.Empty;
-                    cell.DragHandle?.Clear();
+                    counts[id] = 1;
+                    order.Add(id);
                 }
             }
+
+            if (order.Count == 0)
+            {
+                return;
+            }
+
+            ownedEffectsRoot.ForceUpdateRectTransforms();
+            float height = ownedEffectsRoot.rect.height;
+            if (height <= 1f)
+            {
+                height = metrics.CellEdge * 0.62f;
+            }
+            float chipEdge = Mathf.Max(24f, height);
+            float gap = chipEdge * 0.18f;
+            float total = (order.Count * chipEdge) + (Mathf.Max(0, order.Count - 1) * gap);
+            float cursor = (total * 0.5f) - (chipEdge * 0.5f);
+
+            for (int index = 0; index < order.Count; index++)
+            {
+                CreateOwnedEffectChip(order[index], counts[order[index]], chipEdge, cursor);
+                cursor -= chipEdge + gap;
+            }
+        }
+
+        private void CreateOwnedEffectChip(string effectId, int count, float chipEdge, float centreX)
+        {
+            EffectDef definition = config.GetEffect(effectId);
+            Sprite icon = artSource.Find($"effect/{effectId}/icon");
+
+            Image chip = RuntimeUiFactory.CreateImage(
+                $"Owned Effect {effectId}", ownedEffectsRoot, EffectChipColor(icon != null));
+            chip.raycastTarget = true;
+            RectTransform rect = chip.rectTransform;
+            rect.anchorMin = new Vector2(1f, 0.5f);
+            rect.anchorMax = new Vector2(1f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(chipEdge, chipEdge);
+            rect.anchoredPosition = new Vector2(-centreX - (chipEdge * 0.5f), 0f);
+
+            if (icon != null)
+            {
+                Image art = RuntimeUiFactory.CreateImage("Icon", chip.transform, Color.white);
+                RuntimeUiFactory.SetAnchors(art.rectTransform, new Vector2(0.1f, 0.1f), new Vector2(0.9f, 0.9f));
+                art.preserveAspect = true;
+                art.sprite = icon;
+            }
+            else
+            {
+                // No icon imported yet: fall back to the effect's own first character so the slot
+                // still identifies itself rather than showing an anonymous block.
+                Text glyph = RuntimeUiFactory.CreateText(
+                    "Glyph", chip.transform, font, Mathf.Max(12, Mathf.RoundToInt(chipEdge * 0.5f)),
+                    FontStyle.Bold, TextAnchor.MiddleCenter);
+                RuntimeUiFactory.Stretch(glyph.rectTransform);
+                glyph.text = string.IsNullOrEmpty(definition.Name)
+                    ? "?"
+                    : definition.Name.Substring(0, 1);
+            }
+
+            if (count > 1)
+            {
+                Text badge = RuntimeUiFactory.CreateText(
+                    "Count", chip.transform, font, Mathf.Max(10, Mathf.RoundToInt(chipEdge * 0.34f)),
+                    FontStyle.Bold, TextAnchor.LowerRight);
+                RuntimeUiFactory.Stretch(badge.rectTransform);
+                badge.text = $"×{count}";
+            }
+
+            var button = chip.gameObject.AddComponent<Button>();
+            string describe = string.IsNullOrWhiteSpace(definition.Desc)
+                ? definition.Name
+                : $"{definition.Name}：{definition.Desc}";
+            button.onClick.AddListener(() => SetFeedback(describe));
+            ownedEffectChips.Add(chip.gameObject);
+        }
+
+        private static Color EffectChipColor(bool hasIcon)
+        {
+            return hasIcon
+                ? new Color(0.16f, 0.22f, 0.30f, 1f)
+                : new Color(0.20f, 0.42f, 0.32f, 1f);
         }
 
         private void RebuildHand()
@@ -1192,10 +1851,31 @@ namespace HanziDefend.View
             }
             for (int index = 0; index < handCards.Count; index++)
             {
-                if (handCards[index].Root != null)
+                RectTransform root = handCards[index].Root;
+                if (root == null)
                 {
-                    Destroy(handCards[index].Root.gameObject);
+                    continue;
                 }
+
+                // The card currently under the pointer must survive this rebuild: destroying it
+                // would invalidate PointerEventData.pointerDrag and kill the rest of the drag, the
+                // same way deactivating it used to. Park it on the drag layer, still active, and let
+                // the drag's own teardown dispose of it.
+                if (drag != null && ReferenceEquals(handCards[index], drag.SourceHandCard))
+                {
+                    root.SetParent(dragLayer, false);
+                    drag.SourceDetached = true;
+                    continue;
+                }
+
+                // Destroy() is deferred to end of frame in play mode, so a card discarded here is
+                // still parented, still rendering and still holding a live drag handle until then.
+                // Two refreshes in one frame therefore stacked overlapping cards on top of each
+                // other. Detaching and deactivating takes effect immediately, so the old row is gone
+                // the moment it is replaced.
+                root.SetParent(null, false);
+                root.gameObject.SetActive(false);
+                Destroy(root.gameObject);
             }
             handCards.Clear();
 
@@ -1237,11 +1917,33 @@ namespace HanziDefend.View
 
             if (footprint != null)
             {
+                // Unit cards borrow the deployed card's language — tier fill, outline, big name,
+                // corner badge — so the thing you pick up looks like the thing you get. Non-unit
+                // cards keep their category colour: an unlock card is not a level-1 anything.
+                bool unit = card.Category == CardCategory.Unit;
+                int level = unit ? (int)config.GetUnit(card.ContentId).Tier : 0;
+                TierPalette palette = Palette(level);
+                Color fill = unit ? palette.Fill : CardColor(card.Category);
+
                 visual = DeployCardVisual.Create(
-                    $"Card {index} {card.ContentId}", handRoot, footprint, handMetrics, CardColor(card.Category));
+                    $"Card {index} {card.ContentId}", handRoot, footprint, handMetrics, fill);
                 visual.SetRaycastTarget(true);
+                if (unit)
+                {
+                    visual.AddOutline(
+                        palette.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * handMetrics.CellEdge));
+                }
                 visual.AddArt(ResolveCardSprite(card));
-                visual.AddLabel(font, CardLabel(card), handMetrics.CellEdge);
+                if (unit)
+                {
+                    visual.AddBigName(font, config.GetUnit(card.ContentId).Name, palette.Text);
+                    visual.AddLevelBadge(
+                        font, level, palette.Border, Color.black, uiRules.LevelBadgeRatio * handMetrics.CellEdge);
+                }
+                else
+                {
+                    visual.AddLabel(font, CardLabel(card), handMetrics.CellEdge);
+                }
                 rootRect = visual.Rect;
             }
             else
@@ -1287,9 +1989,14 @@ namespace HanziDefend.View
                 UnitFootprint.FromDefinition(definition));
         }
 
-        /// <summary>Highlights every cell the footprint covers — notched shapes skip their gap.</summary>
+        /// <summary>
+        /// Highlights every cell the footprint covers — notched shapes skip their gap. Incremental
+        /// by construction: it first restores only the cells the previous preview touched, so a drag
+        /// frame writes at most (previous footprint + new footprint) cells regardless of field size.
+        /// </summary>
         private void PaintFootprint(UnitFootprint footprint, GridCoordinate anchor, DeployCellHighlight highlight)
         {
+            ClearHighlights();
             Color color = HighlightColor(highlight);
             bool painted = false;
             for (int index = 0; index < footprint.OccupiedOffsets.Count; index++)
@@ -1297,8 +2004,10 @@ namespace HanziDefend.View
                 GridCoordinate coordinate = anchor + footprint.OccupiedOffsets[index];
                 if (cells.TryGetValue(coordinate, out CellVisual cell))
                 {
-                    cell.Image.color = color;
+                    CellVisitCount++;
+                    SetCellColor(cell, color);
                     cell.Highlight = highlight;
+                    highlightedCells.Add(coordinate);
                     if (highlight == DeployCellHighlight.Merge)
                     {
                         mergePulseCells.Add(coordinate);
@@ -1327,7 +2036,8 @@ namespace HanziDefend.View
         {
             if (cells.TryGetValue(coordinate, out CellVisual cell))
             {
-                cell.Image.color = color;
+                SetCellColor(cell, color);
+                highlightedCells.Add(coordinate);
             }
         }
 
@@ -1425,6 +2135,8 @@ namespace HanziDefend.View
             {
                 Image = image;
                 Label = label;
+                BaseColor = image.color;
+                BaseLabel = string.Empty;
             }
 
             internal Image Image { get; }
@@ -1432,6 +2144,35 @@ namespace HanziDefend.View
             internal bool IsUnlocked { get; set; }
             internal DeployCellHighlight Highlight { get; set; }
             internal DeployPlacementDragHandle DragHandle { get; set; }
+
+            /// <summary>
+            /// Colour this cell shows when nothing is previewing over it. Cached by
+            /// <see cref="RefreshCells"/> so a drag frame can restore it without re-asking the
+            /// rule layer what is standing here.
+            /// </summary>
+            internal Color BaseColor { get; set; }
+
+            internal string BaseLabel { get; set; }
+        }
+
+        /// <summary>One deployed unit's card and the parts of it a test can read back.</summary>
+        private sealed class DeployUnitCard
+        {
+            internal DeployUnitCard(
+                DeployCardVisual visual, Text nameLabel, Text levelLabel, Color fill, Color border)
+            {
+                Visual = visual;
+                NameLabel = nameLabel;
+                LevelLabel = levelLabel;
+                Fill = fill;
+                Border = border;
+            }
+
+            internal DeployCardVisual Visual { get; }
+            internal Text NameLabel { get; }
+            internal Text LevelLabel { get; }
+            internal Color Fill { get; }
+            internal Color Border { get; }
         }
 
         private sealed class HandCard
@@ -1458,6 +2199,14 @@ namespace HanziDefend.View
             internal GridCoordinate Anchor;
             internal bool HasAnchor;
             internal bool Snapped;
+
+            /// <summary>Set when a hand rebuild parked this card outside the hand mid-drag.</summary>
+            internal bool SourceDetached;
+
+            /// <summary>Last pointer position in screen space, so release can be located on the UI.</summary>
+            internal Vector2 ReleasePoint;
+
+            internal bool HasReleasePoint;
         }
     }
 
@@ -1528,7 +2277,7 @@ namespace HanziDefend.View
     }
 
     internal sealed class DeployPlacementDragHandle : MonoBehaviour,
-        IBeginDragHandler, IDragHandler, IEndDragHandler
+        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         private DeployScreen owner;
         private string deploymentId;
@@ -1569,6 +2318,15 @@ namespace HanziDefend.View
             {
                 owner.EndDrag();
                 dragging = false;
+            }
+        }
+
+        /// <summary>A tap that never became a drag opens the unit's stat sheet.</summary>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!dragging && owner != null && !string.IsNullOrEmpty(deploymentId))
+            {
+                owner.ShowDeployedUnitInfo(deploymentId);
             }
         }
     }

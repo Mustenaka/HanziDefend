@@ -283,8 +283,8 @@ namespace HanziDefend.Gameplay
             streams = new RngStreams(seed);
             Economy = CardEconomy.StartNew(config, levels[0], streams.MasterSeed);
             Reward = null;
-            Phase = GameFlowPhase.Deploy;
-            PhaseChanged?.Invoke(Phase);
+            // Through ChangePhase so a fresh run is dealt its first hand by the same single owner.
+            ChangePhase(GameFlowPhase.Deploy);
             RunStateChanged?.Invoke();
         }
 
@@ -310,15 +310,71 @@ namespace HanziDefend.Gameplay
             Position2Def basePosition = battleRules.AllyBasePosition;
             Position2Def originOffset = battleRules.DeploymentOriginOffset;
             Position2Def cellSize = battleRules.DeploymentCellSize;
+            ResolveUnlockedColumnSpan(out int firstColumn, out int lastColumn);
             for (int index = 0; index < placements.Count; index++)
             {
                 DeployedUnitState value = placements[index];
                 float x = basePosition.X
                           + originOffset.X
-                          + (value.Col - (RunState.GridWidth - 1) * 0.5f) * cellSize.X;
+                          + SpreadOffset(value.Col, firstColumn, lastColumn, battleRules.DeploymentSpreadWidth);
                 float y = basePosition.Y + originOffset.Y + value.Row * cellSize.Y;
                 battle.Spawn(new UnitSpawnRequest(value.UnitId, value.Level, new Vector2(x, y)));
             }
+        }
+
+        /// <summary>
+        /// Leftmost and rightmost unlocked columns. Spawns fan out across this range rather than
+        /// across the whole 7-wide field, so the line always fills the base however much is unlocked.
+        /// </summary>
+        private void ResolveUnlockedColumnSpan(out int firstColumn, out int lastColumn)
+        {
+            firstColumn = int.MaxValue;
+            lastColumn = int.MinValue;
+
+            bool[] mask = RunState.UnlockedCells;
+            int width = RunState.GridWidth;
+            int height = RunState.GridHeight;
+            if (mask != null && width > 0 && height > 0 && mask.Length == checked(width * height))
+            {
+                for (int row = 0; row < height; row++)
+                for (int column = 0; column < width; column++)
+                {
+                    if (!mask[(row * width) + column])
+                    {
+                        continue;
+                    }
+
+                    if (column < firstColumn) firstColumn = column;
+                    if (column > lastColumn) lastColumn = column;
+                }
+            }
+
+            if (firstColumn > lastColumn)
+            {
+                firstColumn = 0;
+                lastColumn = Math.Max(0, width - 1);
+            }
+        }
+
+        /// <summary>
+        /// Maps a grid column onto the battlefield so the unlocked range spans
+        /// <paramref name="spreadWidth"/> world units, centred on the base.
+        ///
+        /// <para>Deliberately a mapping and not a random scatter: "put it on the left and it comes
+        /// out on the left" is a strategic dimension, and randomising would throw it away. Three
+        /// unlocked columns spread wide, seven spread tight — either way the units read as a line
+        /// across the base instead of a single point.</para>
+        /// </summary>
+        private static float SpreadOffset(int column, int firstColumn, int lastColumn, float spreadWidth)
+        {
+            int span = lastColumn - firstColumn;
+            if (span <= 0)
+            {
+                return 0f;
+            }
+
+            float normalized = Mathf.Clamp01((column - firstColumn) / (float)span);
+            return (normalized - 0.5f) * spreadWidth;
         }
 
         private void ApplyPersistentBuffs()
@@ -339,8 +395,32 @@ namespace HanziDefend.Gameplay
             }
         }
 
+        /// <summary>
+        /// Every minor stage is dealt exactly one free hand, and this is the only place that
+        /// happens.
+        ///
+        /// <para>It used to live in <c>DeployScreen.Initialize</c>, which runs once. The deploy
+        /// screen is reused across minor stages, so from stage 2 onward nobody dealt the hand:
+        /// the hand rendered empty and refresh/unlock threw "Draw the minor stage's free offer
+        /// before refreshing". Dealing a hand is a game rule, so it belongs to the flow rather than
+        /// to whoever happens to be looking at the screen — and this way a headless run gets one too.</para>
+        /// </summary>
+        private void EnsureMinorStageHandDealt()
+        {
+            if (Economy != null && Economy.CanDrawFreeOffer)
+            {
+                Economy.DrawOffer();
+            }
+        }
+
         private void ChangePhase(GameFlowPhase phase)
         {
+            if (phase == GameFlowPhase.Deploy)
+            {
+                // Before PhaseChanged fires, so the view already sees a populated hand.
+                EnsureMinorStageHandDealt();
+            }
+
             Phase = phase;
             PhaseChanged?.Invoke(phase);
         }

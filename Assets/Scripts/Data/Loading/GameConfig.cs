@@ -723,6 +723,9 @@ namespace HanziDefend.Data
             RequireFinitePositive(deployUi.UnitCardInsetRatio, "economy.deployUi.unitCardInsetRatio");
             RequireFinitePositive(deployUi.UnitCardOutlineRatio, "economy.deployUi.unitCardOutlineRatio");
             RequireFinitePositive(deployUi.LevelBadgeRatio, "economy.deployUi.levelBadgeRatio");
+            RequireFinitePositive(deployUi.UnitCardTintAlpha, "economy.deployUi.unitCardTintAlpha");
+            Require(deployUi.UnitCardTintAlpha < 0.6f,
+                "economy.deployUi.unitCardTintAlpha must stay below 0.6 or the wash hides the artwork.");
             Require(deployUi.CellInsetRatio < 0.5f, "economy.deployUi.cellInsetRatio must be below 0.5.");
             Require(deployUi.UnitCardInsetRatio < 0.5f, "economy.deployUi.unitCardInsetRatio must be below 0.5.");
 

@@ -16,6 +16,7 @@
     "unitCardInsetRatio": 0.10,
     "unitCardOutlineRatio": 0.07,
     "levelBadgeRatio": 0.34,
+    "unitCardTintAlpha": 0.26,
     "tierColors": [
       { "level": 1, "name": "绿", "fill": "#2C6E49", "border": "#63E08C", "text": "#EAFFF1" },
       { "level": 2, "name": "蓝", "fill": "#1D5B87", "border": "#54C8F5", "text": "#EAF8FF" },

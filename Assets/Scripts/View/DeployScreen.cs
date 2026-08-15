@@ -346,6 +346,84 @@ namespace HanziDefend.View
         /// palette length is presentation, so a unit arriving from somewhere the table has not caught
         /// up with should still render — in the nearest colour — not crash the deploy screen.
         /// </summary>
+        /// <summary>
+        /// What sits behind the artwork. Darker than the level colour on purpose: it is a bed for a
+        /// picture that may be transparent or sparse, not the card's identity. The level reads from
+        /// the border, the badge and the wash — the three places the reference art puts it.
+        /// </summary>
+        private static Color CardBedColor(Color fill)
+        {
+            return new Color(fill.r * 0.42f, fill.g * 0.42f, fill.b * 0.42f, 1f);
+        }
+
+        /// <summary>How one hand card presents itself: its palette, its big name and its corner mark.</summary>
+        private readonly struct CardFace
+        {
+            internal CardFace(TierPalette palette, string name, string badge)
+            {
+                Palette = palette;
+                Name = name;
+                Badge = badge;
+            }
+
+            internal TierPalette Palette { get; }
+            internal string Name { get; }
+            internal string Badge { get; }
+        }
+
+        /// <summary>
+        /// One place that decides what a hand card looks like.
+        ///
+        /// <para>A unit's mark is its level. An effect's mark is its kind — 增 for a buff, 令 for a
+        /// global, 锁 for an unlock card — because effects have no level and printing a "1" on them
+        /// would state something untrue. Rarity is carried by the palette instead, on the same five
+        /// colours units use, so a rare buff and a level-3 unit share a purple the player has
+        /// already learned to read as "better than blue".</para>
+        /// </summary>
+        private CardFace ResolveCardFace(CardOfferItem card)
+        {
+            switch (card.Category)
+            {
+                case CardCategory.Unit:
+                {
+                    UnitDef unit = config.GetUnit(card.ContentId);
+                    int level = (int)unit.Tier;
+                    return new CardFace(Palette(level), unit.Name, level.ToString());
+                }
+                case CardCategory.Unlock:
+                    return new CardFace(
+                        new TierPalette(
+                            "解锁",
+                            CardColor(CardCategory.Unlock),
+                            new Color(0.92f, 0.72f, 0.34f),
+                            new Color(1f, 0.96f, 0.88f)),
+                        UnlockShapeLabel(card.Unlock),
+                        "锁");
+                default:
+                {
+                    EffectDef effect = config.GetEffect(card.ContentId);
+                    return new CardFace(
+                        RarityPalette(effect.Rarity),
+                        effect.Name,
+                        card.Category == CardCategory.Buff ? "增" : "令");
+                }
+            }
+        }
+
+        /// <summary>Palette for an effect card's rarity, mapped onto the shared tier colours.</summary>
+        private TierPalette RarityPalette(string rarity)
+        {
+            switch (rarity)
+            {
+                case "Common": return Palette(1);
+                case "Uncommon": return Palette(2);
+                case "Rare": return Palette(3);
+                case "Epic": return Palette(4);
+                case "Commander": return Palette(5);
+                default: return Palette(1);
+            }
+        }
+
         private TierPalette Palette(int level)
         {
             if (tierPalettes.Count == 0)
@@ -421,9 +499,12 @@ namespace HanziDefend.View
             drag.Ghost.SetAlpha(GhostAlpha);
             // The ghost carries the card's own artwork, not just a coloured block — otherwise the
             // picture appears to vanish the instant you pick a card up.
-            Image ghostArt = drag.Ghost.AddArt(ResolveCardSprite(card));
-            ghostArt.color = new Color(1f, 1f, 1f, GhostArtAlpha);
-            drag.Ghost.AddLabel(font, CardLabel(card), metrics.CellEdge);
+            CardFace ghostFace = ResolveCardFace(card);
+            drag.Ghost.AddArtwork(ResolveCardSprite(card), 0f);
+            drag.Ghost.AddTintWash(ghostFace.Palette.Fill, uiRules.UnitCardTintAlpha);
+            drag.Ghost.AddOutline(
+                ghostFace.Palette.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * metrics.CellEdge));
+            drag.Ghost.AddBigName(font, ghostFace.Name, ghostFace.Palette.Text);
             HideSourceForDrag(source);
 
             LastDragOutcome = DeployDragOutcome.None;
@@ -451,9 +532,12 @@ namespace HanziDefend.View
             };
             drag.Ghost.SetRaycastTarget(false);
             drag.Ghost.SetAlpha(GhostAlpha);
-            Image placementArt = drag.Ghost.AddArt(artSource.Find($"unit/{placement.UnitId}/idle"));
-            placementArt.color = new Color(1f, 1f, 1f, GhostArtAlpha);
-            drag.Ghost.AddLabel(font, config.GetUnit(placement.UnitId).Name, metrics.CellEdge);
+            TierPalette carried = Palette(placement.Level);
+            drag.Ghost.AddArtwork(artSource.Find($"unit/{placement.UnitId}/idle"), 0f);
+            drag.Ghost.AddTintWash(carried.Fill, uiRules.UnitCardTintAlpha);
+            drag.Ghost.AddOutline(
+                carried.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * metrics.CellEdge));
+            drag.Ghost.AddBigName(font, config.GetUnit(placement.UnitId).Name, carried.Text);
             FadeUnitCardForDrag(deploymentId);
 
             LastDragOutcome = DeployDragOutcome.None;
@@ -1659,14 +1743,19 @@ namespace HanziDefend.View
             float outline = Mathf.Max(1f, uiRules.UnitCardOutlineRatio * metrics.CellEdge);
             float badge = uiRules.LevelBadgeRatio * metrics.CellEdge;
 
+            // Layer order is the whole point of WO-C10, and sibling order is what enforces it:
+            // fill → artwork → level wash → border → name → badge. The artwork is the card's body
+            // and the level colour survives as border, badge and a thin wash, which is how the
+            // reference art reads. WO-C9 had the fill on top of the art and the picture vanished.
             DeployCardVisual visual = DeployCardVisual.CreateSolid(
-                $"Unit {placement.DeploymentId}", unitLayer, placement.Footprint, metrics, palette.Fill, inset);
+                $"Unit {placement.DeploymentId}", unitLayer, placement.Footprint, metrics,
+                CardBedColor(palette.Fill), inset);
             visual.Rect.anchoredPosition = metrics.FootprintCentreInField(
                 placement.Footprint, placement.Anchor, economy.Grid.Width, economy.Grid.Height);
             visual.SetRaycastTarget(true);
+            visual.AddArtwork(artSource.Find($"unit/{placement.UnitId}/idle"), 0f);
+            visual.AddTintWash(palette.Fill, uiRules.UnitCardTintAlpha);
             visual.AddOutline(palette.Border, outline);
-            visual.AddArt(artSource.Find($"unit/{placement.UnitId}/idle")).color =
-                new Color(1f, 1f, 1f, 0.30f);
             Text name = visual.AddBigName(font, definition.Name, palette.Text);
             Text level = visual.AddLevelBadge(font, placement.Level, palette.Border, Color.black, badge);
 
@@ -1888,17 +1977,34 @@ namespace HanziDefend.View
             // Lay cards out side by side on their own true widths so a 3x1 stays long and a 2x2
             // stays square. A uniform layout group is exactly what flattened them before WO-C4.
             var widths = new float[offer.Cards.Count];
-            float totalWidth = 0f;
-            float gap = handMetrics.Step * 0.5f;
+            float cardWidth = 0f;
             for (int index = 0; index < offer.Cards.Count; index++)
             {
                 UnitFootprint footprint = ResolveFootprint(offer.Cards[index]);
                 widths[index] = footprint == null
-                    ? handMetrics.CellEdge * 1.6f
+                    ? handMetrics.CellEdge
                     : handMetrics.FootprintSize(footprint).x;
-                totalWidth += widths[index];
+                cardWidth += widths[index];
             }
-            totalWidth += gap * Mathf.Max(0, offer.Cards.Count - 1);
+
+            // The row was centred but bunched: three small cards clustered mid-panel with the rest
+            // of the width empty, which is what read as "偏左、右侧留白". The gap now opens up to
+            // spread the same cards across most of the panel, bounded so two cards never drift into
+            // opposite corners. Equal gaps and a zero midpoint are unchanged, so the WO-C4 layout
+            // gate still holds.
+            int gaps = Mathf.Max(0, offer.Cards.Count - 1);
+            float gap = handMetrics.Step * 0.5f;
+            if (gaps > 0)
+            {
+                handRoot.ForceUpdateRectTransforms();
+                float available = handRoot.rect.width;
+                if (available > 1f)
+                {
+                    float spread = ((available * 0.92f) - cardWidth) / gaps;
+                    gap = Mathf.Clamp(spread, gap, handMetrics.Step * 2.2f);
+                }
+            }
+            float totalWidth = cardWidth + (gap * gaps);
 
             float cursor = -totalWidth * 0.5f;
             for (int index = 0; index < offer.Cards.Count; index++)
@@ -1915,55 +2021,29 @@ namespace HanziDefend.View
             RectTransform rootRect;
             DeployCardVisual visual = null;
 
-            if (footprint != null)
-            {
-                // Unit cards borrow the deployed card's language — tier fill, outline, big name,
-                // corner badge — so the thing you pick up looks like the thing you get. Non-unit
-                // cards keep their category colour: an unlock card is not a level-1 anything.
-                bool unit = card.Category == CardCategory.Unit;
-                int level = unit ? (int)config.GetUnit(card.ContentId).Tier : 0;
-                TierPalette palette = Palette(level);
-                Color fill = unit ? palette.Fill : CardColor(card.Category);
+            // Every hand card is built the same way now, including effect cards: bed → artwork →
+            // colour wash → border → name → badge. Before WO-C10 a buff was a bare purple rectangle
+            // with no border and no badge sitting next to fully dressed unit cards — two visual
+            // languages in one row, and nothing to say how good the buff was.
+            //
+            // Effect cards have no footprint because they never touch the grid; the 1x1 shape here
+            // is presentation only. ResolveFootprint still returns null for them, so the placement
+            // and drag rules are unchanged and a buff still cannot be dragged onto the board.
+            UnitFootprint shape = footprint ?? UnitFootprint.FromDefinition(config.GetUnit("zu"));
+            CardFace face = ResolveCardFace(card);
 
-                visual = DeployCardVisual.Create(
-                    $"Card {index} {card.ContentId}", handRoot, footprint, handMetrics, fill);
-                visual.SetRaycastTarget(true);
-                if (unit)
-                {
-                    visual.AddOutline(
-                        palette.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * handMetrics.CellEdge));
-                }
-                visual.AddArt(ResolveCardSprite(card));
-                if (unit)
-                {
-                    visual.AddBigName(font, config.GetUnit(card.ContentId).Name, palette.Text);
-                    visual.AddLevelBadge(
-                        font, level, palette.Border, Color.black, uiRules.LevelBadgeRatio * handMetrics.CellEdge);
-                }
-                else
-                {
-                    visual.AddLabel(font, CardLabel(card), handMetrics.CellEdge);
-                }
-                rootRect = visual.Rect;
-            }
-            else
-            {
-                // Buff and global cards have no footprint; they keep a neutral 1x1-ish chip.
-                Image chip = RuntimeUiFactory.CreateImage(
-                    $"Card {index} {card.ContentId}", handRoot, CardColor(card.Category));
-                chip.raycastTarget = true;
-                rootRect = chip.rectTransform;
-                rootRect.anchorMin = new Vector2(0.5f, 0.5f);
-                rootRect.anchorMax = new Vector2(0.5f, 0.5f);
-                rootRect.pivot = new Vector2(0.5f, 0.5f);
-                rootRect.sizeDelta = new Vector2(handMetrics.CellEdge * 1.6f, handMetrics.CellEdge);
-                Text label = RuntimeUiFactory.CreateText(
-                    "Card Label", chip.transform, font,
-                    Mathf.Max(10, Mathf.RoundToInt(handMetrics.CellEdge * 0.26f)),
-                    FontStyle.Bold, TextAnchor.MiddleCenter);
-                RuntimeUiFactory.Stretch(label.rectTransform);
-                label.text = CardLabel(card);
-            }
+            visual = DeployCardVisual.Create(
+                $"Card {index} {card.ContentId}", handRoot, shape, handMetrics, CardBedColor(face.Palette.Fill));
+            visual.SetRaycastTarget(true);
+            visual.AddArtwork(ResolveCardSprite(card), 0f);
+            visual.AddTintWash(face.Palette.Fill, uiRules.UnitCardTintAlpha);
+            visual.AddOutline(
+                face.Palette.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * handMetrics.CellEdge));
+            visual.AddBigName(font, face.Name, face.Palette.Text);
+            visual.AddLevelBadge(
+                font, face.Badge, face.Palette.Border, Color.black,
+                uiRules.LevelBadgeRatio * handMetrics.CellEdge);
+            rootRect = visual.Rect;
 
             rootRect.anchoredPosition = new Vector2(centreX, 0f);
             DeployCardDragHandle handle = rootRect.gameObject.AddComponent<DeployCardDragHandle>();

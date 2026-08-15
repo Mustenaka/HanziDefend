@@ -9,7 +9,7 @@ using UnityEngine;
 namespace HanziDefend.Editor
 {
     /// <summary>
-    /// The four WO-C9 review shots, taken off the running game's own deploy screen.
+    /// The four deploy-card review shots (WO-C9 structure, WO-C10 layering), taken off the running game's own deploy screen.
     ///
     /// <para>Same approach as <c>DeployCaptureTool</c> and for the same reasons recorded in
     /// TECH_DEBT: capturing from Edit mode gives black frames because URP will not drive a runtime
@@ -24,7 +24,7 @@ namespace HanziDefend.Editor
     [InitializeOnLoad]
     internal static class DeployUnitCardCaptureTool
     {
-        private const string PendingKey = "HanziDefend.WOC9.CapturePending";
+        private const string PendingKey = "HanziDefend.WOC10.CapturePending";
 
         private static readonly List<string> CapturedPaths = new List<string>();
         private static readonly List<string> Findings = new List<string>();
@@ -82,7 +82,7 @@ namespace HanziDefend.Editor
             catch (Exception exception)
             {
                 Findings.Add($"FAILED at step {step}: {exception.Message}");
-                Debug.LogError($"WO-C9 capture failed at step {step}: {exception}");
+                Debug.LogError($"WO-C10 capture failed at step {step}: {exception}");
                 Finish();
             }
         }
@@ -98,13 +98,13 @@ namespace HanziDefend.Editor
                     bootstrap.AutoRun = false;
                     WidenGrid(bootstrap);
                     BuildLevelLadder(bootstrap);
-                    Shot("c9-levels-at-a-glance");
+                    Shot("c10-levels-art-forward");
                     Next(2);
                     break;
 
                 case 1:
                     BuildNotchedPair(bootstrap);
-                    Shot("c9-l-shape-whole-card");
+                    Shot("c10-l-shape-art-clipped");
                     Next(2);
                     break;
 
@@ -115,14 +115,14 @@ namespace HanziDefend.Editor
                         throw new InvalidOperationException("could not open the info panel");
                     }
                     Findings.Add($"info panel rows: {screen.InfoPanelRows.Count}");
-                    Shot("c9-info-panel");
+                    Shot("c10-info-panel");
                     Next(2);
                     break;
 
                 case 3:
                     screen.CloseUnitInfo();
                     BeginReturnDrag(bootstrap);
-                    Shot("c9-drag-back-to-hand");
+                    Shot("c10-hand-row-and-undo");
                     Next(2);
                     break;
 
@@ -285,7 +285,7 @@ namespace HanziDefend.Editor
         private static void Finish()
         {
             running = false;
-            Debug.Log("WO-C9 deployed unit cards:" + Environment.NewLine
+            Debug.Log("WO-C10 card layering:" + Environment.NewLine
                       + string.Join(Environment.NewLine, Findings) + Environment.NewLine
                       + "captures:" + Environment.NewLine
                       + string.Join(Environment.NewLine, CapturedPaths));
@@ -297,7 +297,7 @@ namespace HanziDefend.Editor
             M1GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<M1GameBootstrap>();
             if (bootstrap == null || bootstrap.DeployScreen == null || bootstrap.Flow == null)
             {
-                throw new InvalidOperationException("WO-C9 capture needs the M1 bootstrap in the Deploy phase.");
+                throw new InvalidOperationException("WO-C10 capture needs the M1 bootstrap in the Deploy phase.");
             }
             return bootstrap;
         }

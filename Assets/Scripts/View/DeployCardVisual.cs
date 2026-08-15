@@ -181,9 +181,17 @@ namespace HanziDefend.View
             bool notched = offsets.Count < Footprint.Width * Footprint.Height;
             float budget = notched ? 0.64f : 0.84f;
 
+            // The cap has to grow with the card or it becomes the only binding term, and then every
+            // card gets the same type whatever its size: measured, a 3x1 「重骑兵」 and a 1x1 「卒」
+            // both came out at 66pt, because both are one cell deep. A bigger card should carry
+            // bigger type — that is what "撑满卡面" means — so the cap opens up by how many cells the
+            // name runs across, while the depth still bounds it so nothing overflows the border.
+            int cellsAlong = vertical ? Footprint.Height : Footprint.Width;
+            float depthCap = notched ? 0.5f : 0.66f + (0.03f * Mathf.Min(2, cellsAlong - 1));
+
             // Fit along the writing direction, then cap by the other axis so one character on a long
             // card does not grow taller than the card is deep.
-            float fitted = Mathf.Min((along * budget) / characters, across * (notched ? 0.5f : 0.66f));
+            float fitted = Mathf.Min((along * budget) / characters, across * depthCap);
             Text label = RuntimeUiFactory.CreateText(
                 "Unit Name", transform, font, Mathf.Max(9, Mathf.RoundToInt(fitted)),
                 FontStyle.Bold, TextAnchor.MiddleCenter);
@@ -200,6 +208,15 @@ namespace HanziDefend.View
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.verticalOverflow = VerticalWrapMode.Overflow;
             label.lineSpacing = 0.84f;
+
+            // Now that the name sits on artwork rather than on a flat fill, it needs its own
+            // contrast: a light glyph on a light patch of picture is unreadable, and the placeholder
+            // art is noisy enough to prove it. An outline binds the name to the card at any density.
+            Outline outline = label.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            float thickness = Mathf.Max(1.5f, fitted * 0.055f);
+            outline.effectDistance = new Vector2(thickness, -thickness);
+            outline.useGraphicAlpha = true;
             return label;
         }
 
@@ -280,6 +297,16 @@ namespace HanziDefend.View
         /// </summary>
         internal Text AddLevelBadge(Font font, int level, Color fill, Color textColor, float edge)
         {
+            return AddLevelBadge(font, level.ToString(), fill, textColor, edge);
+        }
+
+        /// <summary>
+        /// Badge overload taking free text, so an effect card can mark its kind where a unit card
+        /// marks its level. Same corner, same shape, same colour language — the row reads as one
+        /// family whether the slot holds a soldier or a buff.
+        /// </summary>
+        internal Text AddLevelBadge(Font font, string mark, Color fill, Color textColor, float edge)
+        {
             int cornerIndex = 0;
             for (int index = 1; index < offsets.Count; index++)
             {
@@ -308,7 +335,7 @@ namespace HanziDefend.View
                 "Level", badge.transform, font, Mathf.Max(9, Mathf.RoundToInt(edge * 0.72f)),
                 FontStyle.Bold, TextAnchor.MiddleCenter);
             RuntimeUiFactory.Stretch(label.rectTransform);
-            label.text = level.ToString();
+            label.text = mark;
             label.color = textColor;
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.verticalOverflow = VerticalWrapMode.Overflow;
@@ -324,6 +351,95 @@ namespace HanziDefend.View
             art.sprite = sprite;
             art.color = sprite == null ? new Color(1f, 1f, 1f, 0.1f) : Color.white;
             return art;
+        }
+
+        /// <summary>
+        /// Artwork as the card's <b>body</b> — the reference art's layering, where the picture fills
+        /// the card and the name sits on top of it. WO-C9 had this inverted: a level-coloured fill
+        /// covered the art and only a 30%-alpha ghost of it showed through, which is the same
+        /// complaint ("拖拽前是图片，落位后是纯文字") one step less severe.
+        ///
+        /// <para>A notched card clips the picture to its real silhouette by drawing one copy per
+        /// tile, each masked to that tile and offset so the copies reconstruct a single continuous
+        /// image. The missing corner therefore has no artwork in it, rather than a 2x2 picture with
+        /// a bite painted over it — the thing WO-C4 first asked for and nobody had done.</para>
+        ///
+        /// <para>Rectangular cards take the cheap path: the bounding box already <i>is</i> the
+        /// silhouette, so one unmasked image does the job without a per-tile canvas batch break.</para>
+        /// </summary>
+        internal void AddArtwork(Sprite sprite, float verticalBias)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+
+            bool notched = offsets.Count < Footprint.Width * Footprint.Height;
+            if (!notched)
+            {
+                CreateArtImage(transform, sprite, Size, Vector2.zero, verticalBias);
+                return;
+            }
+
+            for (int index = 0; index < tiles.Count; index++)
+            {
+                RectTransform tile = tiles[index].rectTransform;
+                if (tile.GetComponent<RectMask2D>() == null)
+                {
+                    tile.gameObject.AddComponent<RectMask2D>();
+                }
+
+                // The copy is laid out in card space, then shifted into this tile's local space, so
+                // every tile shows its own window onto the same picture.
+                CreateArtImage(tile, sprite, Size, -tile.anchoredPosition, verticalBias);
+            }
+        }
+
+        private static Image CreateArtImage(
+            Transform parent, Sprite sprite, Vector2 cardSize, Vector2 offset, float verticalBias)
+        {
+            Image art = RuntimeUiFactory.CreateImage("Artwork", parent, Color.white);
+            art.raycastTarget = false;
+            art.preserveAspect = true;
+            art.sprite = sprite;
+            RectTransform rect = art.rectTransform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = cardSize;
+            rect.anchoredPosition = offset + new Vector2(0f, cardSize.y * verticalBias);
+            return art;
+        }
+
+        /// <summary>
+        /// A thin wash of the level colour over the artwork. The level has to stay readable once the
+        /// picture owns the card, but a solid fill is what buried the art in the first place — so
+        /// the colour survives as a tint plus the border and badge, not as the background.
+        /// </summary>
+        internal void AddTintWash(Color color, float alpha)
+        {
+            var washColor = new Color(color.r, color.g, color.b, alpha);
+            bool notched = offsets.Count < Footprint.Width * Footprint.Height;
+            if (!notched)
+            {
+                // Same parent as the artwork on this path, added after it, so it lands on top.
+                Image wash = RuntimeUiFactory.CreateImage("Tint", transform, washColor);
+                wash.raycastTarget = false;
+                RectTransform rect = wash.rectTransform;
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.sizeDelta = Size;
+                rect.anchoredPosition = Vector2.zero;
+                return;
+            }
+
+            for (int index = 0; index < tiles.Count; index++)
+            {
+                Image wash = RuntimeUiFactory.CreateImage("Tint", tiles[index].transform, washColor);
+                wash.raycastTarget = false;
+                RuntimeUiFactory.Stretch(wash.rectTransform);
+            }
         }
 
         internal void SetTint(Color color)

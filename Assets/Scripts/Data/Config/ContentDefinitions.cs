@@ -380,6 +380,13 @@ namespace HanziDefend.Data
         public float LevelBadgeRatio { get; set; }
 
         /// <summary>
+        /// Opacity of the level-coloured wash laid over a card's artwork. The artwork is the card's
+        /// body, so this only has to be strong enough to read the level at a glance — push it up and
+        /// the picture disappears again, which is the bug it replaced.
+        /// </summary>
+        public float UnitCardTintAlpha { get; set; }
+
+        /// <summary>
         /// Per-level palette, ordered by level. Deliberately longer than the merge ceiling: level 5
         /// is reserved for units obtained some other way later, so the table can grow without the
         /// merge rules moving. See <c>DeploymentGrid.MaximumUnitLevel</c> for the ceiling that

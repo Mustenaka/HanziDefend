@@ -10,8 +10,19 @@
   "deployUi": {
     "cellSpacingRatio": 0.08,
     "handCardScale": 0.70,
-    "snapRadiusCells": 0.60,
-    "dragLiftCells": 0.80
+    "snapRadiusCells": 0.35,
+    "dragLiftCells": 0.80,
+    "cellInsetRatio": 0.13,
+    "unitCardInsetRatio": 0.10,
+    "unitCardOutlineRatio": 0.07,
+    "levelBadgeRatio": 0.34,
+    "tierColors": [
+      { "level": 1, "name": "绿", "fill": "#2C6E49", "border": "#63E08C", "text": "#EAFFF1" },
+      { "level": 2, "name": "蓝", "fill": "#1D5B87", "border": "#54C8F5", "text": "#EAF8FF" },
+      { "level": 3, "name": "紫", "fill": "#5A2E86", "border": "#C583FF", "text": "#F6EAFF" },
+      { "level": 4, "name": "金", "fill": "#8A6212", "border": "#FFD24A", "text": "#FFF8E5" },
+      { "level": 5, "name": "红", "fill": "#8C2130", "border": "#FF5E70", "text": "#FFECEE" }
+    ]
   },
   "dropCoins": {
     "normal": 1,
@@ -116,6 +127,7 @@
     "deploymentCellSize": {
       "x": 1.2,
       "y": 0.85
-    }
+    },
+    "deploymentSpreadWidth": 9.0
   }
 }

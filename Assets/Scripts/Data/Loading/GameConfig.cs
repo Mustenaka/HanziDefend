@@ -583,6 +583,7 @@ namespace HanziDefend.Data
                 "economy.deployUi.cellSpacingRatio cannot be negative.");
             Require(Economy.DeployUi.DragLiftCells >= 0f,
                 "economy.deployUi.dragLiftCells cannot be negative.");
+            ValidateTierColors(Economy.DeployUi);
             Require(Economy.DropCoins != null, "economy.dropCoins is required.");
             Require(Economy.Damage != null, "economy.damage is required.");
             Require(Economy.CardWeights != null, "economy.cardWeights is required.");
@@ -631,6 +632,7 @@ namespace HanziDefend.Data
             ValidatePosition(battle.DeploymentCellSize, "economy.battle.deploymentCellSize");
             Require(battle.DeploymentCellSize.X > 0f && battle.DeploymentCellSize.Y > 0f,
                 "economy.battle.deploymentCellSize values must be positive.");
+            RequireFinitePositive(battle.DeploymentSpreadWidth, "economy.battle.deploymentSpreadWidth");
             Require(battle.AllyBasePosition.X != battle.EnemyBasePosition.X
                     || battle.AllyBasePosition.Y != battle.EnemyBasePosition.Y,
                 "economy.battle allyBasePosition and enemyBasePosition must be different.");
@@ -704,6 +706,53 @@ namespace HanziDefend.Data
         {
             RequireId(effectId, context);
             Require(EffectsById.ContainsKey(effectId), $"{context} references unknown effect '{effectId}'.");
+        }
+
+        /// <summary>
+        /// The per-level palette. Levels must run 1..N with no gaps so the view can index it
+        /// directly, and every colour must be a literal <c>#RRGGBB</c> — the view parses these and a
+        /// silent parse failure would show up as a black card rather than as a config error.
+        ///
+        /// <para>N is deliberately not tied to the merge ceiling. The table may hold more levels than
+        /// merging can reach; what it may not do is hold fewer than the ceiling, or the top merge
+        /// would have no colour.</para>
+        /// </summary>
+        private static void ValidateTierColors(DeployUiRulesDef deployUi)
+        {
+            RequireFinitePositive(deployUi.CellInsetRatio, "economy.deployUi.cellInsetRatio");
+            RequireFinitePositive(deployUi.UnitCardInsetRatio, "economy.deployUi.unitCardInsetRatio");
+            RequireFinitePositive(deployUi.UnitCardOutlineRatio, "economy.deployUi.unitCardOutlineRatio");
+            RequireFinitePositive(deployUi.LevelBadgeRatio, "economy.deployUi.levelBadgeRatio");
+            Require(deployUi.CellInsetRatio < 0.5f, "economy.deployUi.cellInsetRatio must be below 0.5.");
+            Require(deployUi.UnitCardInsetRatio < 0.5f, "economy.deployUi.unitCardInsetRatio must be below 0.5.");
+
+            TierColorDef[] colors = deployUi.TierColors;
+            Require(colors != null && colors.Length > 0, "economy.deployUi.tierColors is required.");
+            for (int index = 0; index < colors.Length; index++)
+            {
+                TierColorDef entry = colors[index];
+                Require(entry != null, $"economy.deployUi.tierColors[{index}] is null.");
+                Require(entry.Level == index + 1,
+                    $"economy.deployUi.tierColors must be ordered 1..N; entry {index} has level {entry.Level}.");
+                RequireText(entry.Name, $"economy.deployUi.tierColors[{index}].name");
+                RequireHexColor(entry.Fill, $"economy.deployUi.tierColors[{index}].fill");
+                RequireHexColor(entry.Border, $"economy.deployUi.tierColors[{index}].border");
+                RequireHexColor(entry.Text, $"economy.deployUi.tierColors[{index}].text");
+            }
+        }
+
+        private static void RequireHexColor(string value, string context)
+        {
+            Require(!string.IsNullOrEmpty(value) && value.Length == 7 && value[0] == '#',
+                $"{context} must be a #RRGGBB colour.");
+            for (int index = 1; index < value.Length; index++)
+            {
+                char digit = value[index];
+                bool hex = (digit >= '0' && digit <= '9')
+                           || (digit >= 'a' && digit <= 'f')
+                           || (digit >= 'A' && digit <= 'F');
+                Require(hex, $"{context} has a non-hex digit '{digit}'.");
+            }
         }
 
         private static void ValidateCurve(StatCurve curve, string unitId, string stat, bool mustBePositive)

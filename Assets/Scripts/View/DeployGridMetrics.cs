@@ -88,6 +88,22 @@ namespace HanziDefend.View
         }
 
         /// <summary>
+        /// Centre of a footprint's bounding box once anchored on the field. A notched shape uses the
+        /// same bounding box as its rectangular sibling, so the card stays put when the notch flips
+        /// corners — the notch shows in which tiles exist, not in where the card sits.
+        /// </summary>
+        internal Vector2 FootprintCentreInField(
+            UnitFootprint footprint, GridCoordinate anchor, int columns, int rows)
+        {
+            if (footprint == null) throw new ArgumentNullException(nameof(footprint));
+            float centreColumn = anchor.Column + ((footprint.MinColumnOffset + footprint.MaxColumnOffset) * 0.5f);
+            float centreRow = anchor.Row + ((footprint.MinRowOffset + footprint.MaxRowOffset) * 0.5f);
+            return new Vector2(
+                (centreColumn - ((columns - 1) * 0.5f)) * Step,
+                (centreRow - ((rows - 1) * 0.5f)) * Step);
+        }
+
+        /// <summary>
         /// Inverse of <see cref="CellCentreInField"/>: the nearest cell to a field-local point, plus
         /// how far off centre that point was, measured in cell edges. Purely geometric — legality is
         /// never decided here, only which cell the cursor is pointing at.

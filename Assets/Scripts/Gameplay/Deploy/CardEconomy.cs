@@ -301,6 +301,64 @@ namespace HanziDefend.Gameplay.Deploy
         }
 
         /// <summary>
+        /// Takes a deployed unit off the grid and puts its card back in hand — the exact inverse of
+        /// <see cref="PlaceUnit(CardOfferItem, GridCoordinate)"/>, and the only sanctioned way to
+        /// undo a placement.
+        ///
+        /// <para><b>Merged units are refused.</b> A hand card is always worth one placement at the
+        /// unit's base tier, so returning a level-3 unit as a single card would quietly destroy two
+        /// merges, and returning several would mint cards out of nothing. Either way the merge
+        /// economy would shift, and this method exists to undo a misdrop, not to reprice merging.
+        /// Un-merging, if it is ever wanted, is its own design decision.</para>
+        /// </summary>
+        /// <param name="deploymentId">The placement to take back.</param>
+        /// <param name="failureReason">Player-facing reason when the answer is no.</param>
+        public bool TryReturnUnitToHand(string deploymentId, out string failureReason)
+        {
+            failureReason = string.Empty;
+            if (string.IsNullOrEmpty(deploymentId))
+            {
+                failureReason = "没有可撤回的单位";
+                return false;
+            }
+
+            if (!Grid.TryGetPlacement(deploymentId, out DeploymentPlacement placement))
+            {
+                failureReason = "部署单位已不存在";
+                return false;
+            }
+
+            UnitDef definition = config.GetUnit(placement.UnitId);
+            if (placement.Level != (int)definition.Tier)
+            {
+                failureReason = $"{definition.Name} 已合成到 {placement.Level} 级，不能拆回手牌";
+                return false;
+            }
+
+            if (CurrentOffer == null)
+            {
+                failureReason = "本小关的手牌尚未发放";
+                return false;
+            }
+
+            if (!Grid.Remove(deploymentId))
+            {
+                failureReason = "撤回失败";
+                return false;
+            }
+
+            var returned = new List<CardOfferItem>(CurrentOffer.Cards.Count + 1);
+            returned.AddRange(CurrentOffer.Cards);
+            returned.Add(new CardOfferItem(CardCategory.Unit, definition.Id));
+            CurrentOffer = new CardOffer(returned, CurrentOffer.IsLucky);
+
+            SnapshotToRunState();
+            HandChanged?.Invoke(CurrentOffer);
+            DeploymentsChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>
         /// Plays a held unlock card at an anchor. Obtaining the card is what costs money or an ad
         /// view, so playing one is free; an illegal anchor leaves both the card and the mask alone.
         /// </summary>

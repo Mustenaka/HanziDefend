@@ -105,3 +105,7 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Agent 跑批产物（不入库）
+.codex-*.json
+Tools/__pycache__/

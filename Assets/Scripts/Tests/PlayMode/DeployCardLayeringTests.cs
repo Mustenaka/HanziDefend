@@ -60,7 +60,9 @@ namespace HanziDefend.Tests.PlayMode
         [TestCase("tie")]
         public void DeployedCard_DrawsArtworkBeneathTheNameAndAboveTheFill(string unitId)
         {
-            DeployScreen screen = CreateScreen(out GameConfig config);
+            // Labels forced on: WO-C11 drops them from multi-cell cards, but the layer *order* is
+            // what this pins, and it has to hold wherever a name is drawn at all.
+            DeployScreen screen = CreateLabelledScreen(out GameConfig config);
             string id = Deploy(screen, config, unitId, 1, new GridCoordinate(2, 2));
             Transform card = FindCard(screen, id);
 
@@ -139,7 +141,7 @@ namespace HanziDefend.Tests.PlayMode
         [Test]
         public void UnitName_CarriesAnOutlineSoItReadsOverAnyArtwork()
         {
-            DeployScreen screen = CreateScreen(out GameConfig config);
+            DeployScreen screen = CreateLabelledScreen(out GameConfig config);
             string id = Deploy(screen, config, "tie", 2, new GridCoordinate(2, 2));
 
             Text name = FindAll<Text>(FindCard(screen, id), "Unit Name").Single();
@@ -160,7 +162,7 @@ namespace HanziDefend.Tests.PlayMode
         [Test]
         public void NameFontSize_GrowsWithTheCardRatherThanStayingConstant()
         {
-            DeployScreen screen = CreateScreen(out GameConfig config);
+            DeployScreen screen = CreateLabelledScreen(out GameConfig config);
             string small = Deploy(screen, config, "zu", 1, new GridCoordinate(2, 2));
             string medium = Deploy(screen, config, "dun", 1, new GridCoordinate(1, 4));
             string large = Deploy(screen, config, "zqi", 1, new GridCoordinate(2, 6));
@@ -183,7 +185,7 @@ namespace HanziDefend.Tests.PlayMode
         [TestCase("mao")]
         public void NameFontSize_NeverOutgrowsTheCardItSitsOn(string unitId)
         {
-            DeployScreen screen = CreateScreen(out GameConfig config);
+            DeployScreen screen = CreateLabelledScreen(out GameConfig config);
             string id = Deploy(screen, config, unitId, 1, new GridCoordinate(2, 2));
 
             Vector2 card = screen.DeployedCardSize(id);
@@ -392,6 +394,24 @@ namespace HanziDefend.Tests.PlayMode
             screen.Economy.SnapshotToRunState();
             screen.RefreshAll();
             return id;
+        }
+
+        /// <summary>
+        /// A screen with name labels forced on for every footprint. WO-C11 suppresses them on cards
+        /// big enough to show their artwork, but the layering and type rules still govern every
+        /// label that does get drawn — raising the config threshold is exactly how a shipping build
+        /// would turn them back on, so this exercises the real path.
+        /// </summary>
+        private DeployScreen CreateLabelledScreen(out GameConfig config)
+        {
+            config = GameConfig.Load();
+            config.Economy.DeployUi.NameLabelMaxFootprintCells = 9;
+            CardEconomy economy = CardEconomy.StartNew(config, config.GetLevel("level_1_1"), 0xC10001u);
+            economy.State.Coins = int.MaxValue;
+            DeployScreen screen = Host(config, economy);
+            OpenWholeGrid(economy);
+            screen.RefreshAll();
+            return screen;
         }
 
         private DeployScreen CreateScreen(out GameConfig config)

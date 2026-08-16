@@ -726,6 +726,9 @@ namespace HanziDefend.Data
             RequireFinitePositive(deployUi.UnitCardTintAlpha, "economy.deployUi.unitCardTintAlpha");
             Require(deployUi.UnitCardTintAlpha < 0.6f,
                 "economy.deployUi.unitCardTintAlpha must stay below 0.6 or the wash hides the artwork.");
+            Require(deployUi.NameLabelMaxFootprintCells >= 1,
+                "economy.deployUi.nameLabelMaxFootprintCells must be at least 1 — a 1x1 card has no "
+                + "room for artwork behind its label, so it always needs the written name.");
             Require(deployUi.CellInsetRatio < 0.5f, "economy.deployUi.cellInsetRatio must be below 0.5.");
             Require(deployUi.UnitCardInsetRatio < 0.5f, "economy.deployUi.unitCardInsetRatio must be below 0.5.");
 

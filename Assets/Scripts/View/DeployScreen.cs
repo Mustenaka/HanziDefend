@@ -356,6 +356,25 @@ namespace HanziDefend.View
             return new Color(fill.r * 0.42f, fill.g * 0.42f, fill.b * 0.42f, 1f);
         }
 
+        /// <summary>
+        /// Whether a card of this footprint writes its unit's name.
+        ///
+        /// <para>The artwork in this game <i>is</i> the character the unit is named after, so once
+        /// WO-C10 made the picture the card's body, the label started printing the same word twice:
+        /// on 铁甲兵 at two different sizes, and on 弩车 with the two sets of strokes interleaved
+        /// until neither could be read. A 1x1 keeps its label because there the text covers the card
+        /// and almost no artwork survives behind it.</para>
+        ///
+        /// <para>Judged on <b>footprint</b>, never on rendered pixel size: hand cards are drawn at
+        /// 70% scale, so a pixel rule would silently give the hand and the board different answers
+        /// for the same unit.</para>
+        /// </summary>
+        private bool ShouldWriteName(UnitFootprint footprint)
+        {
+            return footprint == null
+                   || footprint.OccupiedCellCount <= uiRules.NameLabelMaxFootprintCells;
+        }
+
         /// <summary>How one hand card presents itself: its palette, its big name and its corner mark.</summary>
         private readonly struct CardFace
         {
@@ -504,7 +523,16 @@ namespace HanziDefend.View
             drag.Ghost.AddTintWash(ghostFace.Palette.Fill, uiRules.UnitCardTintAlpha);
             drag.Ghost.AddOutline(
                 ghostFace.Palette.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * metrics.CellEdge));
-            drag.Ghost.AddBigName(font, ghostFace.Name, ghostFace.Palette.Text);
+            if (card.Category != CardCategory.Unit || ShouldWriteName(footprint))
+            {
+                drag.Ghost.AddBigName(font, ghostFace.Name, ghostFace.Palette.Text);
+            }
+
+            // The badge rides along too. Once WO-C11 takes the name off a big card, the badge is the
+            // only mark left on it — a ghost without one would be an anonymous coloured shape.
+            drag.Ghost.AddLevelBadge(
+                font, ghostFace.Badge, ghostFace.Palette.Border, Color.black,
+                uiRules.LevelBadgeRatio * metrics.CellEdge);
             HideSourceForDrag(source);
 
             LastDragOutcome = DeployDragOutcome.None;
@@ -537,7 +565,13 @@ namespace HanziDefend.View
             drag.Ghost.AddTintWash(carried.Fill, uiRules.UnitCardTintAlpha);
             drag.Ghost.AddOutline(
                 carried.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * metrics.CellEdge));
-            drag.Ghost.AddBigName(font, config.GetUnit(placement.UnitId).Name, carried.Text);
+            if (ShouldWriteName(placement.Footprint))
+            {
+                drag.Ghost.AddBigName(font, config.GetUnit(placement.UnitId).Name, carried.Text);
+            }
+            drag.Ghost.AddLevelBadge(
+                font, placement.Level, carried.Border, Color.black,
+                uiRules.LevelBadgeRatio * metrics.CellEdge);
             FadeUnitCardForDrag(deploymentId);
 
             LastDragOutcome = DeployDragOutcome.None;
@@ -1756,7 +1790,9 @@ namespace HanziDefend.View
             visual.AddArtwork(artSource.Find($"unit/{placement.UnitId}/idle"), 0f);
             visual.AddTintWash(palette.Fill, uiRules.UnitCardTintAlpha);
             visual.AddOutline(palette.Border, outline);
-            Text name = visual.AddBigName(font, definition.Name, palette.Text);
+            Text name = ShouldWriteName(placement.Footprint)
+                ? visual.AddBigName(font, definition.Name, palette.Text)
+                : null;
             Text level = visual.AddLevelBadge(font, placement.Level, palette.Border, Color.black, badge);
 
             var handle = visual.gameObject.AddComponent<DeployPlacementDragHandle>();
@@ -2039,7 +2075,14 @@ namespace HanziDefend.View
             visual.AddTintWash(face.Palette.Fill, uiRules.UnitCardTintAlpha);
             visual.AddOutline(
                 face.Palette.Border, Mathf.Max(1f, uiRules.UnitCardOutlineRatio * handMetrics.CellEdge));
-            visual.AddBigName(font, face.Name, face.Palette.Text);
+
+            // Same footprint rule as the board, so a unit looks the same in hand as it does deployed.
+            // Only unit cards duplicate themselves this way: an unlock card's "3x1" and an effect's
+            // name appear nowhere in their artwork, so those keep their labels at every size.
+            if (card.Category != CardCategory.Unit || ShouldWriteName(footprint))
+            {
+                visual.AddBigName(font, face.Name, face.Palette.Text);
+            }
             visual.AddLevelBadge(
                 font, face.Badge, face.Palette.Border, Color.black,
                 uiRules.LevelBadgeRatio * handMetrics.CellEdge);

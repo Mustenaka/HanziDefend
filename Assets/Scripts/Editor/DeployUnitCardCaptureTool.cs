@@ -24,7 +24,7 @@ namespace HanziDefend.Editor
     [InitializeOnLoad]
     internal static class DeployUnitCardCaptureTool
     {
-        private const string PendingKey = "HanziDefend.WOC10.CapturePending";
+        private const string PendingKey = "HanziDefend.WOC11.CapturePending";
 
         private static readonly List<string> CapturedPaths = new List<string>();
         private static readonly List<string> Findings = new List<string>();
@@ -82,7 +82,7 @@ namespace HanziDefend.Editor
             catch (Exception exception)
             {
                 Findings.Add($"FAILED at step {step}: {exception.Message}");
-                Debug.LogError($"WO-C10 capture failed at step {step}: {exception}");
+                Debug.LogError($"WO-C11 capture failed at step {step}: {exception}");
                 Finish();
             }
         }
@@ -98,13 +98,13 @@ namespace HanziDefend.Editor
                     bootstrap.AutoRun = false;
                     WidenGrid(bootstrap);
                     BuildLevelLadder(bootstrap);
-                    Shot("c10-levels-art-forward");
+                    Shot("c11-levels-no-duplicate-names");
                     Next(2);
                     break;
 
                 case 1:
                     BuildNotchedPair(bootstrap);
-                    Shot("c10-l-shape-art-clipped");
+                    Shot("c11-l-shape-readable");
                     Next(2);
                     break;
 
@@ -115,14 +115,14 @@ namespace HanziDefend.Editor
                         throw new InvalidOperationException("could not open the info panel");
                     }
                     Findings.Add($"info panel rows: {screen.InfoPanelRows.Count}");
-                    Shot("c10-info-panel");
+                    Shot("c11-info-panel-is-the-fallback");
                     Next(2);
                     break;
 
                 case 3:
                     screen.CloseUnitInfo();
                     BeginReturnDrag(bootstrap);
-                    Shot("c10-hand-row-and-undo");
+                    Shot("c11-hand-row");
                     Next(2);
                     break;
 
@@ -285,7 +285,7 @@ namespace HanziDefend.Editor
         private static void Finish()
         {
             running = false;
-            Debug.Log("WO-C10 card layering:" + Environment.NewLine
+            Debug.Log("WO-C11 card labels:" + Environment.NewLine
                       + string.Join(Environment.NewLine, Findings) + Environment.NewLine
                       + "captures:" + Environment.NewLine
                       + string.Join(Environment.NewLine, CapturedPaths));
@@ -297,7 +297,7 @@ namespace HanziDefend.Editor
             M1GameBootstrap bootstrap = UnityEngine.Object.FindFirstObjectByType<M1GameBootstrap>();
             if (bootstrap == null || bootstrap.DeployScreen == null || bootstrap.Flow == null)
             {
-                throw new InvalidOperationException("WO-C10 capture needs the M1 bootstrap in the Deploy phase.");
+                throw new InvalidOperationException("WO-C11 capture needs the M1 bootstrap in the Deploy phase.");
             }
             return bootstrap;
         }

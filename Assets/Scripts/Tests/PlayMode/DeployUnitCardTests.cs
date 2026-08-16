@@ -68,10 +68,20 @@ namespace HanziDefend.Tests.PlayMode
                 "one deployed unit is one card, not one card per occupied cell");
             Assert.That(screen.DeployedCardCellOffsets(id), Has.Count.EqualTo(occupiedCells),
                 "the card still covers every cell the unit occupies");
-            Assert.That(
-                screen.DeployedCardName(id).Replace("\n", string.Empty),
-                Is.EqualTo(config.GetUnit(unitId).Name),
-                "the name is written once, across the card");
+            // WO-C11 stopped labelling cards big enough to show their artwork, because this game's
+            // artwork *is* the character the unit is named after. Where a label survives it must
+            // still be exactly one, spanning the card — never one stamped per occupied cell.
+            string rendered = screen.DeployedCardName(id).Replace("\n", string.Empty);
+            if (occupiedCells <= config.Economy.DeployUi.NameLabelMaxFootprintCells)
+            {
+                Assert.That(rendered, Is.EqualTo(config.GetUnit(unitId).Name),
+                    "a card too small for artwork keeps its written name");
+            }
+            else
+            {
+                Assert.That(rendered, Is.Empty,
+                    "a card big enough to show its artwork must not print the same word again");
+            }
         }
 
         /// <summary>
@@ -85,7 +95,10 @@ namespace HanziDefend.Tests.PlayMode
         [TestCase("nub", true)]
         public void DeployedCardName_RunsDownTallCardsAndAcrossWideOnes(string unitId, bool expectVertical)
         {
-            DeployScreen screen = CreateScreen(out GameConfig config);
+            // Multi-cell cards no longer print a name in shipping config (WO-C11), so this fixture
+            // turns labelling back on to keep testing the rule that decides *how* a name is written.
+            // The two rules are independent: whether to write, and which way to write it.
+            DeployScreen screen = CreateLabelledScreen(out GameConfig config);
             string id = Deploy(screen, config, unitId, 1, new GridCoordinate(2, 2));
 
             string rendered = screen.DeployedCardName(id);
@@ -488,6 +501,21 @@ namespace HanziDefend.Tests.PlayMode
         private DeployScreen CreateScreen(out GameConfig config)
         {
             config = GameConfig.Load();
+            CardEconomy economy = CardEconomy.StartNew(config, config.GetLevel("level_1_1"), 0xC9D001u);
+            economy.State.Coins = int.MaxValue;
+            return Host(config, economy);
+        }
+
+        /// <summary>
+        /// A screen with name labels forced on for every footprint, for the tests that are about
+        /// <i>how</i> a name is drawn rather than <i>whether</i> it is. Raising the config threshold
+        /// is how the shipping build would turn labelling back on too, so this exercises the real
+        /// path rather than a test-only branch.
+        /// </summary>
+        private DeployScreen CreateLabelledScreen(out GameConfig config)
+        {
+            config = GameConfig.Load();
+            config.Economy.DeployUi.NameLabelMaxFootprintCells = 9;
             CardEconomy economy = CardEconomy.StartNew(config, config.GetLevel("level_1_1"), 0xC9D001u);
             economy.State.Coins = int.MaxValue;
             return Host(config, economy);

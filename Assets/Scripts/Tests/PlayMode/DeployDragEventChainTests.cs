@@ -249,7 +249,18 @@ namespace HanziDefend.Tests.PlayMode
             Assert.That(art, Is.Not.Null,
                 "the ghost must carry the source card's sprite — otherwise the picture vanishes on pickup.");
             Assert.That(art.color.a, Is.GreaterThan(0.5f), "the artwork must be clearly visible");
-            Assert.That(ghost.GetComponentsInChildren<Text>(true), Is.Not.Empty, "and keep its label");
+
+            // 大刀 is 2x1, so WO-C11 leaves its name off: the artwork already *is* the character, and
+            // printing it again is what made 弩车 unreadable. The badge still identifies the card, and
+            // the point of this test — that the picture survives pickup — is unchanged.
+            Assert.That(
+                ghost.GetComponentsInChildren<Text>(true).Any(text => text.gameObject.name == "Level"),
+                Is.True,
+                "and keep the corner badge that identifies it");
+            Assert.That(
+                ghost.GetComponentsInChildren<Text>(true).Any(text => text.gameObject.name == "Unit Name"),
+                Is.False,
+                "a card this size must not print the same character its artwork already shows");
 
             screen.EndDrag();
             UnityEngine.Object.DestroyImmediate(sprite);

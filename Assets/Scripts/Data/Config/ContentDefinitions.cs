@@ -387,6 +387,17 @@ namespace HanziDefend.Data
         public float UnitCardTintAlpha { get; set; }
 
         /// <summary>
+        /// Largest footprint, in occupied cells, that still gets a written name on its card.
+        ///
+        /// <para>This unit's artwork <i>is</i> the character it is named after, so on a card big
+        /// enough to show the artwork properly the label prints the same word twice — on 弩车 the
+        /// gold strokes of the picture and the white strokes of the label interleave until neither
+        /// reads. A 1x1 is the exception: the label covers the whole card and only a sliver of
+        /// artwork survives behind it, so there the text is what identifies the unit.</para>
+        /// </summary>
+        public int NameLabelMaxFootprintCells { get; set; }
+
+        /// <summary>
         /// Per-level palette, ordered by level. Deliberately longer than the merge ceiling: level 5
         /// is reserved for units obtained some other way later, so the table can grow without the
         /// merge rules moving. See <c>DeploymentGrid.MaximumUnitLevel</c> for the ceiling that

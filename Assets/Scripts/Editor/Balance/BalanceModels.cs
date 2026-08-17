@@ -335,10 +335,11 @@ namespace HanziDefend.Editor.Balance
                 new[] { "level_1_1", "level_1_5" },
                 BalanceReferenceLineups.All,
                 seed,
-                // The target band is 90-150s. A battle still running at 300 has not "nearly won":
-                // it is the stalemate WO-F1 §A set out to remove, and calling it a timeout at 300
-                // instead of 600 halves the cost of finding that out.
-                300d,
+                // The target band is 90-150s, so a battle still running at 160 is already a
+                // timeout by the acceptance definition — the extra 140 seconds the old 300s ceiling
+                // bought produced no information and cost minutes of main-thread compute per game,
+                // which is what made the editor stop responding during tuning.
+                160d,
                 false,
                 outputDirectory);
         }
@@ -415,6 +416,9 @@ namespace HanziDefend.Editor.Balance
             bool timedOut,
             int peakConcurrentUnits,
             double lastAllyEntrySeconds,
+            int enemyDeaths,
+            int enemyZeroAttackDeaths,
+            IReadOnlyList<double> enemyLifetimes,
             IReadOnlyList<float> enemyDeathPositionsY,
             IReadOnlyList<float> enemyDeathPositionsYBeforeCastle,
             IReadOnlyList<BalanceEntityResult> entities,
@@ -441,6 +445,9 @@ namespace HanziDefend.Editor.Balance
             TimedOut = timedOut;
             PeakConcurrentUnits = peakConcurrentUnits;
             LastAllyEntrySeconds = lastAllyEntrySeconds;
+            EnemyDeaths = enemyDeaths;
+            EnemyZeroAttackDeaths = enemyZeroAttackDeaths;
+            EnemyLifetimes = enemyLifetimes;
             EnemyDeathPositionsY = enemyDeathPositionsY;
             EnemyDeathPositionsYBeforeCastle = enemyDeathPositionsYBeforeCastle;
             Entities = entities;
@@ -484,6 +491,19 @@ namespace HanziDefend.Editor.Balance
         /// high value means the enemy died at its own door and the front line never moved — which is
         /// the symptom WO-F1 §B exists to detect.
         /// </summary>
+        /// <summary>Enemy units that died this battle.</summary>
+        public int EnemyDeaths { get; }
+
+        /// <summary>
+        /// Enemy units that died without ever landing an attack. This is the literal definition of
+        /// "the enemy never got out", which is the feel WO-F1 §B is about — and unlike a death
+        /// height it cannot be confused with an ally simply out-ranging the spawn door.
+        /// </summary>
+        public int EnemyZeroAttackDeaths { get; }
+
+        /// <summary>Seconds each dead enemy lived, for the median readout.</summary>
+        public IReadOnlyList<double> EnemyLifetimes { get; }
+
         public IReadOnlyList<float> EnemyDeathPositionsY { get; }
 
         /// <summary>Enemy death heights from before the castle spawned; see the cohort summary.</summary>
@@ -576,6 +596,8 @@ namespace HanziDefend.Editor.Balance
             int peakConcurrentUnits,
             double enemyDeathYP90,
             double enemyDeathYP90BeforeCastle,
+            double enemyZeroAttackDeathRate,
+            double enemyLifetimeP50,
             double meanLastAllyEntrySeconds)
         {
             LineupId = lineupId;
@@ -598,6 +620,8 @@ namespace HanziDefend.Editor.Balance
             PeakConcurrentUnits = peakConcurrentUnits;
             EnemyDeathYP90 = enemyDeathYP90;
             EnemyDeathYP90BeforeCastle = enemyDeathYP90BeforeCastle;
+            EnemyZeroAttackDeathRate = enemyZeroAttackDeathRate;
+            EnemyLifetimeP50 = enemyLifetimeP50;
             MeanLastAllyEntrySeconds = meanLastAllyEntrySeconds;
         }
 
@@ -636,6 +660,15 @@ namespace HanziDefend.Editor.Balance
         /// the castle, so it reads high by design once the assault starts.
         /// </summary>
         public double EnemyDeathYP90BeforeCastle { get; }
+
+        /// <summary>
+        /// Share of enemy deaths that never got an attack off. WO-F1's front-line gate, replacing
+        /// the death-height percentile: below 35% the enemy is reaching the line and fighting.
+        /// </summary>
+        public double EnemyZeroAttackDeathRate { get; }
+
+        /// <summary>Median enemy lifetime in seconds; the floor is 6.0s.</summary>
+        public double EnemyLifetimeP50 { get; }
 
         public double MeanLastAllyEntrySeconds { get; }
     }

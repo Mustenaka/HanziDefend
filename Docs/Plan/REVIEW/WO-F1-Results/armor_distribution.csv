@@ -1,0 +1,9 @@
+﻿wave_set_id,act,first_wave,last_wave,unarmored,light,heavy,building,other,non_boss_total,total,unarmored_rate,light_rate,heavy_rate,building_rate,heavy_at_least_15_percent
+main_20,ACT1,1,8,17,7,0,0,0,24,24,0.708333,0.291667,0,0,false
+main_20,ACT2,9,19,9,8,3,0,0,20,20,0.45,0.4,0.15,0,true
+main_20,ACT3,20,31,8,8,7,1,0,23,24,0.347826,0.347826,0.304348,0.041667,true
+main_20,ALL,1,31,34,23,10,1,0,67,68,0.507463,0.343284,0.149254,0.014706,false
+main_20_stage_5,ACT1,1,13,34,14,0,0,0,48,48,0.708333,0.291667,0,0,false
+main_20_stage_5,ACT2,14,24,19,16,6,0,0,41,41,0.463415,0.390244,0.146341,0,false
+main_20_stage_5,ACT3,25,38,17,16,14,1,0,47,48,0.361702,0.340426,0.297872,0.020833,true
+main_20_stage_5,ALL,1,38,70,46,20,1,0,136,137,0.514706,0.338235,0.147059,0.007299,false

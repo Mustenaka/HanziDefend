@@ -15,8 +15,14 @@ namespace HanziDefend.Editor.Balance
             double stageOneMeanDurationSeconds,
             double stageFiveMeanDurationSeconds,
             double stageOneHeavyRate,
-            double stageFiveHeavyRate)
+            double stageFiveHeavyRate,
+            double worstZeroAttackDeathRate,
+            double worstEnemyLifetimeP50,
+            double netDifficultyMonotonicSlack)
         {
+            WorstZeroAttackDeathRate = worstZeroAttackDeathRate;
+            WorstEnemyLifetimeP50 = worstEnemyLifetimeP50;
+            NetDifficultyMonotonicSlack = netDifficultyMonotonicSlack;
             HundredGameWallClockSeconds = hundredGameWallClockSeconds;
             TimeoutCount = timeoutCount;
             StageOneWinRate = stageOneWinRate;
@@ -35,6 +41,18 @@ namespace HanziDefend.Editor.Balance
         public double StageFiveMeanDurationSeconds { get; }
         public double StageOneHeavyRate { get; }
         public double StageFiveHeavyRate { get; }
+
+        /// <summary>Highest share of enemy deaths that never landed an attack, across cohorts.</summary>
+        public double WorstZeroAttackDeathRate { get; }
+
+        /// <summary>Lowest median enemy lifetime across cohorts.</summary>
+        public double WorstEnemyLifetimeP50 { get; }
+
+        /// <summary>
+        /// Smallest step in the normalised net-difficulty curve. Positive means every stage is
+        /// harder than the one before it; zero or negative means the ramp is not monotonic.
+        /// </summary>
+        public double NetDifficultyMonotonicSlack { get; }
     }
 
     public sealed class BalanceAcceptanceCheck
@@ -88,6 +106,15 @@ namespace HanziDefend.Editor.Balance
         public const double MinimumMeanDurationSeconds = 90d;
         public const double MaximumMeanDurationSeconds = 150d;
         public const double MinimumHeavyArmorRate = 0.15d;
+
+        /// <summary>
+        /// WO-F1 review §three replaced the enemy death-height percentile with these two. The
+        /// percentile could not tell "the front line never formed" apart from "our siege engine
+        /// out-ranges their spawn door"; whether a unit ever swung cannot be confused that way.
+        /// </summary>
+        public const double MaximumZeroAttackDeathRate = 0.35d;
+
+        public const double MinimumEnemyLifetimeP50Seconds = 6d;
 
         public static BalanceAcceptanceResult Evaluate(BalanceRunReport report)
         {
@@ -145,6 +172,21 @@ namespace HanziDefend.Editor.Balance
                     AtLeast(metrics.StageOneHeavyRate, MinimumHeavyArmorRate),
                     Percent(metrics.StageOneHeavyRate) + "; floor 15%"),
                 Check(
+                    "enemy_reaches_the_line",
+                    "Enemy deaths with no attack landed",
+                    AtMost(metrics.WorstZeroAttackDeathRate, MaximumZeroAttackDeathRate),
+                    Percent(metrics.WorstZeroAttackDeathRate) + "; ceiling 35%"),
+                Check(
+                    "enemy_lifetime",
+                    "Median enemy lifetime",
+                    AtLeast(metrics.WorstEnemyLifetimeP50, MinimumEnemyLifetimeP50Seconds),
+                    Seconds(metrics.WorstEnemyLifetimeP50) + "; floor 6.0s"),
+                Check(
+                    "net_difficulty_monotonic",
+                    "Net difficulty rises every stage",
+                    metrics.NetDifficultyMonotonicSlack > 0d,
+                    "smallest step " + metrics.NetDifficultyMonotonicSlack.ToString("0.000", CultureInfo.InvariantCulture)),
+                Check(
                     "stage5_heavy_armor",
                     "Heavy armor share main_20_stage_5 (all acts)",
                     AtLeast(metrics.StageFiveHeavyRate, MinimumHeavyArmorRate),
@@ -188,7 +230,35 @@ namespace HanziDefend.Editor.Balance
                 stageOne?.MeanDurationSeconds ?? double.NaN,
                 stageFive?.MeanDurationSeconds ?? double.NaN,
                 stageOneArmor?.HeavyRate ?? double.NaN,
-                stageFiveArmor?.HeavyRate ?? double.NaN);
+                stageFiveArmor?.HeavyRate ?? double.NaN,
+                report.Cohorts.Count == 0
+                    ? double.NaN
+                    : report.Cohorts.Max(value => value.EnemyZeroAttackDeathRate),
+                report.Cohorts.Count == 0
+                    ? double.NaN
+                    : report.Cohorts.Min(value => value.EnemyLifetimeP50),
+                MonotonicSlack(WaveSetSpecTable.NetDifficultyNormalised));
+        }
+
+        /// <summary>Smallest step in a curve; negative or zero means it is not strictly rising.</summary>
+        private static double MonotonicSlack(IReadOnlyList<float> curve)
+        {
+            if (curve == null || curve.Count < 2)
+            {
+                return double.NaN;
+            }
+
+            double smallest = double.PositiveInfinity;
+            for (int index = 1; index < curve.Count; index++)
+            {
+                double step = curve[index] - curve[index - 1];
+                if (step < smallest)
+                {
+                    smallest = step;
+                }
+            }
+
+            return smallest;
         }
 
         private static BalanceAcceptanceCheck Check(
@@ -208,6 +278,11 @@ namespace HanziDefend.Editor.Balance
         private static bool AtLeast(double value, double minimum)
         {
             return !double.IsNaN(value) && value >= minimum;
+        }
+
+        private static bool AtMost(double value, double maximum)
+        {
+            return !double.IsNaN(value) && value <= maximum;
         }
 
         private static string Percent(double value)

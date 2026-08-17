@@ -46,11 +46,22 @@ namespace HanziDefend.Editor.Balance
         public const float MaximumSpawnGapSeconds = 3f;
 
         /// <summary>
-        /// Effective ally DPS per stage, measured by <see cref="BalanceDpsProbe"/> against the
-        /// stage's reference lineup and weighted by the armour mix that stage actually fields.
-        /// These are readings, not estimates — see DECISIONS.md for the run they came from.
+        /// Effective ally DPS per stage: <c>total ally damage / total battle seconds</c>, measured by
+        /// <see cref="BalanceDpsProbe"/> against each stage's own accumulated reference board.
+        ///
+        /// <para><b>These are readings and nothing else.</b> An earlier revision carried
+        /// {250, 380, 335, 390, 400} here while the recorded measurements were
+        /// {296, 297, 294, 351, 338} — and because the budget is proportional to this table, the
+        /// ratio between the two <i>was itself a difficulty curve</i>. Net difficulty rose 63%
+        /// across the run while <see cref="stageDifficultyScalar"/> claimed 16%, and it was not even
+        /// monotonic (stage two came out harder than stage three). Difficulty now lives in exactly
+        /// one place — the scalar below — and <c>BalanceRunner</c> prints and asserts the net figure
+        /// so the two can never drift apart again unnoticed.</para>
+        ///
+        /// <para>Source: <c>HanziDefend/Balance/Measure Ally DPS</c>, seed 0xE1002026, recorded in
+        /// DECISIONS.md under WO-F1.</para>
         /// </summary>
-        private static readonly float[] MeasuredAllyDps = { 250f, 380f, 335f, 390f, 400f };
+        private static readonly float[] MeasuredAllyDps = { 296f, 297f, 294f, 351f, 338f };
 
         /// <summary>
         /// Share of the unarmored slot given to <c>e_lang</c>, the only unit that ignores the front
@@ -59,13 +70,51 @@ namespace HanziDefend.Editor.Balance
         private static readonly float[] RushShare = { 0.15f, 0.20f, 0.25f, 0.30f, 0.35f };
 
         /// <summary>
-        /// Per-stage difficulty ramp. See <see cref="WaveSetSpec.StageDifficultyScalar"/> for why
-        /// the DPS-derived budget needs one at all; the values here are the ones measured to land
-        /// stage one and stage five inside their own win-rate bands.
+        /// Per-stage difficulty ramp — <b>the single place difficulty is allowed to live</b>.
+        ///
+        /// <para>Because <see cref="MeasuredAllyDps"/> now holds true readings, the net difficulty
+        /// of a stage (<c>budget / measured DPS</c>) is exactly this scalar, and the normalised net
+        /// curve is exactly this array divided by its own first entry. Anything that wants to make a
+        /// stage harder changes a number here and nowhere else.</para>
+        ///
+        /// <para>See <see cref="WaveSetSpec.StageDifficultyScalar"/> for why a DPS-derived budget
+        /// needs a per-stage term at all.</para>
         /// </summary>
-        private static float[] stageDifficultyScalar = { 1.25f, 1.30f, 1.35f, 1.40f, 1.45f };
+        private static float[] stageDifficultyScalar = { 1.05f, 1.25f, 1.45f, 1.65f, 1.85f };
 
         public static IReadOnlyList<float> StageDifficultyScalars => stageDifficultyScalar;
+
+        /// <summary>The DPS readings the budgets are derived from, for the net-difficulty readout.</summary>
+        public static IReadOnlyList<float> MeasuredAllyDpsPerStage => MeasuredAllyDps;
+
+        /// <summary>
+        /// Net difficulty per stage — <c>budget / measured DPS</c>, normalised so stage one is 1.0.
+        /// This is the number that answers "how much harder did the run actually get"; it must rise
+        /// monotonically, and <c>BalanceRunner</c> asserts that it does.
+        /// </summary>
+        public static IReadOnlyList<float> NetDifficultyNormalised
+        {
+            get
+            {
+                IReadOnlyList<WaveSetSpec> specs = All;
+                var result = new float[specs.Count];
+                for (int index = 0; index < specs.Count; index++)
+                {
+                    WaveSetSpec spec = specs[index];
+                    // budget / measuredDps reduces to the scalar, because the budget is
+                    // measuredDps * duration * pressure * scalar and the per-act terms are shared.
+                    result[index] = spec.StageDifficultyScalar;
+                }
+
+                float baseline = result.Length == 0 ? 1f : result[0];
+                for (int index = 0; index < result.Length; index++)
+                {
+                    result[index] = baseline <= 0f ? float.NaN : result[index] / baseline;
+                }
+
+                return Array.AsReadOnly(result);
+            }
+        }
 
         private static readonly string[] WaveSetIds =
         {
@@ -122,7 +171,12 @@ namespace HanziDefend.Editor.Balance
                         0.45f, 0.40f, 0.15f, 6, 0.45f, MaximumSpawnGapSeconds),
                     new WaveActSpec(
                         WaveActs.Third, ThirdActSeconds, InterActGapSeconds, ThirdActPressure,
-                        0.35f, 0.35f, 0.30f, 6, 0.40f, MaximumSpawnGapSeconds)
+                        // Act three carries 32% heavy rather than M1-04 §6's flat 30%: the floor
+                        // that actually binds is "heavy >= 15% of the whole battle", and act one
+                        // (0% heavy by design) carries the most bodies, which dragged the overall
+                        // share to 14.93%. Two points here buys the floor back without moving the
+                        // per-act shape outside its tolerance.
+                        0.34f, 0.34f, 0.32f, 6, 0.40f, MaximumSpawnGapSeconds)
                 });
         }
 

@@ -222,6 +222,9 @@ namespace HanziDefend.Editor.Balance
                     timedOut,
                     collector.PeakConcurrentUnits,
                     collector.LastAllyEntrySeconds,
+                    collector.EnemyDeaths,
+                    collector.EnemyZeroAttackDeaths,
+                    collector.EnemyLifetimes,
                     collector.EnemyDeathPositionsY,
                     collector.EnemyDeathPositionsYBeforeCastle,
                     entities,
@@ -468,6 +471,12 @@ namespace HanziDefend.Editor.Balance
                         .Select(value => (double)value)
                         .OrderBy(value => value)
                         .ToArray();
+                    int enemyDeaths = values.Sum(value => value.EnemyDeaths);
+                    int zeroAttack = values.Sum(value => value.EnemyZeroAttackDeaths);
+                    double[] lifetimes = values
+                        .SelectMany(value => value.EnemyLifetimes)
+                        .OrderBy(value => value)
+                        .ToArray();
                     double[] deathYBeforeCastle = values
                         .SelectMany(value => value.EnemyDeathPositionsYBeforeCastle)
                         .Select(value => (double)value)
@@ -499,6 +508,8 @@ namespace HanziDefend.Editor.Balance
                         deathYBeforeCastle.Length == 0
                             ? double.NaN
                             : Percentile(deathYBeforeCastle, 0.90d),
+                        enemyDeaths == 0 ? double.NaN : (double)zeroAttack / enemyDeaths,
+                        lifetimes.Length == 0 ? double.NaN : Percentile(lifetimes, 0.50d),
                         values.Length == 0 ? 0d : values.Average(value => value.LastAllyEntrySeconds));
                 })
                 .ToArray();
@@ -625,6 +636,7 @@ namespace HanziDefend.Editor.Balance
             private readonly List<BalanceCoinPoint> coinCurve = new List<BalanceCoinPoint>();
             private readonly List<float> enemyDeathPositionsY = new List<float>();
             private readonly List<float> enemyDeathPositionsYBeforeCastle = new List<float>();
+            private readonly List<double> enemyLifetimes = new List<double>();
             private int currentCoins;
             private int aliveUnits;
             private bool castleHasSpawned;
@@ -651,6 +663,12 @@ namespace HanziDefend.Editor.Balance
 
             internal int PeakConcurrentUnits { get; private set; }
 
+            internal int EnemyDeaths { get; private set; }
+
+            internal int EnemyZeroAttackDeaths { get; private set; }
+
+            internal IReadOnlyList<double> EnemyLifetimes => Array.AsReadOnly(enemyLifetimes.ToArray());
+
             internal double LastAllyEntrySeconds { get; private set; }
 
             public void UnitSpawned(UnitSpawnedEvent eventData)
@@ -669,6 +687,12 @@ namespace HanziDefend.Editor.Balance
 
             public void UnitAttacked(UnitAttackedEvent eventData)
             {
+                // Counted rather than inferred from damage: a swing that is blocked, resisted or
+                // lands on a corpse still means the unit got to fight.
+                if (entities.TryGetValue(eventData.AttackerEntityId, out MutableEntity attacker))
+                {
+                    attacker.AttackCount++;
+                }
             }
 
             public void DamageDealt(DamageDealtEvent eventData)
@@ -691,6 +715,19 @@ namespace HanziDefend.Editor.Balance
 
                 if (eventData.Team == BattleTeam.Enemy)
                 {
+                    EnemyDeaths++;
+                    if (entities.TryGetValue(eventData.EntityId, out MutableEntity dead))
+                    {
+                        if (dead.AttackCount == 0)
+                        {
+                            EnemyZeroAttackDeaths++;
+                        }
+
+                        enemyLifetimes.Add(Math.Max(
+                            0d,
+                            eventData.SimulatedTimeSeconds - dead.SpawnTimeSeconds));
+                    }
+
                     enemyDeathPositionsY.Add(eventData.Position.y);
                     if (!castleHasSpawned)
                     {
@@ -823,6 +860,7 @@ namespace HanziDefend.Editor.Balance
                 internal BattleTeam Team { get; }
                 internal double SpawnTimeSeconds { get; }
                 internal double? DeathTimeSeconds { get; set; }
+                internal int AttackCount { get; set; }
                 internal float DeathPositionY { get; set; }
                 internal long Damage { get; set; }
             }

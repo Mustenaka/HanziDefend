@@ -1,0 +1,5 @@
+﻿lineup_id,lineup_name,level_id,stage_index,unlocked_cells,games,wins,losses,timeouts,win_rate,mean_duration_s,median_duration_s,p95_duration_s,mean_wall_ms,cohort_wall_s,mean_end_coins,mean_dropped_coins,peak_concurrent_units,enemy_death_y_p90,enemy_death_y_p90_pre_castle,enemy_zero_attack_death_rate,enemy_lifetime_p50,mean_last_ally_entry_s
+A_real_s1,A_real_s1 · 真实开局（弩车2+长矛+冰+重骑，3×3 满格）,level_1_1,1,9,25,23,1,1,0.92,84.320004,77.300004,138.366674,270.428552,6.760714,113.88,68.88,42,5.736995,5.450093,0.585022,1.633333,8
+A_real_s5,A_real_s5 · 真实积累 S5（11 单位 / 21 格 / 含弩车+冲车）,level_1_5,5,21,25,11,4,10,0.44,117.717339,129.63334,160.000008,2298.299848,57.457496,144.24,99.24,85,6.131057,6.192039,0.456765,1.633333,9
+B_real_s1_nosiege,B_real_s1_nosiege · 真实开局·无器械（长矛+冰+重骑+弓）,level_1_1,1,9,25,0,17,8,0,120.910673,107.833339,160.000008,1783.437596,44.58594,67.88,22.88,53,3.153733,3.153733,0.314685,2.833333,6.5
+B_real_s5_nosiege,B_real_s5_nosiege · 真实积累 S5·无器械（12 单位 / 21 格）,level_1_5,5,21,25,0,13,12,0,136.136007,133.43334,160.000008,4013.80836,100.345209,87.08,42.08,113,4.301873,4.301873,0.475285,2.433333,6.5

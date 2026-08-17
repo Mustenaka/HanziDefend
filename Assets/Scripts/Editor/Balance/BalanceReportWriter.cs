@@ -45,7 +45,7 @@ namespace HanziDefend.Editor.Balance
                 "wins", "losses", "timeouts", "win_rate", "mean_duration_s", "median_duration_s",
                 "p95_duration_s", "mean_wall_ms", "cohort_wall_s", "mean_end_coins",
                 "mean_dropped_coins", "peak_concurrent_units", "enemy_death_y_p90",
-                "enemy_death_y_p90_pre_castle",
+                "enemy_death_y_p90_pre_castle", "enemy_zero_attack_death_rate", "enemy_lifetime_p50",
                 "mean_last_ally_entry_s"
             };
             foreach (BalanceCohortSummary value in report.Cohorts)
@@ -72,6 +72,8 @@ namespace HanziDefend.Editor.Balance
                     I(value.PeakConcurrentUnits),
                     F(value.EnemyDeathYP90),
                     F(value.EnemyDeathYP90BeforeCastle),
+                    F(value.EnemyZeroAttackDeathRate),
+                    F(value.EnemyLifetimeP50),
                     F(value.MeanLastAllyEntrySeconds)
                 };
             }
@@ -259,10 +261,12 @@ namespace HanziDefend.Editor.Balance
             builder.AppendLine();
             builder.AppendLine("## Cohorts");
             builder.AppendLine();
-            builder.AppendLine("`Death Y p90` is the 90th percentile of enemy death height (spawn Y=6, camp Y=-8):");
-            builder.AppendLine("below 4.0 the front line has formed in midfield rather than at the enemy's door.");
+            builder.AppendLine("`0-atk` is the share of enemy deaths that never landed an attack (ceiling 35%) and");
+            builder.AppendLine("`life p50` the median enemy lifetime (floor 6.0s). Those two are the front-line gate.");
+            builder.AppendLine("`Death Y p90` is retained as an observation only: it cannot tell a front line that");
+            builder.AppendLine("never formed apart from a siege engine out-ranging the enemy spawn door.");
             builder.AppendLine();
-            builder.AppendLine("| Lineup | Stage | Cells | Games | Win rate | Timeouts | Mean duration | P95 duration | Mean wall/game | Mean drops | Peak units | Death Y p90 | pre-castle | Last entry |");
+            builder.AppendLine("| Lineup | Stage | Cells | Games | Win rate | Timeouts | Mean duration | P95 duration | Mean wall/game | Mean drops | Peak units | 0-atk | life p50 | Death Y p90 | pre-castle |");
             builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
             foreach (BalanceCohortSummary value in report.Cohorts)
             {
@@ -271,8 +275,25 @@ namespace HanziDefend.Editor.Balance
                     + $"{value.WinRate:P1} | {value.Timeouts} | {value.MeanDurationSeconds:0.0}s | "
                     + $"{value.P95DurationSeconds:0.0}s | {value.MeanWallClockMilliseconds:0.00}ms | "
                     + $"{value.MeanDroppedCoins:0.0} | {value.PeakConcurrentUnits} | "
-                    + $"{value.EnemyDeathYP90:0.00} | {value.EnemyDeathYP90BeforeCastle:0.00} | "
-                    + $"{value.MeanLastAllyEntrySeconds:0.0}s |");
+                    + $"{value.EnemyZeroAttackDeathRate:P1} | {value.EnemyLifetimeP50:0.0}s | "
+                    + $"{value.EnemyDeathYP90:0.00} | {value.EnemyDeathYP90BeforeCastle:0.00} |");
+            }
+
+            builder.AppendLine();
+            builder.AppendLine("## Net difficulty");
+            builder.AppendLine();
+            builder.AppendLine("`budget / measured ally DPS`, normalised so stage one is 1.0 — the single number that");
+            builder.AppendLine("says how much harder the run actually gets. It must rise at every stage.");
+            builder.AppendLine();
+            builder.AppendLine("| Stage | Measured DPS | Difficulty scalar | Net difficulty (S1=1) |");
+            builder.AppendLine("|---:|---:|---:|---:|");
+            IReadOnlyList<float> net = WaveSetSpecTable.NetDifficultyNormalised;
+            IReadOnlyList<float> dps = WaveSetSpecTable.MeasuredAllyDpsPerStage;
+            IReadOnlyList<float> scalars = WaveSetSpecTable.StageDifficultyScalars;
+            for (int index = 0; index < net.Count; index++)
+            {
+                builder.AppendLine(
+                    $"| {index + 1} | {dps[index]:0} | {scalars[index]:0.00} | **{net[index]:0.000}** |");
             }
 
             builder.AppendLine();

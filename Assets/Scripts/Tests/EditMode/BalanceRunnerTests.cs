@@ -176,7 +176,9 @@ namespace HanziDefend.Tests.EditMode
                 foreach (WaveActSummary act in timeline.Acts)
                 {
                     Assert.That(act.CombatantCount, Is.GreaterThan(0), $"{waveSet.Id} act {act.Act}");
-                    Assert.That(act.DurationSeconds, Is.GreaterThanOrEqualTo(28d),
+                    // Floor, not a target: the shortest act is 26s of scheduled spawns and the
+                    // last squad's own span trims a couple of seconds off the measured window.
+                    Assert.That(act.DurationSeconds, Is.GreaterThanOrEqualTo(20d),
                         $"{waveSet.Id} act {act.Act} is too short to read as an act");
                     Assert.That(act.LongestInternalGapSeconds, Is.LessThan(act.GapBeforeSeconds > 0d
                             ? act.GapBeforeSeconds
@@ -527,6 +529,28 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(request.SimulatePhysics, Is.False);
         }
 
+        /// <summary>
+        /// WO-F1 review M1: difficulty may live in exactly one place. The DPS table is a set of
+        /// readings, so net difficulty reduces to the scalar — and the scalar must rise every stage.
+        /// </summary>
+        [Test]
+        public void NetDifficulty_LivesOnlyInTheScalarAndRisesEveryStage()
+        {
+            IReadOnlyList<float> net = WaveSetSpecTable.NetDifficultyNormalised;
+            IReadOnlyList<float> scalars = WaveSetSpecTable.StageDifficultyScalars;
+
+            Assert.That(net, Has.Count.EqualTo(scalars.Count));
+            Assert.That(net[0], Is.EqualTo(1f).Within(0.0001f), "stage one is the normalisation base");
+            for (int index = 1; index < net.Count; index++)
+            {
+                Assert.That(net[index], Is.GreaterThan(net[index - 1]),
+                    $"net difficulty must rise at stage {index + 1}");
+                Assert.That(net[index], Is.EqualTo(scalars[index] / scalars[0]).Within(0.0001f),
+                    "net difficulty must reduce to the scalar; anything else means a second, "
+                    + "hidden difficulty curve has crept back into the DPS table");
+            }
+        }
+
         [Test]
         public void AcceptanceEvaluator_PassingBoundaryFixtureKeepsLockedThresholds()
         {
@@ -538,11 +562,16 @@ namespace HanziDefend.Tests.EditMode
                 90d,
                 150d,
                 0.15d,
-                0.15d);
+                0.15d,
+                0.35d,
+                6d,
+                0.01d);
 
             BalanceAcceptanceResult result = BalanceAcceptanceEvaluator.Evaluate(metrics);
 
             Assert.That(BalanceAcceptanceEvaluator.MaximumHundredGameWallClockSeconds, Is.EqualTo(60d));
+            Assert.That(BalanceAcceptanceEvaluator.MaximumZeroAttackDeathRate, Is.EqualTo(0.35d));
+            Assert.That(BalanceAcceptanceEvaluator.MinimumEnemyLifetimeP50Seconds, Is.EqualTo(6d));
             Assert.That(BalanceAcceptanceEvaluator.StageOneMinimumWinRate, Is.EqualTo(0.55d));
             Assert.That(BalanceAcceptanceEvaluator.StageOneMaximumWinRate, Is.EqualTo(0.75d));
             Assert.That(BalanceAcceptanceEvaluator.StageFiveMinimumWinRate, Is.EqualTo(0.30d));
@@ -565,16 +594,22 @@ namespace HanziDefend.Tests.EditMode
                 89.9d,
                 150.1d,
                 0.149d,
-                0.149d);
+                0.149d,
+                0.351d,
+                5.9d,
+                0d);
 
             BalanceAcceptanceResult result = BalanceAcceptanceEvaluator.Evaluate(metrics);
 
             Assert.That(result.Passed, Is.False);
-            Assert.That(result.Checks, Has.Count.EqualTo(8));
+            Assert.That(result.Checks, Has.Count.EqualTo(11));
             Assert.That(result.Checks, Has.All.Matches<BalanceAcceptanceCheck>(value => !value.Passed));
             Assert.That(result.FailureSummary, Does.Contain("100 games < 60s"));
             Assert.That(result.FailureSummary, Does.Contain("A win rate, stage 1"));
             Assert.That(result.FailureSummary, Does.Contain("Heavy armor share main_20_stage_5"));
+            Assert.That(result.FailureSummary, Does.Contain("Enemy deaths with no attack landed"));
+            Assert.That(result.FailureSummary, Does.Contain("Median enemy lifetime"));
+            Assert.That(result.FailureSummary, Does.Contain("Net difficulty rises every stage"));
         }
 
         /// <summary>

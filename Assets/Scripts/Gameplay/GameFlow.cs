@@ -22,13 +22,14 @@ namespace HanziDefend.Gameplay
     /// Rules owner for the single-scene five-stage loop. It exposes phase changes as commands;
     /// a view decides only which roots to project from the already-decided phase.
     /// </summary>
-    public sealed class GameFlow : IDisposable, IBattleEncounterEvents, IBattleEffectEvents
+    public sealed class GameFlow : IDisposable, IBattleEncounterEvents, IBattleEffectEvents, IBattleDeploymentEvents
     {
         private readonly GameConfig config;
         private readonly LevelDef[] levels;
         private readonly IBattleEvents presentationEvents;
         private readonly IBattleEncounterEvents presentationEncounterEvents;
         private readonly IBattleEffectEvents presentationEffectEvents;
+        private readonly IBattleDeploymentEvents presentationDeploymentEvents;
         private readonly IAdService adService;
         private RngStreams streams;
         private bool disposed;
@@ -49,6 +50,8 @@ namespace HanziDefend.Gameplay
             presentationEvents = battlePresentationEvents ?? NullBattleEvents.Instance;
             presentationEncounterEvents = battlePresentationEvents as IBattleEncounterEvents ?? NullBattleEvents.Instance;
             presentationEffectEvents = battlePresentationEvents as IBattleEffectEvents ?? NullBattleEffectEvents.Instance;
+            presentationDeploymentEvents = battlePresentationEvents as IBattleDeploymentEvents
+                                           ?? NullBattleDeploymentEvents.Instance;
             adService = rewardedAdService ?? new MockAdService();
             ResetRun(seed);
         }
@@ -277,6 +280,16 @@ namespace HanziDefend.Gameplay
             presentationEffectEvents.CoinsModified(eventData);
         }
 
+        public void AllyDeploymentQueued(AllyDeploymentQueuedEvent eventData)
+        {
+            presentationDeploymentEvents.AllyDeploymentQueued(eventData);
+        }
+
+        public void AllyDeploymentEntered(AllyDeploymentEnteredEvent eventData)
+        {
+            presentationDeploymentEvents.AllyDeploymentEntered(eventData);
+        }
+
         private void ResetRun(uint seed)
         {
             DisposeBattle();
@@ -307,90 +320,39 @@ namespace HanziDefend.Gameplay
         {
             IReadOnlyList<DeployedUnitState> placements = deployed ?? Array.Empty<DeployedUnitState>();
             BattleRulesDef battleRules = config.Economy.Battle;
-            Position2Def basePosition = battleRules.AllyBasePosition;
-            Position2Def originOffset = battleRules.DeploymentOriginOffset;
-            Position2Def cellSize = battleRules.DeploymentCellSize;
-            ResolveUnlockedColumnSpan(out int firstColumn, out int lastColumn);
+            DeploymentSpawnMap.ResolveUnlockedColumnSpan(
+                RunState.UnlockedCells,
+                RunState.GridWidth,
+                RunState.GridHeight,
+                out int firstColumn,
+                out int lastColumn);
             for (int index = 0; index < placements.Count; index++)
             {
                 DeployedUnitState value = placements[index];
-                float x = basePosition.X
-                          + originOffset.X
-                          + SpreadOffset(value.Col, firstColumn, lastColumn, battleRules.DeploymentSpreadWidth);
-                float y = basePosition.Y + originOffset.Y + value.Row * cellSize.Y;
-                battle.Spawn(new UnitSpawnRequest(value.UnitId, value.Level, new Vector2(x, y)));
+                Vector2 position = DeploymentSpawnMap.Resolve(
+                    battleRules,
+                    firstColumn,
+                    lastColumn,
+                    value.Col,
+                    value.Row);
+                // Deploy, not Spawn: entry timing is the unit's own spawnMode/cooldown (WO-F1 §B).
+                battle.Deploy(new UnitSpawnRequest(value.UnitId, value.Level, position));
             }
         }
 
         /// <summary>
-        /// Leftmost and rightmost unlocked columns. Spawns fan out across this range rather than
-        /// across the whole 7-wide field, so the line always fills the base however much is unlocked.
+        /// Applies the run's carried buffs. They are registered rather than merely applied, because
+        /// most of a real lineup is still queued behind its entry cooldown at this moment (WO-F1 §B)
+        /// — a plain apply would buff only whichever units happen to be <c>Instant</c>.
         /// </summary>
-        private void ResolveUnlockedColumnSpan(out int firstColumn, out int lastColumn)
-        {
-            firstColumn = int.MaxValue;
-            lastColumn = int.MinValue;
-
-            bool[] mask = RunState.UnlockedCells;
-            int width = RunState.GridWidth;
-            int height = RunState.GridHeight;
-            if (mask != null && width > 0 && height > 0 && mask.Length == checked(width * height))
-            {
-                for (int row = 0; row < height; row++)
-                for (int column = 0; column < width; column++)
-                {
-                    if (!mask[(row * width) + column])
-                    {
-                        continue;
-                    }
-
-                    if (column < firstColumn) firstColumn = column;
-                    if (column > lastColumn) lastColumn = column;
-                }
-            }
-
-            if (firstColumn > lastColumn)
-            {
-                firstColumn = 0;
-                lastColumn = Math.Max(0, width - 1);
-            }
-        }
-
-        /// <summary>
-        /// Maps a grid column onto the battlefield so the unlocked range spans
-        /// <paramref name="spreadWidth"/> world units, centred on the base.
-        ///
-        /// <para>Deliberately a mapping and not a random scatter: "put it on the left and it comes
-        /// out on the left" is a strategic dimension, and randomising would throw it away. Three
-        /// unlocked columns spread wide, seven spread tight — either way the units read as a line
-        /// across the base instead of a single point.</para>
-        /// </summary>
-        private static float SpreadOffset(int column, int firstColumn, int lastColumn, float spreadWidth)
-        {
-            int span = lastColumn - firstColumn;
-            if (span <= 0)
-            {
-                return 0f;
-            }
-
-            float normalized = Mathf.Clamp01((column - firstColumn) / (float)span);
-            return (normalized - 0.5f) * spreadWidth;
-        }
-
         private void ApplyPersistentBuffs()
         {
             string[] effects = RunState.OwnedEffects ?? Array.Empty<string>();
-            Position2Def basePosition = config.Economy.Battle.AllyBasePosition;
-            var context = new EffectExecutionContext(
-                null,
-                BattleTeam.Ally,
-                new Vector2(basePosition.X, basePosition.Y),
-                1);
             for (int index = 0; index < effects.Length; index++)
             {
                 if (effects[index].StartsWith("buff_", StringComparison.Ordinal))
                 {
-                    Battle.ApplyEffect(effects[index], context);
+                    Battle.RegisterPersistentAllyEffect(effects[index]);
                 }
             }
         }

@@ -41,9 +41,12 @@ namespace HanziDefend.Editor.Balance
         {
             yield return new[]
             {
-                "lineup_id", "lineup_name", "level_id", "stage_index", "grid_cols", "games",
+                "lineup_id", "lineup_name", "level_id", "stage_index", "unlocked_cells", "games",
                 "wins", "losses", "timeouts", "win_rate", "mean_duration_s", "median_duration_s",
-                "p95_duration_s", "mean_wall_ms", "cohort_wall_s", "mean_end_coins"
+                "p95_duration_s", "mean_wall_ms", "cohort_wall_s", "mean_end_coins",
+                "mean_dropped_coins", "peak_concurrent_units", "enemy_death_y_p90",
+                "enemy_death_y_p90_pre_castle",
+                "mean_last_ally_entry_s"
             };
             foreach (BalanceCohortSummary value in report.Cohorts)
             {
@@ -53,7 +56,7 @@ namespace HanziDefend.Editor.Balance
                     value.LineupName,
                     value.LevelId,
                     I(value.StageIndex),
-                    I(value.GridColumns),
+                    I(value.UnlockedCellCount),
                     I(value.Games),
                     I(value.Wins),
                     I(value.Losses),
@@ -64,7 +67,12 @@ namespace HanziDefend.Editor.Balance
                     F(value.P95DurationSeconds),
                     F(value.MeanWallClockMilliseconds),
                     F(value.TotalWallClockSeconds),
-                    F(value.MeanEndCoins)
+                    F(value.MeanEndCoins),
+                    F(value.MeanDroppedCoins),
+                    I(value.PeakConcurrentUnits),
+                    F(value.EnemyDeathYP90),
+                    F(value.EnemyDeathYP90BeforeCastle),
+                    F(value.MeanLastAllyEntrySeconds)
                 };
             }
         }
@@ -73,10 +81,11 @@ namespace HanziDefend.Editor.Balance
         {
             yield return new[]
             {
-                "lineup_id", "lineup_name", "level_id", "stage_index", "grid_cols", "game_index",
+                "lineup_id", "lineup_name", "level_id", "stage_index", "unlocked_cells", "game_index",
                 "seed_hex", "result", "timed_out", "duration_s", "ticks", "wall_ms",
                 "start_coins", "dropped_coins", "end_coins", "ally_base_hp",
-                "ally_base_max_hp", "boss_hp", "boss_max_hp"
+                "ally_base_max_hp", "boss_hp", "boss_max_hp",
+                "peak_concurrent_units", "last_ally_entry_s", "enemy_deaths", "enemy_death_y_p90"
             };
             foreach (BalanceBattleResult value in report.Battles)
             {
@@ -86,7 +95,7 @@ namespace HanziDefend.Editor.Balance
                     value.LineupName,
                     value.LevelId,
                     I(value.StageIndex),
-                    I(value.GridColumns),
+                    I(value.UnlockedCellCount),
                     I(value.GameIndex),
                     "0x" + value.Seed.ToString("X8", CultureInfo.InvariantCulture),
                     value.Result.ToString(),
@@ -100,9 +109,27 @@ namespace HanziDefend.Editor.Balance
                     F(value.AllyBaseHp),
                     F(value.AllyBaseMaxHp),
                     F(value.BossHp),
-                    F(value.BossMaxHp)
+                    F(value.BossMaxHp),
+                    I(value.PeakConcurrentUnits),
+                    F(value.LastAllyEntrySeconds),
+                    I(value.EnemyDeathPositionsY.Count),
+                    F(Percentile(value.EnemyDeathPositionsY, 0.90d))
                 };
             }
+        }
+
+        /// <summary>Percentile of one battle's enemy death heights; NaN when nothing died.</summary>
+        private static double Percentile(IReadOnlyList<float> values, double percentile)
+        {
+            if (values == null || values.Count == 0)
+            {
+                return double.NaN;
+            }
+
+            var sorted = new List<float>(values);
+            sorted.Sort();
+            int rank = Math.Max(0, (int)Math.Ceiling(percentile * sorted.Count) - 1);
+            return sorted[Math.Min(rank, sorted.Count - 1)];
         }
 
         private static IEnumerable<IReadOnlyList<string>> UnitRows(BalanceRunReport report)
@@ -165,7 +192,7 @@ namespace HanziDefend.Editor.Balance
         {
             yield return new[]
             {
-                "wave_set_id", "phase", "first_wave", "last_wave", "unarmored", "light",
+                "wave_set_id", "act", "first_wave", "last_wave", "unarmored", "light",
                 "heavy", "building", "other", "non_boss_total", "total", "unarmored_rate",
                 "light_rate", "heavy_rate", "building_rate", "heavy_at_least_15_percent"
             };
@@ -212,31 +239,40 @@ namespace HanziDefend.Editor.Balance
             builder.AppendLine();
             builder.AppendLine("## Lineups");
             builder.AppendLine();
-            builder.AppendLine("`Grid cols` is the deployment width the cohort actually ran on: the level's own");
-            builder.AppendLine("`gridCols` unless the lineup overrides it to probe a wider shape-unlock tier.");
+            builder.AppendLine("`Cells` is the unlock mask the cohort deploys on: the level's starting rect");
+            builder.AppendLine("unless the lineup carries its own accumulated mask. `Levels` names the stages the");
+            builder.AppendLine("board is meaningful on — an accumulated stage-five board is not run against stage one.");
             builder.AppendLine();
-            builder.AppendLine("| Lineup id | Name | Grid cols | Composition | Siege |");
-            builder.AppendLine("|---|---|---:|---|---|");
+            builder.AppendLine("| Lineup id | Name | Cells | Levels | Composition | Siege |");
+            builder.AppendLine("|---|---|---:|---|---|---|");
             foreach (BalanceLineup lineup in report.Request.Lineups)
             {
+                string levels = lineup.LevelIds == null
+                    ? "all"
+                    : string.Join(", ", lineup.LevelIds);
                 builder.AppendLine(
                     $"| `{lineup.Id}` | {lineup.DisplayName} | "
-                    + $"{(lineup.GridColumnsOverride == 0 ? "level" : lineup.GridColumnsOverride.ToString(CultureInfo.InvariantCulture))} | "
-                    + $"{Composition(lineup)} | {(lineup.ExpectedToContainSiege ? "yes" : "no")} |");
+                    + $"{(lineup.UnlockedCells == null ? "level" : lineup.DeclaredUnlockedCellCount.ToString(CultureInfo.InvariantCulture))} | "
+                    + $"{levels} | {Composition(lineup)} | {(lineup.ExpectedToContainSiege ? "yes" : "no")} |");
             }
 
             builder.AppendLine();
             builder.AppendLine("## Cohorts");
             builder.AppendLine();
-            builder.AppendLine("| Lineup | Stage | Grid cols | Games | Win rate | Timeouts | Mean duration | P95 duration | Mean wall/game | Mean coins |");
-            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
+            builder.AppendLine("`Death Y p90` is the 90th percentile of enemy death height (spawn Y=6, camp Y=-8):");
+            builder.AppendLine("below 4.0 the front line has formed in midfield rather than at the enemy's door.");
+            builder.AppendLine();
+            builder.AppendLine("| Lineup | Stage | Cells | Games | Win rate | Timeouts | Mean duration | P95 duration | Mean wall/game | Mean drops | Peak units | Death Y p90 | pre-castle | Last entry |");
+            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
             foreach (BalanceCohortSummary value in report.Cohorts)
             {
                 builder.AppendLine(
-                    $"| {value.LineupName} | {value.StageIndex} | {value.GridColumns} | {value.Games} | "
+                    $"| {value.LineupName} | {value.StageIndex} | {value.UnlockedCellCount} | {value.Games} | "
                     + $"{value.WinRate:P1} | {value.Timeouts} | {value.MeanDurationSeconds:0.0}s | "
                     + $"{value.P95DurationSeconds:0.0}s | {value.MeanWallClockMilliseconds:0.00}ms | "
-                    + $"{value.MeanEndCoins:0.0} |");
+                    + $"{value.MeanDroppedCoins:0.0} | {value.PeakConcurrentUnits} | "
+                    + $"{value.EnemyDeathYP90:0.00} | {value.EnemyDeathYP90BeforeCastle:0.00} | "
+                    + $"{value.MeanLastAllyEntrySeconds:0.0}s |");
             }
 
             builder.AppendLine();
@@ -250,9 +286,9 @@ namespace HanziDefend.Editor.Balance
             builder.AppendLine();
             builder.AppendLine("## Armor distribution");
             builder.AppendLine();
-            builder.AppendLine("Rates exclude the wave-20 building from the non-boss denominator.");
+            builder.AppendLine("Counted per act; the castle is excluded from the non-boss denominator.");
             builder.AppendLine();
-            builder.AppendLine("| Wave set | Phase | Unarmored | Light | Heavy | Building | Heavy floor |");
+            builder.AppendLine("| Wave set | Act | Unarmored | Light | Heavy | Building | Heavy floor |");
             builder.AppendLine("|---|---|---:|---:|---:|---:|---|");
             foreach (BalanceArmorDistribution value in report.ArmorDistributions)
             {

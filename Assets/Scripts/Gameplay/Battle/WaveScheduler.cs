@@ -108,7 +108,10 @@ namespace HanziDefend.Gameplay.Battle
             WaveSetDef waveSet = config.GetWaveSet(level.WaveSetId);
             Position2Def spawnCenter = config.Economy.Battle.EnemySpawnCenter;
             TotalWaveCount = waveSet.Waves.Length;
-            timeline = CompileTimeline(waveSet, spawnCenter, battleRng);
+            timeline = CompileTimeline(
+                WaveTimeline.Compile(config, waveSet),
+                spawnCenter,
+                battleRng);
         }
 
         internal int TotalWaveCount { get; }
@@ -166,50 +169,50 @@ namespace HanziDefend.Gameplay.Battle
             }
         }
 
+        /// <summary>
+        /// Turns the compiled wave timeline into schedulable items. Timing comes wholly from
+        /// <see cref="WaveTimeline"/> so validation, the balance tooling and the live encounter can
+        /// never disagree about when a wave lands; this method only adds the random spawn X.
+        ///
+        /// <para><see cref="WaveTimeline.Spawns"/> is walked in declaration order on purpose — one
+        /// random draw per spread spawn, in exactly the order the old inline compiler used, so the
+        /// refactor leaves every seed's spawn positions byte-identical.</para>
+        /// </summary>
         private static List<ScheduledItem> CompileTimeline(
-            WaveSetDef waveSet,
+            WaveTimeline compiled,
             Position2Def spawnCenter,
             Rng battleRng)
         {
             var result = new List<ScheduledItem>();
-            double waveStartTime = 0d;
-
-            for (int waveOrder = 0; waveOrder < waveSet.Waves.Length; waveOrder++)
+            for (int index = 0; index < compiled.WaveStarts.Count; index++)
             {
-                WaveDef wave = waveSet.Waves[waveOrder];
-                waveStartTime += wave.DelaySec;
-                var waveStart = new ScheduledWaveStart(
-                    waveSet.Id,
-                    wave.Index,
-                    wave.RewardRank,
-                    waveStartTime);
-                result.Add(ScheduledItem.ForWaveStart(waveStart));
+                WaveStartPoint start = compiled.WaveStarts[index];
+                result.Add(ScheduledItem.ForWaveStart(new ScheduledWaveStart(
+                    compiled.WaveSetId,
+                    start.WaveIndex,
+                    start.RewardRank,
+                    start.TimeSeconds)));
+            }
 
-                for (int groupIndex = 0; groupIndex < wave.Spawns.Length; groupIndex++)
+            for (int index = 0; index < compiled.Spawns.Count; index++)
+            {
+                WaveSpawnPoint spawn = compiled.Spawns[index];
+                float x = spawnCenter.X;
+                if (spawn.SpreadX > 0f)
                 {
-                    WaveSpawnDef group = wave.Spawns[groupIndex];
-                    for (int ordinal = 0; ordinal < group.Count; ordinal++)
-                    {
-                        float x = spawnCenter.X;
-                        if (group.SpreadX > 0f)
-                        {
-                            x += (battleRng.NextFloat() * 2f - 1f) * group.SpreadX;
-                        }
-
-                        double scheduledTime = waveStartTime + (double)ordinal * group.IntervalSec;
-                        var spawn = new ScheduledSpawn(
-                            waveSet.Id,
-                            wave.Index,
-                            wave.RewardRank,
-                            group.UnitId,
-                            group.Level,
-                            new Vector2(x, spawnCenter.Y),
-                            groupIndex,
-                            ordinal,
-                            scheduledTime);
-                        result.Add(ScheduledItem.ForSpawn(spawn));
-                    }
+                    x += (battleRng.NextFloat() * 2f - 1f) * spawn.SpreadX;
                 }
+
+                result.Add(ScheduledItem.ForSpawn(new ScheduledSpawn(
+                    compiled.WaveSetId,
+                    spawn.WaveIndex,
+                    spawn.RewardRank,
+                    spawn.UnitId,
+                    spawn.Level,
+                    new Vector2(x, spawnCenter.Y),
+                    spawn.GroupIndex,
+                    spawn.Ordinal,
+                    spawn.TimeSeconds)));
             }
 
             result.Sort(ScheduledItemComparer.Instance);

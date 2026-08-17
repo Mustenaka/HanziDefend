@@ -40,21 +40,17 @@ namespace HanziDefend.Editor.Balance
             var results = new BalanceBattleResult[request.TotalGames];
             var seedRng = new Rng(request.Seed);
             int jobIndex = 0;
-            for (int lineupIndex = 0; lineupIndex < request.Lineups.Count; lineupIndex++)
+            for (int cohortIndex = 0; cohortIndex < request.Cohorts.Count; cohortIndex++)
             {
-                BalanceLineup lineup = request.Lineups[lineupIndex];
-                for (int levelIndex = 0; levelIndex < request.LevelIds.Count; levelIndex++)
+                BalanceCohortKey cohort = request.Cohorts[cohortIndex];
+                for (int gameIndex = 0; gameIndex < request.GamesPerCohort; gameIndex++)
                 {
-                    string levelId = request.LevelIds[levelIndex];
-                    for (int gameIndex = 0; gameIndex < request.GamesPerCohort; gameIndex++)
-                    {
-                        uint seed = seedRng.NextUInt();
-                        jobs[jobIndex++] = new BalanceJob(
-                            lineup,
-                            levelId,
-                            gameIndex + 1,
-                            seed);
-                    }
+                    uint seed = seedRng.NextUInt();
+                    jobs[jobIndex++] = new BalanceJob(
+                        cohort.Lineup,
+                        cohort.LevelId,
+                        gameIndex + 1,
+                        seed);
                 }
             }
 
@@ -148,7 +144,7 @@ namespace HanziDefend.Editor.Balance
             bool simulatePhysics)
         {
             LevelDef level = config.GetLevel(levelId);
-            int gridColumns = ResolveGridColumns(level, lineup);
+            IReadOnlyList<GridCoordinate> unlockedCells = ResolveUnlockedCells(level, lineup);
             var collector = new BalanceEventCollector(level.StartCoins);
             BattleSystem system = null;
             try
@@ -159,13 +155,21 @@ namespace HanziDefend.Editor.Balance
                     seed,
                     collector,
                     simulatePhysics: simulatePhysics);
+                ResolveColumnSpan(unlockedCells, out int firstColumn, out int lastColumn);
                 for (int index = 0; index < lineup.Spawns.Count; index++)
                 {
                     BalanceLineupSpawn spawn = lineup.Spawns[index];
-                    system.Spawn(new UnitSpawnRequest(
+                    // Deploy, not Spawn: the harness must obey the same entry timing the live flow
+                    // does, or it measures a formation the player never fields (WO-F1 §B).
+                    system.Deploy(new UnitSpawnRequest(
                         spawn.UnitId,
                         spawn.Level,
-                        ResolveDeploymentPosition(config, gridColumns, spawn.Anchor)));
+                        DeploymentSpawnMap.Resolve(
+                            config.Economy.Battle,
+                            firstColumn,
+                            lastColumn,
+                            spawn.Anchor.Column,
+                            spawn.Anchor.Row)));
                 }
 
                 if (config.Commanders.Count > 0)
@@ -201,7 +205,7 @@ namespace HanziDefend.Editor.Balance
                     lineup.DisplayName,
                     levelId,
                     level.StageIndex,
-                    gridColumns,
+                    unlockedCells.Count,
                     gameIndex,
                     seed,
                     system.Result,
@@ -216,6 +220,10 @@ namespace HanziDefend.Editor.Balance
                     bossHp,
                     bossMaxHp,
                     timedOut,
+                    collector.PeakConcurrentUnits,
+                    collector.LastAllyEntrySeconds,
+                    collector.EnemyDeathPositionsY,
+                    collector.EnemyDeathPositionsYBeforeCastle,
                     entities,
                     collector.CoinCurve);
             }
@@ -266,18 +274,23 @@ namespace HanziDefend.Editor.Balance
 
                 for (int levelIndex = 0; levelIndex < request.LevelIds.Count; levelIndex++)
                 {
-                    ValidateDeployment(config, request.LevelIds[levelIndex], lineup);
+                    if (lineup.AppliesTo(request.LevelIds[levelIndex]))
+                    {
+                        ValidateDeployment(config, request.LevelIds[levelIndex], lineup);
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Width of the unlocked region a cohort deploys on: the level's own initial unlock rect
-        /// unless the lineup asks for a wider one. An override describes a centred rectangle that
-        /// unlock cards can actually grow into, so a probe cohort always describes a reachable state.
-        /// Lineup anchors are relative to that rectangle's lower-left corner.
+        /// The unlock mask a cohort deploys on: the lineup's own cells, or the level's starting rect
+        /// when it declares none. A declared mask is checked for reachability first — see
+        /// <see cref="RequireReachableMask"/> — so a probe cohort always describes a board some run
+        /// could actually have grown.
         /// </summary>
-        public static int ResolveGridColumns(LevelDef level, BalanceLineup lineup)
+        public static IReadOnlyList<GridCoordinate> ResolveUnlockedCells(
+            LevelDef level,
+            BalanceLineup lineup)
         {
             if (level == null)
             {
@@ -289,31 +302,79 @@ namespace HanziDefend.Editor.Balance
                 throw new ArgumentNullException(nameof(lineup));
             }
 
-            if (lineup.GridColumnsOverride == 0)
+            if (lineup.UnlockedCells == null)
             {
-                return level.InitialUnlock.Width;
+                return new List<GridCoordinate>(DeploymentGrid.EnumerateRect(level.InitialUnlock))
+                    .AsReadOnly();
             }
 
-            if (lineup.GridColumnsOverride < level.InitialUnlock.Width
-                || lineup.GridColumnsOverride > level.GridWidth)
+            RequireReachableMask(level, lineup);
+            return lineup.UnlockedCells;
+        }
+
+        /// <summary>
+        /// A mask is reachable exactly when a real run could have produced it: inside the field,
+        /// containing every cell the level starts with, and edge-connected — the three properties
+        /// M1-04 §4.3 gives unlock-card placement, which together guarantee the mask is one blob
+        /// grown outward from the starting rect rather than an arbitrary set of cells.
+        /// </summary>
+        private static void RequireReachableMask(LevelDef level, BalanceLineup lineup)
+        {
+            var cells = new HashSet<GridCoordinate>(lineup.UnlockedCells);
+            foreach (GridCoordinate cell in lineup.UnlockedCells)
+            {
+                if (cell.Column < 0 || cell.Column >= level.GridWidth
+                    || cell.Row < 0 || cell.Row >= level.GridHeight)
+                {
+                    throw new ArgumentException(
+                        $"Lineup '{lineup.Id}' unlocks {cell}, outside the "
+                        + $"{level.GridWidth}x{level.GridHeight} field.",
+                        nameof(lineup));
+                }
+            }
+
+            foreach (GridCoordinate cell in DeploymentGrid.EnumerateRect(level.InitialUnlock))
+            {
+                if (!cells.Contains(cell))
+                {
+                    throw new ArgumentException(
+                        $"Lineup '{lineup.Id}' omits {cell}, which level '{level.Id}' starts unlocked; "
+                        + "a run can only add cells.",
+                        nameof(lineup));
+                }
+            }
+
+            var reached = new HashSet<GridCoordinate>();
+            var frontier = new Stack<GridCoordinate>();
+            GridCoordinate seed = new GridCoordinate(level.InitialUnlock.Col, level.InitialUnlock.Row);
+            frontier.Push(seed);
+            reached.Add(seed);
+            GridCoordinate[] steps =
+            {
+                new GridCoordinate(1, 0), new GridCoordinate(-1, 0),
+                new GridCoordinate(0, 1), new GridCoordinate(0, -1)
+            };
+            while (frontier.Count > 0)
+            {
+                GridCoordinate current = frontier.Pop();
+                for (int index = 0; index < steps.Length; index++)
+                {
+                    GridCoordinate next = current + steps[index];
+                    if (cells.Contains(next) && reached.Add(next))
+                    {
+                        frontier.Push(next);
+                    }
+                }
+            }
+
+            if (reached.Count != cells.Count)
             {
                 throw new ArgumentException(
-                    $"Lineup '{lineup.Id}' overrides level '{level.Id}' to "
-                    + $"{lineup.GridColumnsOverride} unlocked columns, outside the reachable range "
-                    + $"[{level.InitialUnlock.Width}, {level.GridWidth}].",
+                    $"Lineup '{lineup.Id}' declares {cells.Count} unlocked cells but only "
+                    + $"{reached.Count} of them connect to the starting rect; unlock cards cannot "
+                    + "create islands.",
                     nameof(lineup));
             }
-
-            if (((level.GridWidth - lineup.GridColumnsOverride) & 1) != 0)
-            {
-                throw new ArgumentException(
-                    $"Lineup '{lineup.Id}' overrides level '{level.Id}' to "
-                    + $"{lineup.GridColumnsOverride} unlocked columns, which cannot be centred on a "
-                    + $"{level.GridWidth}-wide field.",
-                    nameof(lineup));
-            }
-
-            return lineup.GridColumnsOverride;
         }
 
         private static DeploymentGrid CreateGrid(
@@ -322,34 +383,13 @@ namespace HanziDefend.Editor.Balance
             BalanceLineup lineup)
         {
             LevelDef level = config.GetLevel(levelId);
-            int columns = ResolveGridColumns(level, lineup);
-            return columns == level.InitialUnlock.Width
-                ? DeploymentGrid.CreateFromConfig(config, levelId)
-                : new DeploymentGrid(
-                    level.GridWidth,
-                    level.GridHeight,
-                    DeploymentGrid.EnumerateRect(new GridRectDef
-                    {
-                        Col = (level.GridWidth - columns) / 2,
-                        Row = level.InitialUnlock.Row,
-                        Width = columns,
-                        Height = level.InitialUnlock.Height
-                    }),
-                    DeploymentGridOrientation.ColumnsHorizontal,
-                    config.Economy.CardPool,
-                    config.Economy.GridUnlock.BaseAnchorRowOffset);
-        }
-
-        /// <summary>
-        /// Translates a lineup anchor from unlocked-region space into playfield space, so lineup
-        /// data stays written against a 0-based rectangle while the grid itself is the full field.
-        /// </summary>
-        public static GridCoordinate ToFieldAnchor(LevelDef level, BalanceLineup lineup, GridCoordinate anchor)
-        {
-            int columns = ResolveGridColumns(level, lineup);
-            return new GridCoordinate(
-                anchor.Column + ((level.GridWidth - columns) / 2),
-                anchor.Row + level.InitialUnlock.Row);
+            return new DeploymentGrid(
+                level.GridWidth,
+                level.GridHeight,
+                ResolveUnlockedCells(level, lineup),
+                DeploymentGridOrientation.ColumnsHorizontal,
+                config.Economy.CardPool,
+                config.Economy.GridUnlock.BaseAnchorRowOffset);
         }
 
         private static void ValidateDeployment(
@@ -357,7 +397,6 @@ namespace HanziDefend.Editor.Balance
             string levelId,
             BalanceLineup lineup)
         {
-            LevelDef level = config.GetLevel(levelId);
             DeploymentGrid grid = CreateGrid(config, levelId, lineup);
             for (int index = 0; index < lineup.Spawns.Count; index++)
             {
@@ -368,8 +407,7 @@ namespace HanziDefend.Editor.Balance
                     spawn.UnitId,
                     spawn.Level,
                     UnitFootprint.FromDefinition(definition));
-                GridCoordinate anchor = ToFieldAnchor(level, lineup, spawn.Anchor);
-                DeploymentEvaluation evaluation = grid.Evaluate(incoming, anchor);
+                DeploymentEvaluation evaluation = grid.Evaluate(incoming, spawn.Anchor);
                 if (!evaluation.IsValid || evaluation.Action != DeploymentActionKind.Place)
                 {
                     throw new ArgumentException(
@@ -378,24 +416,30 @@ namespace HanziDefend.Editor.Balance
                         nameof(lineup));
                 }
 
-                grid.Apply(incoming, anchor);
+                grid.Apply(incoming, spawn.Anchor);
             }
         }
 
-        private static Vector2 ResolveDeploymentPosition(
-            GameConfig config,
-            int gridColumns,
-            GridCoordinate anchor)
+        /// <summary>Leftmost and rightmost unlocked columns of an explicit cell list.</summary>
+        internal static void ResolveColumnSpan(
+            IReadOnlyList<GridCoordinate> cells,
+            out int firstColumn,
+            out int lastColumn)
         {
-            BattleRulesDef battle = config.Economy.Battle;
-            Position2Def basePosition = battle.AllyBasePosition;
-            Position2Def originOffset = battle.DeploymentOriginOffset;
-            Position2Def cellSize = battle.DeploymentCellSize;
-            float x = basePosition.X
-                      + originOffset.X
-                      + (anchor.Column - (gridColumns - 1) * 0.5f) * cellSize.X;
-            float y = basePosition.Y + originOffset.Y + anchor.Row * cellSize.Y;
-            return new Vector2(x, y);
+            firstColumn = int.MaxValue;
+            lastColumn = int.MinValue;
+            for (int index = 0; index < cells.Count; index++)
+            {
+                int column = cells[index].Column;
+                if (column < firstColumn) firstColumn = column;
+                if (column > lastColumn) lastColumn = column;
+            }
+
+            if (firstColumn > lastColumn)
+            {
+                firstColumn = 0;
+                lastColumn = 0;
+            }
         }
 
         private static IReadOnlyList<BalanceCohortSummary> SummarizeCohorts(
@@ -408,7 +452,7 @@ namespace HanziDefend.Editor.Balance
                     value.LineupName,
                     value.LevelId,
                     value.StageIndex,
-                    value.GridColumns
+                    value.UnlockedCellCount
                 })
                 .OrderBy(group => group.Key.LineupId, StringComparer.Ordinal)
                 .ThenBy(group => group.Key.StageIndex)
@@ -419,6 +463,16 @@ namespace HanziDefend.Editor.Balance
                         .Select(value => value.DurationSeconds)
                         .OrderBy(value => value)
                         .ToArray();
+                    double[] deathY = values
+                        .SelectMany(value => value.EnemyDeathPositionsY)
+                        .Select(value => (double)value)
+                        .OrderBy(value => value)
+                        .ToArray();
+                    double[] deathYBeforeCastle = values
+                        .SelectMany(value => value.EnemyDeathPositionsYBeforeCastle)
+                        .Select(value => (double)value)
+                        .OrderBy(value => value)
+                        .ToArray();
                     int wins = values.Count(value => value.Result == BattleResult.Win);
                     int losses = values.Count(value => value.Result == BattleResult.Lose);
                     int timeouts = values.Count(value => value.TimedOut);
@@ -427,7 +481,7 @@ namespace HanziDefend.Editor.Balance
                         group.Key.LineupName,
                         group.Key.LevelId,
                         group.Key.StageIndex,
-                        group.Key.GridColumns,
+                        group.Key.UnlockedCellCount,
                         values.Length,
                         wins,
                         losses,
@@ -438,7 +492,14 @@ namespace HanziDefend.Editor.Balance
                         Percentile(durations, 0.95d),
                         values.Length == 0 ? 0d : values.Average(value => value.WallClockMilliseconds),
                         values.Sum(value => value.WallClockMilliseconds) / 1000d,
-                        values.Length == 0 ? 0d : values.Average(value => value.EndCoins));
+                        values.Length == 0 ? 0d : values.Average(value => value.EndCoins),
+                        values.Length == 0 ? 0d : values.Average(value => value.DroppedCoins),
+                        values.Length == 0 ? 0 : values.Max(value => value.PeakConcurrentUnits),
+                        deathY.Length == 0 ? double.NaN : Percentile(deathY, 0.90d),
+                        deathYBeforeCastle.Length == 0
+                            ? double.NaN
+                            : Percentile(deathYBeforeCastle, 0.90d),
+                        values.Length == 0 ? 0d : values.Average(value => value.LastAllyEntrySeconds));
                 })
                 .ToArray();
             return Array.AsReadOnly(result);
@@ -478,6 +539,11 @@ namespace HanziDefend.Editor.Balance
             return Array.AsReadOnly(result.ToArray());
         }
 
+        /// <summary>
+        /// Counts armour by act rather than by wave-number bands. The old W01-W06 / W07-W12 /
+        /// W13-W19 slicing was a stand-in for the three difficulty phases back when a wave was one
+        /// enemy; now the acts are declared in the data, so the analysis reads them directly.
+        /// </summary>
         private static IReadOnlyList<BalanceArmorDistribution> AnalyzeArmor(
             GameConfig config,
             IReadOnlyList<string> levelIds)
@@ -492,67 +558,47 @@ namespace HanziDefend.Editor.Balance
                     continue;
                 }
 
-                WaveSetDef waveSet = config.GetWaveSet(waveSetId);
-                result.Add(CountArmor(config, waveSet, "W01-W06", 1, 6));
-                result.Add(CountArmor(config, waveSet, "W07-W12", 7, 12));
-                result.Add(CountArmor(config, waveSet, "W13-W19", 13, 19));
-                result.Add(CountArmor(config, waveSet, "W01-W19", 1, 19));
-                result.Add(CountArmor(config, waveSet, "W20", 20, 20));
+                WaveTimeline timeline = WaveTimeline.Compile(config, config.GetWaveSet(waveSetId));
+                int unarmored = 0;
+                int light = 0;
+                int heavy = 0;
+                int building = 0;
+                int firstWave = int.MaxValue;
+                int lastWave = int.MinValue;
+                for (int actIndex = 0; actIndex < timeline.Acts.Count; actIndex++)
+                {
+                    WaveActSummary act = timeline.Acts[actIndex];
+                    result.Add(new BalanceArmorDistribution(
+                        waveSetId,
+                        "ACT" + act.Act.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        act.FirstWaveIndex,
+                        act.LastWaveIndex,
+                        act.Unarmored,
+                        act.Light,
+                        act.Heavy,
+                        act.Building,
+                        0));
+                    unarmored += act.Unarmored;
+                    light += act.Light;
+                    heavy += act.Heavy;
+                    building += act.Building;
+                    if (act.FirstWaveIndex < firstWave) firstWave = act.FirstWaveIndex;
+                    if (act.LastWaveIndex > lastWave) lastWave = act.LastWaveIndex;
+                }
+
+                result.Add(new BalanceArmorDistribution(
+                    waveSetId,
+                    "ALL",
+                    firstWave == int.MaxValue ? 0 : firstWave,
+                    lastWave == int.MinValue ? 0 : lastWave,
+                    unarmored,
+                    light,
+                    heavy,
+                    building,
+                    0));
             }
 
             return Array.AsReadOnly(result.ToArray());
-        }
-
-        private static BalanceArmorDistribution CountArmor(
-            GameConfig config,
-            WaveSetDef waveSet,
-            string phase,
-            int firstWave,
-            int lastWave)
-        {
-            int unarmored = 0;
-            int light = 0;
-            int heavy = 0;
-            int building = 0;
-            int other = 0;
-            IEnumerable<WaveSpawnDef> spawns = waveSet.Waves
-                .Where(value => value.Index >= firstWave && value.Index <= lastWave)
-                .SelectMany(value => value.Spawns);
-            foreach (WaveSpawnDef spawn in spawns)
-            {
-                ArmorType armorType = config.UnitsById.TryGetValue(spawn.UnitId, out UnitDef unit)
-                    ? unit.ArmorType
-                    : config.GetBoss(spawn.UnitId).ArmorType;
-                switch (armorType)
-                {
-                    case ArmorType.Unarmored:
-                        unarmored = checked(unarmored + spawn.Count);
-                        break;
-                    case ArmorType.Light:
-                        light = checked(light + spawn.Count);
-                        break;
-                    case ArmorType.Heavy:
-                        heavy = checked(heavy + spawn.Count);
-                        break;
-                    case ArmorType.Building:
-                        building = checked(building + spawn.Count);
-                        break;
-                    default:
-                        other = checked(other + spawn.Count);
-                        break;
-                }
-            }
-
-            return new BalanceArmorDistribution(
-                waveSet.Id,
-                phase,
-                firstWave,
-                lastWave,
-                unarmored,
-                light,
-                heavy,
-                building,
-                other);
         }
 
         private static string CohortKey(BalanceBattleResult value)
@@ -571,12 +617,17 @@ namespace HanziDefend.Editor.Balance
             return sortedValues[Math.Min(rank, sortedValues.Count - 1)];
         }
 
-        private sealed class BalanceEventCollector : IBattleEncounterEvents, IBattleEffectEvents
+        private sealed class BalanceEventCollector
+            : IBattleEncounterEvents, IBattleEffectEvents, IBattleDeploymentEvents
         {
             private readonly Dictionary<int, MutableEntity> entities =
                 new Dictionary<int, MutableEntity>();
             private readonly List<BalanceCoinPoint> coinCurve = new List<BalanceCoinPoint>();
+            private readonly List<float> enemyDeathPositionsY = new List<float>();
+            private readonly List<float> enemyDeathPositionsYBeforeCastle = new List<float>();
             private int currentCoins;
+            private int aliveUnits;
+            private bool castleHasSpawned;
 
             internal BalanceEventCollector(int startCoins)
             {
@@ -587,6 +638,21 @@ namespace HanziDefend.Editor.Balance
             internal IReadOnlyList<BalanceCoinPoint> CoinCurve =>
                 Array.AsReadOnly(coinCurve.ToArray());
 
+            internal IReadOnlyList<float> EnemyDeathPositionsY =>
+                Array.AsReadOnly(enemyDeathPositionsY.ToArray());
+
+            /// <summary>
+            /// Deaths from before the castle arrives — the window the WO-F1 §B threshold is really
+            /// asking about. Act three deliberately marches the line up to the castle, so deaths up
+            /// there are the assault working, not the front line failing to form.
+            /// </summary>
+            internal IReadOnlyList<float> EnemyDeathPositionsYBeforeCastle =>
+                Array.AsReadOnly(enemyDeathPositionsYBeforeCastle.ToArray());
+
+            internal int PeakConcurrentUnits { get; private set; }
+
+            internal double LastAllyEntrySeconds { get; private set; }
+
             public void UnitSpawned(UnitSpawnedEvent eventData)
             {
                 entities.Add(eventData.EntityId, new MutableEntity(
@@ -594,6 +660,11 @@ namespace HanziDefend.Editor.Balance
                     eventData.DefinitionId,
                     eventData.Team,
                     eventData.SimulatedTimeSeconds));
+                aliveUnits++;
+                if (aliveUnits > PeakConcurrentUnits)
+                {
+                    PeakConcurrentUnits = aliveUnits;
+                }
             }
 
             public void UnitAttacked(UnitAttackedEvent eventData)
@@ -611,9 +682,20 @@ namespace HanziDefend.Editor.Balance
 
             public void UnitDied(UnitDiedEvent eventData)
             {
+                aliveUnits--;
                 if (entities.TryGetValue(eventData.EntityId, out MutableEntity entity))
                 {
                     entity.DeathTimeSeconds = eventData.SimulatedTimeSeconds;
+                    entity.DeathPositionY = eventData.Position.y;
+                }
+
+                if (eventData.Team == BattleTeam.Enemy)
+                {
+                    enemyDeathPositionsY.Add(eventData.Position.y);
+                    if (!castleHasSpawned)
+                    {
+                        enemyDeathPositionsYBeforeCastle.Add(eventData.Position.y);
+                    }
                 }
             }
 
@@ -634,6 +716,7 @@ namespace HanziDefend.Editor.Balance
 
             public void BossSpawned(BossSpawnedEvent eventData)
             {
+                castleHasSpawned = true;
                 if (!entities.ContainsKey(eventData.EntityId))
                 {
                     entities.Add(eventData.EntityId, new MutableEntity(
@@ -680,6 +763,18 @@ namespace HanziDefend.Editor.Balance
                     currentCoins));
             }
 
+            public void AllyDeploymentQueued(AllyDeploymentQueuedEvent eventData)
+            {
+                if (eventData.EntryTimeSeconds > LastAllyEntrySeconds)
+                {
+                    LastAllyEntrySeconds = eventData.EntryTimeSeconds;
+                }
+            }
+
+            public void AllyDeploymentEntered(AllyDeploymentEnteredEvent eventData)
+            {
+            }
+
             internal IReadOnlyList<BalanceEntityResult> CompleteEntities(double endTimeSeconds)
             {
                 BalanceEntityResult[] result = entities.Values
@@ -691,7 +786,8 @@ namespace HanziDefend.Editor.Balance
                         value.SpawnTimeSeconds,
                         value.DeathTimeSeconds ?? endTimeSeconds,
                         !value.DeathTimeSeconds.HasValue,
-                        value.Damage))
+                        value.Damage,
+                        value.DeathPositionY))
                     .ToArray();
                 return Array.AsReadOnly(result);
             }
@@ -719,6 +815,7 @@ namespace HanziDefend.Editor.Balance
                     UnitId = unitId;
                     Team = team;
                     SpawnTimeSeconds = spawnTimeSeconds;
+                    DeathPositionY = float.NaN;
                 }
 
                 internal int EntityId { get; }
@@ -726,6 +823,7 @@ namespace HanziDefend.Editor.Balance
                 internal BattleTeam Team { get; }
                 internal double SpawnTimeSeconds { get; }
                 internal double? DeathTimeSeconds { get; set; }
+                internal float DeathPositionY { get; set; }
                 internal long Damage { get; set; }
             }
         }

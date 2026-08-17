@@ -14,11 +14,18 @@ namespace HanziDefend.Gameplay.Battle
     {
         public const string IceAuraPresentationEffectId = "trait_ice_aura";
 
+        /// <summary>
+        /// How many times one unit re-resolves its separation against neighbours in a tick before
+        /// falling back to "step behind the rear leader". See ResolveSeparationAgainstLeaders.
+        /// </summary>
+        private const int MaximumSeparationPasses = 4;
+
         private readonly GameConfig config;
         private readonly BattleRulesDef rules;
         private readonly IBattleEvents events;
         private readonly IBattleEncounterEvents encounterEvents;
         private readonly IBattleEffectEvents effectEvents;
+        private readonly IBattleDeploymentEvents deploymentEvents;
         private readonly RngStreams rngStreams;
         private readonly List<BattleUnit> units = new List<BattleUnit>();
         private readonly List<BattleUnit> aliveAllyUnits = new List<BattleUnit>();
@@ -62,6 +69,8 @@ namespace HanziDefend.Gameplay.Battle
             events = battleEvents ?? NullBattleEvents.Instance;
             encounterEvents = battleEvents as IBattleEncounterEvents ?? NullBattleEvents.Instance;
             effectEvents = battleEvents as IBattleEffectEvents ?? NullBattleEffectEvents.Instance;
+            deploymentEvents = battleEvents as IBattleDeploymentEvents
+                               ?? NullBattleDeploymentEvents.Instance;
             rngStreams = new RngStreams(seed);
             this.simulatePhysics = simulatePhysics;
 
@@ -275,6 +284,7 @@ namespace HanziDefend.Gameplay.Battle
 
                 ExpireEffects();
 
+                ReleaseDueDeployments();
                 waveScheduler?.Advance(SimulatedTimeSeconds, PublishWaveStarted, SpawnScheduled);
 
                 ApplySeparation();
@@ -339,6 +349,7 @@ namespace HanziDefend.Gameplay.Battle
                             distance,
                             GetTraitAdjustedMoveSpeed(unit),
                             dt);
+                        ApplyAllyAdvanceLimit(unit);
                     }
                 }
 
@@ -921,6 +932,27 @@ namespace HanziDefend.Gameplay.Battle
             unit.Facing = ResolveFacing(targetPosition - unit.Position, unit.Facing);
         }
 
+        /// <summary>
+        /// Holds the ally line at <c>allyAdvanceLimitY</c> until the castle shows up. Applied after
+        /// the move rather than before it so a unit still turns, still faces its target and still
+        /// fights whatever walks into range — it simply stops walking forward.
+        /// </summary>
+        private void ApplyAllyAdvanceLimit(BattleUnit unit)
+        {
+            if (unit.Team != BattleTeam.Ally
+                || rules.AllyAdvanceLimitY <= 0f
+                || unit.Targeting == TargetingMode.RushBase
+                || BossEntityId.HasValue)
+            {
+                return;
+            }
+
+            if (unit.Position.y > rules.AllyAdvanceLimitY)
+            {
+                unit.Position = new Vector2(unit.Position.x, rules.AllyAdvanceLimitY);
+            }
+        }
+
         private void TryAttack(BattleUnit attacker, TargetRef target)
         {
             if (attacker.Stats.AtkSpeed <= 0f
@@ -1072,7 +1104,15 @@ namespace HanziDefend.Gameplay.Battle
             // Moving away from a leader can expose the follower to a different adjacent
             // bucket. Re-query until stable; the bounded fallback keeps pathological
             // layouts finite while preserving the same progress/EntityId leader order.
-            for (int pass = 0; pass < separationUnits.Count; pass++)
+            //
+            // WO-F1: the bound used to be the crowd size itself, which was harmless while a wave
+            // was one enemy and became a wall clock disaster the moment waves carried a hundred.
+            // A tight crowd makes every follower re-query once per neighbour, so the cost went
+            // cubic in crowd size and a single headless battle stopped finishing at all. Two or
+            // three passes is all a converging layout ever needs; past that the fallback below
+            // already has a defined answer, so the extra passes only bought worst-case precision
+            // nobody was reading.
+            for (int pass = 0; pass < MaximumSeparationPasses; pass++)
             {
                 CollectSeparationNeighbors(follower, cellSize);
                 if (separationNeighbors.Count == 0)

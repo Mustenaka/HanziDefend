@@ -32,98 +32,311 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [Test]
-        public void ReferenceLineups_ResolveOneSiegeAndThreeNonSiegeProfilesFromGameData()
+        public void ReferenceLineups_AreTheFourAccumulatedBoardsPairedWithTheirOwnStage()
         {
             GameConfig config = GameConfig.Load();
+
             Assert.That(BalanceReferenceLineups.All.Select(value => value.Id),
-                Is.EqualTo(new[] { "A_siege_nub", "B_no_siege", "B_fair_s1", "B_fair_s5" }));
-
-            BalanceLineup siege = BalanceReferenceLineups.All.Single(value => value.ExpectedToContainSiege);
-            Assert.That(siege.Id, Is.EqualTo("A_siege_nub"));
-            Assert.That(siege.Spawns.Select(value => config.GetUnit(value.UnitId).AtkType),
-                Does.Contain(AttackType.Siege));
-            Assert.That(siege.Spawns.Select(value => value.UnitId),
-                Is.EquivalentTo(new[] { "gong", "gong", "gong", "dun", "mao", "nub" }));
-
-            foreach (BalanceLineup lineup in BalanceReferenceLineups.All
-                         .Where(value => !value.ExpectedToContainSiege))
-            {
-                Assert.That(lineup.Spawns.Select(value => config.GetUnit(value.UnitId).AtkType),
-                    Has.None.EqualTo(AttackType.Siege), lineup.Id);
-            }
+                Is.EqualTo(new[]
+                {
+                    "A_real_s1", "A_real_s5", "B_real_s1_nosiege", "B_real_s5_nosiege"
+                }));
 
             foreach (BalanceLineup lineup in BalanceReferenceLineups.All)
             {
-                AssertLineupFillsGrid(config, "level_1_1", lineup);
-                AssertLineupFillsGrid(config, "level_1_5", lineup);
+                Assert.That(lineup.LevelIds, Is.Not.Null,
+                    $"{lineup.Id} must name the stage its board belongs to");
+                Assert.That(lineup.LevelIds, Has.Count.EqualTo(1), lineup.Id);
+                AssertLineupFitsItsMask(config, lineup);
+
+                bool containsSiege = lineup.Spawns.Any(value =>
+                    config.GetUnit(value.UnitId).AtkType == AttackType.Siege);
+                Assert.That(containsSiege, Is.EqualTo(lineup.ExpectedToContainSiege), lineup.Id);
+            }
+        }
+
+        /// <summary>
+        /// WO-F1 §C in assertions: the stage-five reference board has to be what a player who
+        /// actually reached stage five is holding, not six level-1 units on three columns.
+        /// </summary>
+        [Test]
+        public void StageFiveReferenceBoard_HasTenPlusUnitsOnFifteenPlusCellsIncludingMerges()
+        {
+            BalanceLineup lineup = BalanceReferenceLineups.All
+                .Single(value => value.Id == BalanceReferenceLineups.StageFiveGateLineupId);
+
+            Assert.That(lineup.Spawns, Has.Count.GreaterThanOrEqualTo(10),
+                "a stage-five board carries at least ten units");
+            Assert.That(lineup.DeclaredUnlockedCellCount, Is.GreaterThanOrEqualTo(15),
+                "a stage-five board is spread over at least fifteen unlocked cells");
+            Assert.That(lineup.Spawns.Count(value => value.Level >= 2), Is.GreaterThanOrEqualTo(3),
+                "a stage-five board carries merge results, not only fresh level-1 cards");
+            Assert.That(lineup.ExpectedToContainSiege, Is.True);
+            Assert.That(lineup.LevelIds, Is.EqualTo(new[] { "level_1_5" }));
+
+            BalanceLineup noSiege = BalanceReferenceLineups.All
+                .Single(value => value.Id == "B_real_s5_nosiege");
+            Assert.That(noSiege.ExpectedToContainSiege, Is.False);
+            Assert.That(noSiege.DeclaredUnlockedCellCount,
+                Is.EqualTo(lineup.DeclaredUnlockedCellCount),
+                "declining siege changes what is deployed, not how the grid grew");
+        }
+
+        /// <summary>
+        /// The stage-one board is only a fair reference if the opening resources really produce it:
+        /// the untouched 3x3 and nothing beyond it.
+        /// </summary>
+        [Test]
+        public void StageOneReferenceBoards_StandOnTheUntouchedStartingRect()
+        {
+            GameConfig config = GameConfig.Load();
+            LevelDef level = config.GetLevel("level_1_1");
+            var startingRect = new HashSet<GridCoordinate>(
+                DeploymentGrid.EnumerateRect(level.InitialUnlock));
+
+            foreach (string id in new[] { "A_real_s1", "B_real_s1_nosiege" })
+            {
+                BalanceLineup lineup = BalanceReferenceLineups.All.Single(value => value.Id == id);
+                Assert.That(lineup.UnlockedCells, Is.EquivalentTo(startingRect), id);
+                Assert.That(lineup.DeclaredUnlockedCellCount, Is.EqualTo(9), id);
+                Assert.That(lineup.Spawns.All(value => value.Level <= 2), Is.True,
+                    $"{id}: stage one cannot have reached level 3");
             }
         }
 
         [Test]
-        public void WorstCaseNoSiegeBaseline_KeepsItsWoE1CompositionAndThreeColumnGrid()
-        {
-            BalanceLineup worst = BalanceReferenceLineups.All.Single(value => value.Id == "B_no_siege");
-
-            Assert.That(worst.Spawns.Select(value => value.UnitId),
-                Is.EquivalentTo(new[] { "gong", "gong", "gong", "dun", "dun", "mao" }));
-            Assert.That(worst.GridColumnsOverride, Is.EqualTo(0));
-            Assert.That(worst.DisplayName, Does.Contain("B_worst"));
-        }
-
-        [Test]
-        public void ShapeUnlockProbeLineups_PinTheThreeAndFiveColumnTiersFromEconomyJson()
+        public void LineupUnlockMask_MustBeAStateAnUnlockCardCouldHaveGrown()
         {
             GameConfig config = GameConfig.Load();
             LevelDef level = config.GetLevel("level_1_1");
-            BalanceLineup threeColumn = BalanceReferenceLineups.All.Single(value => value.Id == "B_fair_s1");
-            BalanceLineup fiveColumn = BalanceReferenceLineups.All.Single(value => value.Id == "B_fair_s5");
+            var island = new BalanceLineup(
+                "probe_island",
+                "probe",
+                false,
+                new[] { new BalanceLineupSpawn("zu", 1, 2, 2) },
+                new List<GridCoordinate>(DeploymentGrid.EnumerateRect(level.InitialUnlock))
+                {
+                    new GridCoordinate(0, 6)
+                });
+            var missingStart = new BalanceLineup(
+                "probe_missing_start",
+                "probe",
+                false,
+                new[] { new BalanceLineupSpawn("zu", 1, 2, 2) },
+                new[] { new GridCoordinate(2, 2), new GridCoordinate(3, 2) });
+            var outside = new BalanceLineup(
+                "probe_outside",
+                "probe",
+                false,
+                new[] { new BalanceLineupSpawn("zu", 1, 2, 2) },
+                new List<GridCoordinate>(DeploymentGrid.EnumerateRect(level.InitialUnlock))
+                {
+                    new GridCoordinate(9, 9)
+                });
 
-            // The 3-column tier must not be able to field any 2x2 or 3x1 unit.
-            Assert.That(threeColumn.GridColumnsOverride, Is.EqualTo(0));
-            Assert.That(BalanceRunner.ResolveGridColumns(level, threeColumn), Is.EqualTo(3));
-            Assert.That(
-                threeColumn.Spawns
-                    .Select(value => UnitFootprint.FromDefinition(config.GetUnit(value.UnitId)))
-                    .All(value => value.OccupiedCellCount <= 2),
-                Is.True);
+            Assert.That(() => BalanceRunner.ResolveUnlockedCells(level, island),
+                Throws.ArgumentException, "an unlock card cannot create a disconnected island");
+            Assert.That(() => BalanceRunner.ResolveUnlockedCells(level, missingStart),
+                Throws.ArgumentException, "a run can only add cells to the starting rect");
+            Assert.That(() => BalanceRunner.ResolveUnlockedCells(level, outside),
+                Throws.ArgumentException, "cells must stay inside the playfield");
+        }
 
-            // The 5-column tier is a reachable unlock state: two vertical cards flanking the
-            // starting rect. It exists to answer whether lia (2x2) changes the no-siege verdict.
-            Assert.That(BalanceRunner.ResolveGridColumns(level, fiveColumn), Is.EqualTo(5));
-            Assert.That(fiveColumn.GridColumnsOverride, Is.LessThanOrEqualTo(level.GridWidth));
-            Assert.That(fiveColumn.Spawns.Count(value => value.UnitId == "lia"), Is.EqualTo(2));
-            Assert.That(
-                config.Economy.CardPool.ShapeUnlocks.Any(value => value.GridW == 2 && value.GridH == 2),
-                Is.True,
-                "the 2x2 shape is still declared; availability now follows the unlock mask");
+        // ---------------------------------------------------------------- WO-F1 §A: three acts
+
+        [Test]
+        public void EveryWaveSet_RunsThreeActsSeparatedByReadableGaps()
+        {
+            GameConfig config = GameConfig.Load();
+
+            foreach (WaveSetDef waveSet in config.WaveSets)
+            {
+                WaveTimeline timeline = WaveTimeline.Compile(config, waveSet);
+                Assert.That(timeline.Acts.Select(value => value.Act),
+                    Is.EqualTo(new[] { WaveActs.First, WaveActs.Second, WaveActs.Third }),
+                    waveSet.Id);
+
+                Assert.That(timeline.GetAct(WaveActs.Second).GapBeforeSeconds,
+                    Is.GreaterThanOrEqualTo(4d),
+                    $"{waveSet.Id}: act 2 must open after a visible pause");
+                Assert.That(timeline.GetAct(WaveActs.Third).GapBeforeSeconds,
+                    Is.GreaterThanOrEqualTo(4d),
+                    $"{waveSet.Id}: act 3 must open after a visible pause");
+            }
         }
 
         [Test]
-        public void GridColumnOverride_OutsideTheReachableUnlockRangeIsRejected()
+        public void EveryWaveSet_KeepsTheStreamRunningInsideEachAct()
         {
             GameConfig config = GameConfig.Load();
-            LevelDef level = config.GetLevel("level_1_1");
-            var tooWide = new BalanceLineup(
-                "probe_too_wide",
-                "probe",
-                false,
-                new[] { new BalanceLineupSpawn("zu", 1, 0, 0) },
-                level.GridWidth + 1);
-            var offCentre = new BalanceLineup(
-                "probe_off_centre",
-                "probe",
-                false,
-                new[] { new BalanceLineupSpawn("zu", 1, 0, 0) },
-                level.GridWidth - 1);
 
-            Assert.That(
-                () => BalanceRunner.ResolveGridColumns(level, tooWide),
-                Throws.ArgumentException);
-            Assert.That(
-                () => BalanceRunner.ResolveGridColumns(level, offCentre),
-                Throws.ArgumentException,
-                "an even-width region cannot be centred on a 7-wide field");
+            foreach (WaveSetDef waveSet in config.WaveSets)
+            {
+                WaveTimeline timeline = WaveTimeline.Compile(config, waveSet);
+                foreach (WaveActSummary act in timeline.Acts)
+                {
+                    Assert.That(act.CombatantCount, Is.GreaterThan(0), $"{waveSet.Id} act {act.Act}");
+                    Assert.That(act.DurationSeconds, Is.GreaterThanOrEqualTo(28d),
+                        $"{waveSet.Id} act {act.Act} is too short to read as an act");
+                    Assert.That(act.LongestInternalGapSeconds, Is.LessThan(act.GapBeforeSeconds > 0d
+                            ? act.GapBeforeSeconds
+                            : 6d),
+                        $"{waveSet.Id} act {act.Act}: a hole inside the act must stay shorter than "
+                        + "the pause between acts, or the player cannot tell them apart");
+                }
+            }
         }
+
+        [Test]
+        public void EveryWaveSet_OpensActThreeWithTheCastleAndKeepsSendingGuardsAfterIt()
+        {
+            GameConfig config = GameConfig.Load();
+
+            foreach (WaveSetDef waveSet in config.WaveSets)
+            {
+                WaveTimeline timeline = WaveTimeline.Compile(config, waveSet);
+                WaveActSummary third = timeline.GetAct(WaveActs.Third);
+
+                Assert.That(timeline.BossSpawnSeconds, Is.EqualTo(third.FirstSpawnSeconds).Within(0.001d),
+                    $"{waveSet.Id}: the castle is act 3's opening beat, not its reward");
+
+                WaveSpawnPoint[] guardsAfterCastle = timeline.Spawns
+                    .Where(value => value.Act == WaveActs.Third
+                                    && !value.IsBoss
+                                    && value.TimeSeconds > timeline.BossSpawnSeconds)
+                    .ToArray();
+                Assert.That(guardsAfterCastle, Is.Not.Empty, waveSet.Id);
+                Assert.That(guardsAfterCastle.Max(value => value.TimeSeconds),
+                    Is.GreaterThan(timeline.BossSpawnSeconds + 30d),
+                    $"{waveSet.Id}: guards must keep arriving well after the castle appears");
+            }
+        }
+
+        [Test]
+        public void EveryWaveSet_HoldsTheArmourMixAndFieldsEveryEnemyUnit()
+        {
+            GameConfig config = GameConfig.Load();
+            var rushShareByStage = new List<double>();
+
+            foreach (LevelDef level in config.Levels.OrderBy(value => value.StageIndex))
+            {
+                WaveSetDef waveSet = config.GetWaveSet(level.WaveSetId);
+                WaveTimeline timeline = WaveTimeline.Compile(config, waveSet);
+
+                Assert.That(timeline.GetAct(WaveActs.First).HeavyRate, Is.EqualTo(0d).Within(0.001d),
+                    $"{waveSet.Id}: act 1 teaches, so no heavy armour");
+                Assert.That(timeline.GetAct(WaveActs.Second).HeavyRate,
+                    Is.GreaterThanOrEqualTo(0.10d), waveSet.Id);
+                Assert.That(timeline.GetAct(WaveActs.Third).HeavyRate,
+                    Is.GreaterThanOrEqualTo(0.25d), waveSet.Id);
+
+                int heavy = timeline.Acts.Sum(value => value.Heavy);
+                int combatants = timeline.TotalCombatantCount;
+                Assert.That((double)heavy / combatants, Is.GreaterThanOrEqualTo(0.15d),
+                    $"{waveSet.Id}: below a 15% heavy floor 链甲兵 and 弩兵 stop having a reason to exist");
+
+                string[] unitIds = timeline.Spawns
+                    .Where(value => !value.IsBoss)
+                    .Select(value => value.UnitId)
+                    .Distinct()
+                    .ToArray();
+                Assert.That(unitIds, Does.Contain("e_shan"),
+                    $"{waveSet.Id}: 山贼 exists and must be used");
+                Assert.That(unitIds, Does.Contain("e_lang"), waveSet.Id);
+
+                int rush = timeline.Spawns.Count(value => value.UnitId == "e_lang");
+                rushShareByStage.Add((double)rush / combatants);
+            }
+
+            Assert.That(rushShareByStage.Last(), Is.GreaterThan(rushShareByStage.First()),
+                "e_lang is the leak unit; its share must rise with the stage so late camps take damage");
+        }
+
+        // ------------------------------------------------- WO-F1 §B: entry timing by cooldown
+
+        [Test]
+        public void Deploy_HoldsADelayedUnitOffTheFieldForItsOwnCooldown()
+        {
+            GameConfig config = GameConfig.Load();
+            UnitDef ram = config.GetUnit("chc");
+            Assert.That(ram.SpawnMode, Is.EqualTo(UnitSpawnMode.Delayed));
+            float cooldown = ram.Cooldown.Base;
+            Assert.That(cooldown, Is.GreaterThan(8f), "chc is the slowest unit to arrive");
+
+            using (BattleSystem system = BattleSystem.CreateEncounter(
+                       config, "level_1_1", 0xF1000001u, simulatePhysics: false))
+            {
+                DeploymentEntry entry = system.Deploy(
+                    new UnitSpawnRequest("chc", 1, new UnityEngine.Vector2(0f, -7f)));
+
+                Assert.That(entry.IsOnField, Is.False);
+                Assert.That(entry.EntryTimeSeconds, Is.EqualTo(cooldown).Within(0.001d));
+                Assert.That(system.PendingDeploymentCount, Is.EqualTo(1));
+                Assert.That(system.GetAliveCount(BattleTeam.Ally), Is.Zero,
+                    "a queued unit is not on the battlefield in any sense");
+
+                TickTo(system, cooldown - 0.5d);
+                Assert.That(system.GetAliveCount(BattleTeam.Ally), Is.Zero,
+                    "still queued half a second before its cooldown expires");
+                Assert.That(system.CapturePendingDeployments().Single().RemainingSeconds,
+                    Is.GreaterThan(0f));
+
+                TickTo(system, cooldown + 0.2d);
+                Assert.That(system.GetAliveCount(BattleTeam.Ally), Is.EqualTo(1));
+                Assert.That(system.PendingDeploymentCount, Is.Zero);
+            }
+        }
+
+        [Test]
+        public void Deploy_LetsTheShortCooldownUnitsFormTheLineBeforeTheHeavyOnesArrive()
+        {
+            GameConfig config = GameConfig.Load();
+            var recorder = new RecordingDeploymentEvents();
+
+            using (BattleSystem system = BattleSystem.CreateEncounter(
+                       config, "level_1_1", 0xF1000002u, recorder, simulatePhysics: false))
+            {
+                foreach (string unitId in new[] { "chc", "zu", "nuc", "gong" })
+                {
+                    system.Deploy(new UnitSpawnRequest(unitId, 1, new UnityEngine.Vector2(0f, -7f)));
+                }
+
+                Assert.That(system.GetAliveCount(BattleTeam.Ally), Is.Zero,
+                    "nothing is on the field at t=0 — that whole-wall opening is what WO-F1 §B removes");
+
+                TickTo(system, 12d);
+            }
+
+            Assert.That(recorder.EntryOrder, Is.EqualTo(new[] { "zu", "gong", "nuc", "chc" }),
+                "entry order follows the cooldown ladder already in units.json");
+            Assert.That(recorder.EntrySeconds["zu"], Is.EqualTo(1.2d).Within(0.05d));
+            Assert.That(recorder.EntrySeconds["chc"], Is.EqualTo(9.0d).Within(0.05d));
+        }
+
+        [Test]
+        public void Deploy_QueuedUnitTakesNoAreaDamageAndIsNotAValidTarget()
+        {
+            GameConfig config = GameConfig.Load();
+
+            using (BattleSystem system = BattleSystem.CreateEncounter(
+                       config, "level_1_1", 0xF1000003u, simulatePhysics: false))
+            {
+                var position = new UnityEngine.Vector2(0f, -7f);
+                system.Deploy(new UnitSpawnRequest("chc", 1, position));
+                int enemy = system.Spawn(new UnitSpawnRequest("e_lang", 1, position));
+
+                system.Tick(system.FixedDeltaTime);
+
+                Assert.That(system.GetUnitSnapshot(enemy).TargetEntityId, Is.Not.EqualTo(0));
+                Assert.That(system.GetAliveCount(BattleTeam.Ally), Is.Zero);
+                Assert.That(
+                    system.CaptureSnapshot().Any(value => value.DefinitionId == "chc"),
+                    Is.False,
+                    "the queued ram has no battle entity at all, so nothing can hit it");
+            }
+        }
+
+        // ------------------------------------------------------------------- harness plumbing
 
         [Test]
         public void Run_FastFixture_WritesAllCsvReportsAndCapturesDpsSurvivalCoinsAndArmor()
@@ -153,6 +366,8 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(report.Battles.SelectMany(value => value.CoinCurve),
                 Has.Some.Matches<BalanceCoinPoint>(value => value.EventKind == "Start"));
             Assert.That(report.ArmorDistributions, Is.Not.Empty);
+            Assert.That(report.Battles, Has.All.Matches<BalanceBattleResult>(value =>
+                value.PeakConcurrentUnits > 0));
 
             string[] expectedFiles =
             {
@@ -166,6 +381,8 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(expectedFiles.All(value => File.Exists(Path.Combine(output, value))), Is.True);
             Assert.That(File.ReadAllText(Path.Combine(output, "summary.csv")),
                 Does.Contain("win_rate").And.Contain("A_fast_siege"));
+            Assert.That(File.ReadAllText(Path.Combine(output, "summary.csv")),
+                Does.Contain("enemy_death_y_p90").And.Contain("peak_concurrent_units"));
             Assert.That(File.ReadAllText(Path.Combine(output, "unit_metrics.csv")),
                 Does.Contain("mean_survival_s").And.Contain("nub"));
             Assert.That(File.ReadAllText(Path.Combine(output, "coin_curve.csv")),
@@ -219,7 +436,7 @@ namespace HanziDefend.Tests.EditMode
                 5d,
                 false);
 
-            BalanceRunReport report = new BalanceRunner().Run(config, request);
+            BalanceRunReport report = new BalanceRunner().Run(request: request, config: config);
 
             Assert.That(report.Battles, Has.Count.EqualTo(100));
             Assert.That(report.Battles, Has.All.Matches<BalanceBattleResult>(value => !value.TimedOut));
@@ -292,15 +509,21 @@ namespace HanziDefend.Tests.EditMode
         }
 
         [Test]
-        public void DefaultRequest_CrossesEveryLineupWithBothTargetStages()
+        public void DefaultRequest_PairsEachAccumulatedBoardWithItsOwnStage()
         {
             BalanceRunRequest request = BalanceRunRequest.CreateDefault(25);
 
-            Assert.That(request.CohortCount, Is.EqualTo(8));
-            Assert.That(request.TotalGames, Is.EqualTo(200));
-            Assert.That(request.Lineups.Select(value => value.Id),
-                Is.EquivalentTo(new[] { "A_siege_nub", "B_no_siege", "B_fair_s1", "B_fair_s5" }));
-            Assert.That(request.LevelIds, Is.EquivalentTo(new[] { "level_1_1", "level_1_5" }));
+            Assert.That(request.CohortCount, Is.EqualTo(4),
+                "four boards, each on the one stage it belongs to");
+            Assert.That(request.TotalGames, Is.EqualTo(100));
+            Assert.That(request.Cohorts.Select(value => value.Lineup.Id + "@" + value.LevelId),
+                Is.EquivalentTo(new[]
+                {
+                    "A_real_s1@level_1_1",
+                    "A_real_s5@level_1_5",
+                    "B_real_s1_nosiege@level_1_1",
+                    "B_real_s5_nosiege@level_1_5"
+                }));
             Assert.That(request.SimulatePhysics, Is.False);
         }
 
@@ -354,20 +577,11 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(result.FailureSummary, Does.Contain("Heavy armor share main_20_stage_5"));
         }
 
-        // SUSPENDED, NOT PASSING. WO-E1 closed as "partially complete": the locked targets below are
-        // genuinely unmet on the current JSON (A/stage-1 win rate 48% vs the 55-75% band, mean
-        // duration 181.5s vs the 90-150s band, 5 of 100 games timing out). Evidence and the full
-        // per-cohort breakdown live in Docs/Plan/REVIEW/WO-E1-Results/report.md plus the retained
-        // acceptance-failure.xml next to it.
-        //
-        // Nothing here is relaxed: every threshold in BalanceAcceptanceEvaluator is untouched and
-        // still asserted verbatim, and the synthetic pass/fail fixtures above keep the evaluator
-        // itself under test on every run. Ignore (rather than Explicit) is deliberate — Explicit
-        // did not actually hold the test back under an assembly-name filter, so it kept reporting
-        // as a hard failure. Delete this attribute to re-run the probe once balance is retuned.
-        [Test, Timeout(60000)]
-        [Ignore("WO-E1 balance targets are known-unmet and tracked separately; see "
-                + "Docs/Plan/REVIEW/WO-E1-Results/report.md. Suspended, NOT passing.")]
+        /// <summary>
+        /// The real gate: a hundred games of live content against the locked WO-E1 targets. WO-F1
+        /// removed the <c>[Ignore]</c> this carried while the targets were unmet.
+        /// </summary>
+        [Test, Timeout(180000)]
         public void DefaultHundredGameContent_WritesReviewArtifactsAndEvaluatesLockedTargets()
         {
             string output = Path.Combine(
@@ -375,17 +589,16 @@ namespace HanziDefend.Tests.EditMode
                 "Docs",
                 "Plan",
                 "REVIEW",
-                "WO-E1-Results");
+                "WO-F1-Results");
             BalanceRunRequest request = BalanceRunRequest.CreateDefault(25, output);
             BalanceRunReport report = new BalanceRunner().Run(request);
             BalanceCohortSummary stageOne = report.Cohorts.Single(value =>
-                value.LineupId == "A_siege_nub" && value.StageIndex == 1);
+                value.LineupId == BalanceReferenceLineups.StageOneGateLineupId && value.StageIndex == 1);
             BalanceCohortSummary stageFive = report.Cohorts.Single(value =>
-                value.LineupId == "A_siege_nub" && value.StageIndex == 5);
+                value.LineupId == BalanceReferenceLineups.StageFiveGateLineupId && value.StageIndex == 5);
             BalanceArmorDistribution[] targetArmor = report.ArmorDistributions
                 .Where(value =>
-                    value.FirstWave == 1
-                    && value.LastWave == 19
+                    value.Phase == "ALL"
                     && (value.WaveSetId == "main_20" || value.WaveSetId == "main_20_stage_5"))
                 .ToArray();
             BalanceAcceptanceResult acceptance = BalanceAcceptanceEvaluator.Evaluate(report);
@@ -395,13 +608,29 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(stageOne, Is.Not.Null);
             Assert.That(stageFive, Is.Not.Null);
             Assert.That(acceptance.Passed, Is.True, acceptance.FailureSummary);
+
+            // WO-F1 §C: the no-siege route must be possible but clearly worse, not impossible.
+            BalanceCohortSummary noSiege = report.Cohorts.Single(value =>
+                value.LineupId == "B_real_s5_nosiege");
+            Assert.That(noSiege.WinRate, Is.GreaterThan(0d),
+                "a siege-free stage-five board must be able to win at all");
+            Assert.That(noSiege.WinRate, Is.LessThan(stageFive.WinRate),
+                "…and must still be clearly worse than the board that brought siege");
+        }
+
+        private static void TickTo(BattleSystem system, double targetSeconds)
+        {
+            while (!system.IsSettled && system.SimulatedTimeSeconds < targetSeconds)
+            {
+                system.Tick(system.FixedDeltaTime);
+            }
         }
 
         private string CreateTemporaryDirectory()
         {
             string path = Path.Combine(
                 Path.GetTempPath(),
-                "HanziDefend-WO-E1-" + Guid.NewGuid().ToString("N"));
+                "HanziDefend-WO-F1-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(path);
             temporaryDirectories.Add(path);
             return path;
@@ -415,7 +644,7 @@ namespace HanziDefend.Tests.EditMode
                 true,
                 new[]
                 {
-                    new BalanceLineupSpawn("nub", 1, 0, 0)
+                    new BalanceLineupSpawn("nub", 1, 2, 2)
                 });
         }
 
@@ -432,7 +661,8 @@ namespace HanziDefend.Tests.EditMode
             {
                 new WaveDef
                 {
-                    Index = 20,
+                    Index = 1,
+                    Act = WaveActs.Third,
                     RewardRank = EnemyRank.Boss,
                     DelaySec = 0.1f,
                     Spawns = new[]
@@ -457,6 +687,9 @@ namespace HanziDefend.Tests.EditMode
             SetCurve(ally.AtkSpeed, 30f);
             SetCurve(ally.Pierce, 100f);
             SetCurve(ally.MoveSpeed, 0f);
+            // The fast fixture measures harness plumbing, not entry pacing: an entry cooldown here
+            // would just add dead ticks to every one of the hundred games.
+            SetCurve(ally.Cooldown, 0f);
             ally.Traits = Array.Empty<UnitTraitDef>();
 
             BossDef boss = config.GetBoss("bld_cheng");
@@ -466,27 +699,17 @@ namespace HanziDefend.Tests.EditMode
             return config;
         }
 
-        private static void AssertLineupFillsGrid(
-            GameConfig config,
-            string levelId,
-            BalanceLineup lineup)
+        private static void AssertLineupFitsItsMask(GameConfig config, BalanceLineup lineup)
         {
-            LevelDef level = config.GetLevel(levelId);
-            int columns = BalanceRunner.ResolveGridColumns(level, lineup);
-            DeploymentGrid grid = columns == level.InitialUnlock.Width
-                ? DeploymentGrid.CreateFromConfig(config, levelId)
-                : new DeploymentGrid(
-                    level.GridWidth,
-                    level.GridHeight,
-                    DeploymentGrid.EnumerateRect(new GridRectDef
-                    {
-                        Col = (level.GridWidth - columns) / 2,
-                        Row = level.InitialUnlock.Row,
-                        Width = columns,
-                        Height = level.InitialUnlock.Height
-                    }),
-                    DeploymentGridOrientation.ColumnsHorizontal,
-                    config.Economy.CardPool);
+            LevelDef level = config.GetLevel(lineup.LevelIds[0]);
+            IReadOnlyList<GridCoordinate> cells = BalanceRunner.ResolveUnlockedCells(level, lineup);
+            var grid = new DeploymentGrid(
+                level.GridWidth,
+                level.GridHeight,
+                cells,
+                DeploymentGridOrientation.ColumnsHorizontal,
+                config.Economy.CardPool,
+                config.Economy.GridUnlock.BaseAnchorRowOffset);
             int occupiedCells = 0;
             for (int index = 0; index < lineup.Spawns.Count; index++)
             {
@@ -497,15 +720,14 @@ namespace HanziDefend.Tests.EditMode
                     spawn.UnitId,
                     spawn.Level,
                     footprint);
-                GridCoordinate anchor = BalanceRunner.ToFieldAnchor(level, lineup, spawn.Anchor);
-                DeploymentEvaluation evaluation = grid.Evaluate(incoming, anchor);
+                DeploymentEvaluation evaluation = grid.Evaluate(incoming, spawn.Anchor);
                 Assert.That(evaluation.IsValid, Is.True, $"{lineup.Id}: {evaluation.Message}");
                 Assert.That(evaluation.Action, Is.EqualTo(DeploymentActionKind.Place), lineup.Id);
-                grid.Apply(incoming, anchor);
+                grid.Apply(incoming, spawn.Anchor);
                 occupiedCells += footprint.OccupiedCellCount;
             }
 
-            Assert.That(occupiedCells, Is.EqualTo(columns * level.InitialUnlock.Height), lineup.Id);
+            Assert.That(occupiedCells, Is.LessThanOrEqualTo(cells.Count), lineup.Id);
         }
 
         private static void SetCurve(StatCurve curve, float value)
@@ -543,6 +765,60 @@ namespace HanziDefend.Tests.EditMode
                 battle.BossHp.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
                 entities,
                 coins);
+        }
+
+        private sealed class RecordingDeploymentEvents : IBattleEncounterEvents, IBattleDeploymentEvents
+        {
+            internal List<string> EntryOrder { get; } = new List<string>();
+
+            internal Dictionary<string, double> EntrySeconds { get; } =
+                new Dictionary<string, double>(StringComparer.Ordinal);
+
+            public void AllyDeploymentQueued(AllyDeploymentQueuedEvent eventData)
+            {
+            }
+
+            public void AllyDeploymentEntered(AllyDeploymentEnteredEvent eventData)
+            {
+                EntryOrder.Add(eventData.DefinitionId);
+                EntrySeconds[eventData.DefinitionId] = eventData.SimulatedTimeSeconds;
+            }
+
+            public void UnitSpawned(UnitSpawnedEvent eventData)
+            {
+            }
+
+            public void UnitAttacked(UnitAttackedEvent eventData)
+            {
+            }
+
+            public void DamageDealt(DamageDealtEvent eventData)
+            {
+            }
+
+            public void UnitDied(UnitDiedEvent eventData)
+            {
+            }
+
+            public void CoinDropped(CoinDroppedEvent eventData)
+            {
+            }
+
+            public void WaveStarted(WaveStartedEvent eventData)
+            {
+            }
+
+            public void BossSpawned(BossSpawnedEvent eventData)
+            {
+            }
+
+            public void BaseDamaged(BaseDamagedEvent eventData)
+            {
+            }
+
+            public void BattleSettled(BattleSettledEvent eventData)
+            {
+            }
         }
     }
 }

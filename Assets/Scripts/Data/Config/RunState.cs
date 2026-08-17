@@ -25,7 +25,15 @@ namespace HanziDefend.Data
 
         public string[] OwnedEffects { get; set; } = Array.Empty<string>();
 
+        /// <summary>
+        /// Paid refreshes taken in the <b>current minor stage</b>. WO-F1 §D reset it per stage:
+        /// while it accumulated across the whole run the price ran 15/20/25/30… into stage 5, so the
+        /// later stages — the ones with the most grid to fill — could afford the fewest hands.
+        /// </summary>
         public int RefreshCount { get; set; }
+
+        /// <summary>Free hands already taken this minor stage; the curve in economy.json caps it.</summary>
+        public int FreeOffersUsed { get; set; }
 
         public int StageIndex { get; set; }
 

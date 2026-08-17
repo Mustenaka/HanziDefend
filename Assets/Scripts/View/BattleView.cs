@@ -124,9 +124,21 @@ namespace HanziDefend.View
     /// interpolation and transient visual timing only; combat authority remains in BattleSystem.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class BattleView : MonoBehaviour, IBattleEncounterEvents, IBattleEffectEvents
+    public sealed class BattleView : MonoBehaviour, IBattleEncounterEvents, IBattleEffectEvents,
+        IBattleDeploymentEvents
     {
         public const float GridCellWorldSize = 0.72f;
+
+        /// <summary>
+        /// How large a not-yet-arrived ally is drawn, relative to its real size.
+        ///
+        /// <para>WO-F1 §B holds most of a lineup off the field behind its entry cooldown, and a
+        /// deployed cell that shows nothing at all reads as "my unit did not work" rather than
+        /// "my unit is on its way". A shrunken copy of the unit's own artwork says "coming" using
+        /// only the rendering path that already exists — a placeholder in the literal sense, for
+        /// WO-C10/C11 to replace with real art.</para>
+        /// </summary>
+        public const float PendingDeploymentScale = 0.45f;
         public const float HealthBarVisibleSeconds = 2f;
         public const float BattlefieldWidth = 8.8f;
         public const float BattlefieldHeight = 16.4f;
@@ -485,6 +497,40 @@ namespace HanziDefend.View
             {
                 HudState.deployedUnitIds.Add(eventData.DefinitionId);
             }
+        }
+
+        /// <summary>
+        /// Shows the marker for an ally that is deployed but has not walked on yet. Pending markers
+        /// are keyed by the negation of their ticket so they cannot collide with a battle entity id,
+        /// which always counts up from one.
+        /// </summary>
+        public void AllyDeploymentQueued(AllyDeploymentQueuedEvent eventData)
+        {
+            Vector2 size = ResolveDisplaySize(eventData.DefinitionId) * PendingDeploymentScale;
+            Sprite sprite = ResolveUnitSprite(eventData.DefinitionId, BattleTeam.Ally);
+            Rent(
+                PendingVisualKey(eventData.Ticket),
+                eventData.DefinitionId,
+                BattleTeam.Ally,
+                sprite,
+                size,
+                eventData.Position,
+                1f,
+                1f,
+                false);
+        }
+
+        public void AllyDeploymentEntered(AllyDeploymentEnteredEvent eventData)
+        {
+            if (visuals.TryGetValue(PendingVisualKey(eventData.Ticket), out EntityVisual marker))
+            {
+                Recycle(marker);
+            }
+        }
+
+        private static int PendingVisualKey(int ticket)
+        {
+            return -ticket;
         }
 
         public void UnitAttacked(UnitAttackedEvent eventData)

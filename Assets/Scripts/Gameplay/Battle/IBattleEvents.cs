@@ -499,6 +499,109 @@ namespace HanziDefend.Gameplay.Battle
         void BattleSettled(BattleSettledEvent eventData);
     }
 
+    /// <summary>
+    /// A deployed ally that has not entered the field yet (WO-F1 §B). The grid cell is paid for and
+    /// committed at t=0, but a Delayed unit only walks on after its own <c>cooldown</c> seconds, so
+    /// something has to tell the player "this one is still coming" rather than "this one failed".
+    /// </summary>
+    public readonly struct AllyDeploymentQueuedEvent
+    {
+        public AllyDeploymentQueuedEvent(
+            long sequence,
+            long tickIndex,
+            double simulatedTimeSeconds,
+            int ticket,
+            string definitionId,
+            int level,
+            Vector2 position,
+            float delaySeconds,
+            double entryTimeSeconds)
+        {
+            Sequence = sequence;
+            TickIndex = tickIndex;
+            SimulatedTimeSeconds = simulatedTimeSeconds;
+            Ticket = ticket;
+            DefinitionId = definitionId;
+            Level = level;
+            Position = position;
+            DelaySeconds = delaySeconds;
+            EntryTimeSeconds = entryTimeSeconds;
+        }
+
+        public long Sequence { get; }
+        public long TickIndex { get; }
+        public double SimulatedTimeSeconds { get; }
+
+        /// <summary>Run-local id of the pending slot; pairs a queued event with its entered event.</summary>
+        public int Ticket { get; }
+
+        public string DefinitionId { get; }
+        public int Level { get; }
+        public Vector2 Position { get; }
+        public float DelaySeconds { get; }
+        public double EntryTimeSeconds { get; }
+    }
+
+    /// <summary>A queued ally has walked on; the placeholder raised by its queued event is done.</summary>
+    public readonly struct AllyDeploymentEnteredEvent
+    {
+        public AllyDeploymentEnteredEvent(
+            long sequence,
+            long tickIndex,
+            double simulatedTimeSeconds,
+            int ticket,
+            int entityId,
+            string definitionId,
+            int level,
+            Vector2 position,
+            double scheduledEntryTimeSeconds)
+        {
+            Sequence = sequence;
+            TickIndex = tickIndex;
+            SimulatedTimeSeconds = simulatedTimeSeconds;
+            Ticket = ticket;
+            EntityId = entityId;
+            DefinitionId = definitionId;
+            Level = level;
+            Position = position;
+            ScheduledEntryTimeSeconds = scheduledEntryTimeSeconds;
+        }
+
+        public long Sequence { get; }
+        public long TickIndex { get; }
+        public double SimulatedTimeSeconds { get; }
+        public int Ticket { get; }
+        public int EntityId { get; }
+        public string DefinitionId { get; }
+        public int Level { get; }
+        public Vector2 Position { get; }
+        public double ScheduledEntryTimeSeconds { get; }
+    }
+
+    /// <summary>
+    /// Optional companion to <see cref="IBattleEvents"/>, discovered by cast the same way
+    /// <c>IBattleEffectEvents</c> is. Listeners that do not care about entry timing need no change.
+    /// </summary>
+    public interface IBattleDeploymentEvents
+    {
+        void AllyDeploymentQueued(AllyDeploymentQueuedEvent eventData);
+
+        void AllyDeploymentEntered(AllyDeploymentEnteredEvent eventData);
+    }
+
+    public sealed class NullBattleDeploymentEvents : IBattleDeploymentEvents
+    {
+        public static NullBattleDeploymentEvents Instance { get; } = new NullBattleDeploymentEvents();
+
+        public void AllyDeploymentQueued(AllyDeploymentQueuedEvent eventData)
+        {
+        }
+
+        public void AllyDeploymentEntered(AllyDeploymentEnteredEvent eventData)
+        {
+        }
+    }
+
     public sealed class NullBattleEvents : IBattleEncounterEvents
     {
         public static NullBattleEvents Instance { get; } = new NullBattleEvents();

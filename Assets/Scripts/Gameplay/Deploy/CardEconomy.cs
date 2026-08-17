@@ -82,7 +82,6 @@ namespace HanziDefend.Gameplay.Deploy
         private readonly GameConfig config;
         private readonly DeploymentGridOrientation orientation;
         private LevelDef level;
-        private bool freeOfferDrawn;
         private ulong nextDeploymentSequence = 1;
 
         private CardEconomy(
@@ -109,7 +108,21 @@ namespace HanziDefend.Gameplay.Deploy
 
         public RngStreams RandomStreams { get; private set; }
 
-        public int NextRefreshCost => Formula.RefreshCost(State.RefreshCount, config.Economy);
+        /// <summary>Free hands this minor stage still owes the player (WO-F1 §D).</summary>
+        public int FreeOffersRemaining => Math.Max(
+            0,
+            config.Economy.CardOffer.FreeOffersForStage(State.StageIndex) - State.FreeOffersUsed);
+
+        /// <summary>
+        /// Price of the next hand: zero while the stage's free deals last, then the coin curve.
+        ///
+        /// <para>Free deals ride the same button as paid refreshes on purpose. A separate "deal"
+        /// action would have to be added to the deployment screen and explained; a refresh that
+        /// happens to cost nothing for the first few presses needs neither.</para>
+        /// </summary>
+        public int NextRefreshCost => FreeOffersRemaining > 0
+            ? 0
+            : Formula.RefreshCost(State.RefreshCount, config.Economy);
 
         /// <summary>Coin price of the next bought unlock card; rises with every purchase this run.</summary>
         public int NextUnlockPurchaseCost =>
@@ -118,9 +131,9 @@ namespace HanziDefend.Gameplay.Deploy
         public bool CanPurchaseUnlockCard =>
             !Grid.IsFullyUnlocked && State.Coins >= NextUnlockPurchaseCost;
 
-        public bool CanDrawFreeOffer => !freeOfferDrawn && CurrentOffer == null;
+        public bool CanDrawFreeOffer => CurrentOffer == null && FreeOffersRemaining > 0;
 
-        public bool CanRefresh => freeOfferDrawn && CurrentOffer != null && State.Coins >= NextRefreshCost;
+        public bool CanRefresh => CurrentOffer != null && State.Coins >= NextRefreshCost;
 
         /// <summary>The currently usable hand. Null until the stage's one free offer is drawn.</summary>
         public CardOffer CurrentOffer { get; private set; }
@@ -184,11 +197,15 @@ namespace HanziDefend.Gameplay.Deploy
             return new EffectiveCardWeights(unit * scale, unlock * scale, buff * scale, global * scale);
         }
 
-        /// <summary>Draws an offer. Any data error leaves both RNG and guarantee state unchanged.</summary>
+        /// <summary>
+        /// Deals this minor stage's opening hand. Any data error leaves both RNG and guarantee state
+        /// unchanged. Further free hands come through <see cref="TryRefresh"/> at zero cost.
+        /// </summary>
         public CardOffer DrawOffer()
         {
-            if (freeOfferDrawn)
-                throw new InvalidOperationException("This minor stage's free offer has already been drawn; use TryRefresh.");
+            if (FreeOffersRemaining <= 0)
+                throw new InvalidOperationException(
+                    "This minor stage's free hands are all used; use TryRefresh.");
             if (CurrentOffer != null)
                 throw new InvalidOperationException("A current offer already exists; use TryRefresh to replace it.");
 
@@ -196,7 +213,7 @@ namespace HanziDefend.Gameplay.Deploy
             RngStreams temporaryStreams = CloneStreams(RandomStreams);
             CardOffer offer = BuildOffer(temporaryState, temporaryStreams);
             CommitDraw(temporaryState, temporaryStreams);
-            freeOfferDrawn = true;
+            State.FreeOffersUsed = checked(State.FreeOffersUsed + 1);
             CurrentOffer = offer;
             OfferDrawn?.Invoke(offer);
             HandChanged?.Invoke(CurrentOffer);
@@ -204,15 +221,21 @@ namespace HanziDefend.Gameplay.Deploy
         }
 
         /// <summary>
-        /// Charges the formula-derived refresh price and draws a new offer atomically. Insufficient
-        /// coins consume neither money, refresh count, guarantee state nor random state.
+        /// Replaces the whole hand: free while the stage's deal curve still owes one, then charged
+        /// at the formula price. Insufficient coins consume neither money, refresh count, guarantee
+        /// state nor random state.
+        ///
+        /// <para>A free deal advances <see cref="RunState.FreeOffersUsed"/> and leaves
+        /// <see cref="RunState.RefreshCount"/> alone, so the coin price only starts climbing once
+        /// the player is actually spending coins.</para>
         /// </summary>
         public bool TryRefresh(out CardOffer offer)
         {
-            if (!freeOfferDrawn || CurrentOffer == null)
+            if (CurrentOffer == null)
                 throw new InvalidOperationException("Draw the minor stage's free offer before refreshing.");
 
-            int cost = NextRefreshCost;
+            bool isFree = FreeOffersRemaining > 0;
+            int cost = isFree ? 0 : Formula.RefreshCost(State.RefreshCount, config.Economy);
             if (State.Coins < cost)
             {
                 offer = null;
@@ -223,10 +246,16 @@ namespace HanziDefend.Gameplay.Deploy
             RngStreams temporaryStreams = CloneStreams(RandomStreams);
             offer = BuildOffer(temporaryState, temporaryStreams);
 
-            int updatedCoins = State.Coins - cost;
-            int updatedRefreshCount = checked(State.RefreshCount + 1);
-            State.Coins = updatedCoins;
-            State.RefreshCount = updatedRefreshCount;
+            if (isFree)
+            {
+                State.FreeOffersUsed = checked(State.FreeOffersUsed + 1);
+            }
+            else
+            {
+                State.Coins = State.Coins - cost;
+                State.RefreshCount = checked(State.RefreshCount + 1);
+            }
+
             CommitDraw(temporaryState, temporaryStreams);
             CurrentOffer = offer;
             CoinsChanged?.Invoke(State.Coins);
@@ -242,7 +271,7 @@ namespace HanziDefend.Gameplay.Deploy
         /// </summary>
         public bool TryRewardedRefresh(out CardOffer offer)
         {
-            if (!freeOfferDrawn || CurrentOffer == null)
+            if (CurrentOffer == null)
                 throw new InvalidOperationException("Draw the minor stage's free offer before refreshing.");
 
             RunState temporaryState = CloneDrawState(State);
@@ -491,8 +520,11 @@ namespace HanziDefend.Gameplay.Deploy
             SnapshotToRunState();
             level = nextLevel;
             State.StageIndex = nextLevel.StageIndex;
+            // Both counters are per-minor-stage (WO-F1 §D): the new stage owes its own free hands,
+            // and its refresh price starts at the base cost rather than wherever the last one ended.
+            State.FreeOffersUsed = 0;
+            State.RefreshCount = 0;
             CurrentOffer = null;
-            freeOfferDrawn = false;
             HandChanged?.Invoke(null);
         }
 
@@ -504,7 +536,6 @@ namespace HanziDefend.Gameplay.Deploy
             State = CreateFreshState(firstLevel, RandomStreams.MasterSeed);
             Grid = CreateGrid(config, firstLevel, State.UnlockedCells, orientation);
             CurrentOffer = null;
-            freeOfferDrawn = false;
             nextDeploymentSequence = 1;
             SnapshotToRunState();
             CoinsChanged?.Invoke(State.Coins);
@@ -788,6 +819,7 @@ namespace HanziDefend.Gameplay.Deploy
                 DeployedGrid = Array.Empty<DeployedUnitState>(),
                 OwnedEffects = Array.Empty<string>(),
                 RefreshCount = 0,
+                FreeOffersUsed = 0,
                 StageIndex = firstLevel.StageIndex,
                 GridWidth = firstLevel.GridWidth,
                 GridHeight = firstLevel.GridHeight,

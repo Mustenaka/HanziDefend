@@ -118,6 +118,14 @@ namespace HanziDefend.Gameplay.Battle
                 ResolveEffectTargets(op, context, effectTargets);
                 operations++;
 
+                if (context.RestrictToEntityId.HasValue
+                    && (op.Op == EffectOpCode.SpawnUnit || op.Op == EffectOpCode.ModifyCoins))
+                {
+                    // A single-unit replay inherits per-unit auras, never one-shot global payouts:
+                    // a late arrival must not re-summon reinforcements or re-pay a coin reward.
+                    continue;
+                }
+
                 if (op.Op == EffectOpCode.SpawnUnit)
                 {
                     for (int ordinal = 0; ordinal < op.Count; ordinal++)
@@ -211,6 +219,22 @@ namespace HanziDefend.Gameplay.Battle
                     break;
                 default:
                     throw new InvalidOperationException($"Unsupported effect target {op.Target}.");
+            }
+
+            if (context.RestrictToEntityId.HasValue)
+            {
+                RestrictTargets(output, context.RestrictToEntityId.Value);
+            }
+        }
+
+        private static void RestrictTargets(List<TargetRef> output, int entityId)
+        {
+            for (int index = output.Count - 1; index >= 0; index--)
+            {
+                if (output[index].EntityId != entityId)
+                {
+                    output.RemoveAt(index);
+                }
             }
         }
 

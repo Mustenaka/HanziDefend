@@ -22,22 +22,7 @@
           "index": 2,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.81,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 3,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.81,
+          "delaySec": 3.48,
           "spawns": [
             {
               "unitId": "zu",
@@ -49,10 +34,25 @@
           ]
         },
         {
+          "index": 3,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 3.48,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
           "index": 4,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.81,
+          "delaySec": 3.48,
           "spawns": [
             {
               "unitId": "zu",
@@ -67,13 +67,13 @@
           "index": 5,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.81,
+          "delaySec": 3.47,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "zu",
               "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
+              "count": 3,
+              "spreadX": 2.6,
               "intervalSec": 0.55
             }
           ]
@@ -82,12 +82,12 @@
           "index": 6,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.81,
+          "delaySec": 3.48,
           "spawns": [
             {
               "unitId": "zu",
               "level": 1,
-              "count": 3,
+              "count": 2,
               "spreadX": 2.6,
               "intervalSec": 0.55
             }
@@ -97,13 +97,13 @@
           "index": 7,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.48,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
+              "count": 4,
+              "spreadX": 2.1,
               "intervalSec": 0.55
             }
           ]
@@ -112,67 +112,7 @@
           "index": 8,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.81,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 9,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.81,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 10,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.81,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 11,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.81,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 12,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.81,
+          "delaySec": 3.48,
           "spawns": [
             {
               "unitId": "e_lang",
@@ -184,7 +124,7 @@
           ]
         },
         {
-          "index": 13,
+          "index": 9,
           "act": 2,
           "rewardRank": "Normal",
           "delaySec": 7.1,
@@ -199,10 +139,10 @@
           ]
         },
         {
-          "index": 14,
+          "index": 10,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.37,
+          "delaySec": 3.15,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -214,25 +154,10 @@
           ]
         },
         {
-          "index": 15,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.38,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 16,
+          "index": 11,
           "act": 2,
           "rewardRank": "Elite",
-          "delaySec": 3.37,
+          "delaySec": 3.16,
           "spawns": [
             {
               "unitId": "tie",
@@ -244,15 +169,90 @@
           ]
         },
         {
-          "index": 17,
+          "index": 12,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.37,
+          "delaySec": 3.15,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.6,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.16,
           "spawns": [
             {
               "unitId": "e_liu",
               "level": 1,
-              "count": 3,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.15,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.6,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.16,
+          "spawns": [
+            {
+              "unitId": "e_shan",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 16,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.15,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.6,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 17,
+          "act": 2,
+          "rewardRank": "Elite",
+          "delaySec": 3.16,
+          "spawns": [
+            {
+              "unitId": "zqi",
+              "level": 1,
+              "count": 1,
               "spreadX": 2.1,
               "intervalSec": 0.45
             }
@@ -262,13 +262,13 @@
           "index": 18,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.37,
+          "delaySec": 3.15,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 2,
-              "spreadX": 2.6,
+              "spreadX": 2.1,
               "intervalSec": 0.45
             }
           ]
@@ -277,82 +277,7 @@
           "index": 19,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.38,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 20,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.37,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 21,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.37,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 22,
-          "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 3.37,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 23,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.38,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 24,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.37,
+          "delaySec": 3.16,
           "spawns": [
             {
               "unitId": "e_lang",
@@ -364,7 +289,7 @@
           ]
         },
         {
-          "index": 25,
+          "index": 20,
           "act": 3,
           "rewardRank": "Boss",
           "delaySec": 6.45,
@@ -379,10 +304,10 @@
           ]
         },
         {
-          "index": 26,
+          "index": 21,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 3.48,
+          "delaySec": 3.75,
           "spawns": [
             {
               "unitId": "zu",
@@ -394,10 +319,10 @@
           ]
         },
         {
-          "index": 27,
+          "index": 22,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 3.47,
+          "delaySec": 3.74,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -409,13 +334,88 @@
           ]
         },
         {
-          "index": 28,
+          "index": 23,
           "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 3.48,
+          "delaySec": 3.75,
           "spawns": [
             {
               "unitId": "tie",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 24,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.74,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 25,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.75,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 26,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.74,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 27,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.75,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 28,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.74,
+          "spawns": [
+            {
+              "unitId": "e_shan",
               "level": 1,
               "count": 2,
               "spreadX": 2.1,
@@ -426,14 +426,14 @@
         {
           "index": 29,
           "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 3.48,
+          "rewardRank": "Elite",
+          "delaySec": 3.75,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "zqi",
               "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
+              "count": 3,
+              "spreadX": 2.1,
               "intervalSec": 0.4
             }
           ]
@@ -442,13 +442,13 @@
           "index": 30,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 3.47,
+          "delaySec": 3.74,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
+              "count": 1,
+              "spreadX": 2.6,
               "intervalSec": 0.4
             }
           ]
@@ -456,119 +456,14 @@
         {
           "index": 31,
           "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 3.48,
-          "spawns": [
-            {
-              "unitId": "tie",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 32,
-          "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 3.48,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 33,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 3.48,
+          "delaySec": 3.75,
           "spawns": [
             {
               "unitId": "e_shan",
               "level": 1,
               "count": 2,
               "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 34,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 3.47,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 35,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 3.48,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 36,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 3.48,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 37,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 3.47,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 38,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 3.48,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
               "intervalSec": 0.4
             }
           ]
@@ -597,7 +492,7 @@
           "index": 2,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.29,
+          "delaySec": 2.21,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -612,7 +507,7 @@
           "index": 3,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.29,
+          "delaySec": 2.22,
           "spawns": [
             {
               "unitId": "zu",
@@ -627,7 +522,7 @@
           "index": 4,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.3,
+          "delaySec": 2.21,
           "spawns": [
             {
               "unitId": "zu",
@@ -642,7 +537,22 @@
           "index": 5,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.29,
+          "delaySec": 2.21,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.22,
           "spawns": [
             {
               "unitId": "zu",
@@ -654,25 +564,10 @@
           ]
         },
         {
-          "index": 6,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.29,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
           "index": 7,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.29,
+          "delaySec": 2.21,
           "spawns": [
             {
               "unitId": "zu",
@@ -687,22 +582,7 @@
           "index": 8,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.3,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 9,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.29,
+          "delaySec": 2.22,
           "spawns": [
             {
               "unitId": "e_shan",
@@ -714,25 +594,10 @@
           ]
         },
         {
-          "index": 10,
+          "index": 9,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.29,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 11,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.29,
+          "delaySec": 2.21,
           "spawns": [
             {
               "unitId": "zu",
@@ -744,15 +609,45 @@
           ]
         },
         {
-          "index": 12,
+          "index": 10,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.3,
+          "delaySec": 2.21,
           "spawns": [
             {
               "unitId": "e_lang",
               "level": 1,
               "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.22,
+          "spawns": [
+            {
+              "unitId": "e_shan",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.21,
+          "spawns": [
+            {
+              "unitId": "e_lang",
+              "level": 1,
+              "count": 2,
               "spreadX": 2.6,
               "intervalSec": 0.55
             }
@@ -760,39 +655,9 @@
         },
         {
           "index": 13,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.29,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 14,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.29,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 15,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 7.65,
+          "delaySec": 6.55,
           "spawns": [
             {
               "unitId": "zu",
@@ -804,10 +669,10 @@
           ]
         },
         {
-          "index": 16,
+          "index": 14,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.41,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -819,15 +684,45 @@
           ]
         },
         {
-          "index": 17,
+          "index": 15,
           "act": 2,
           "rewardRank": "Elite",
-          "delaySec": 3.62,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "tie",
               "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 16,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.41,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
               "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 17,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 3,
               "spreadX": 2.1,
               "intervalSec": 0.45
             }
@@ -837,7 +732,7 @@
           "index": 18,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.41,
           "spawns": [
             {
               "unitId": "zu",
@@ -852,12 +747,12 @@
           "index": 19,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_shan",
               "level": 1,
-              "count": 5,
+              "count": 4,
               "spreadX": 2.1,
               "intervalSec": 0.45
             }
@@ -866,14 +761,14 @@
         {
           "index": 20,
           "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "rewardRank": "Elite",
+          "delaySec": 3.41,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "zqi",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
+              "count": 2,
+              "spreadX": 2.1,
               "intervalSec": 0.45
             }
           ]
@@ -882,13 +777,13 @@
           "index": 21,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
+              "count": 3,
+              "spreadX": 2.6,
               "intervalSec": 0.45
             }
           ]
@@ -897,25 +792,10 @@
           "index": 22,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.41,
           "spawns": [
             {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 23,
-          "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "zqi",
+              "unitId": "e_shan",
               "level": 1,
               "count": 3,
               "spreadX": 2.1,
@@ -924,40 +804,10 @@
           ]
         },
         {
-          "index": 24,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 25,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 26,
+          "index": 23,
           "act": 3,
           "rewardRank": "Boss",
-          "delaySec": 7.35,
+          "delaySec": 6.9,
           "spawns": [
             {
               "unitId": "bld_cheng",
@@ -969,10 +819,55 @@
           ]
         },
         {
+          "index": 24,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 25,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 26,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
           "index": 27,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "zu",
@@ -987,12 +882,12 @@
           "index": 28,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "e_liu",
               "level": 1,
-              "count": 3,
+              "count": 4,
               "spreadX": 2.1,
               "intervalSec": 0.4
             }
@@ -1002,7 +897,7 @@
           "index": 29,
           "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "tie",
@@ -1017,12 +912,12 @@
           "index": 30,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "zu",
               "level": 1,
-              "count": 3,
+              "count": 4,
               "spreadX": 2.6,
               "intervalSec": 0.4
             }
@@ -1032,10 +927,10 @@
           "index": 31,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 3,
               "spreadX": 2.1,
@@ -1047,12 +942,12 @@
           "index": 32,
           "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "tie",
+              "unitId": "zqi",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.1,
               "intervalSec": 0.4
             }
@@ -1062,127 +957,7 @@
           "index": 33,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 34,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 35,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 36,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 37,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 38,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 39,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 40,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.8,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 41,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "e_lang",
@@ -1194,15 +969,30 @@
           ]
         },
         {
-          "index": 42,
+          "index": 34,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.8,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "e_shan",
               "level": 1,
-              "count": 2,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 35,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "zqi",
+              "level": 1,
+              "count": 3,
               "spreadX": 2.1,
               "intervalSec": 0.4
             }
@@ -1232,7 +1022,7 @@
           "index": 2,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "delaySec": 2.64,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -1247,7 +1037,7 @@
           "index": 3,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.49,
+          "delaySec": 2.65,
           "spawns": [
             {
               "unitId": "zu",
@@ -1262,7 +1052,7 @@
           "index": 4,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "delaySec": 2.64,
           "spawns": [
             {
               "unitId": "zu",
@@ -1277,22 +1067,7 @@
           "index": 5,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 6,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.49,
+          "delaySec": 2.65,
           "spawns": [
             {
               "unitId": "zu",
@@ -1304,10 +1079,25 @@
           ]
         },
         {
+          "index": 6,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.64,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
           "index": 7,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "delaySec": 2.65,
           "spawns": [
             {
               "unitId": "zu",
@@ -1322,10 +1112,10 @@
           "index": 8,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "delaySec": 2.64,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_lang",
               "level": 1,
               "count": 4,
               "spreadX": 2.6,
@@ -1337,12 +1127,12 @@
           "index": 9,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.49,
+          "delaySec": 2.65,
           "spawns": [
             {
               "unitId": "e_shan",
               "level": 1,
-              "count": 4,
+              "count": 5,
               "spreadX": 2.1,
               "intervalSec": 0.55
             }
@@ -1352,12 +1142,12 @@
           "index": 10,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "delaySec": 2.64,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.6,
               "intervalSec": 0.55
             }
@@ -1365,46 +1155,46 @@
         },
         {
           "index": 11,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "delaySec": 7.1,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "zu",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.6,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 12,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 2.49,
+          "delaySec": 3.06,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "e_liu",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.1,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 13,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 2.48,
+          "act": 2,
+          "rewardRank": "Elite",
+          "delaySec": 3.07,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "tie",
               "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
             }
           ]
         },
@@ -1412,12 +1202,12 @@
           "index": 14,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 8.2,
+          "delaySec": 3.06,
           "spawns": [
             {
               "unitId": "zu",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.6,
               "intervalSec": 0.45
             }
@@ -1427,7 +1217,7 @@
           "index": 15,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.07,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -1441,14 +1231,14 @@
         {
           "index": 16,
           "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 3.62,
+          "rewardRank": "Normal",
+          "delaySec": 3.06,
           "spawns": [
             {
-              "unitId": "tie",
+              "unitId": "zu",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
+              "count": 3,
+              "spreadX": 2.6,
               "intervalSec": 0.45
             }
           ]
@@ -1457,13 +1247,13 @@
           "index": 17,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.07,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
+              "count": 3,
+              "spreadX": 2.1,
               "intervalSec": 0.45
             }
           ]
@@ -1472,52 +1262,7 @@
           "index": 18,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 19,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 20,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 21,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.07,
           "spawns": [
             {
               "unitId": "zu",
@@ -1529,13 +1274,28 @@
           ]
         },
         {
-          "index": 22,
+          "index": 19,
           "act": 2,
           "rewardRank": "Elite",
-          "delaySec": 3.62,
+          "delaySec": 3.06,
           "spawns": [
             {
               "unitId": "zqi",
+              "level": 1,
+              "count": 2,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
+            }
+          ]
+        },
+        {
+          "index": 20,
+          "act": 2,
+          "rewardRank": "Normal",
+          "delaySec": 3.07,
+          "spawns": [
+            {
+              "unitId": "e_shan",
               "level": 1,
               "count": 3,
               "spreadX": 2.1,
@@ -1544,40 +1304,25 @@
           ]
         },
         {
-          "index": 23,
+          "index": 21,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.62,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 24,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.62,
+          "delaySec": 3.06,
           "spawns": [
             {
               "unitId": "e_lang",
               "level": 1,
-              "count": 5,
+              "count": 3,
               "spreadX": 2.6,
               "intervalSec": 0.45
             }
           ]
         },
         {
-          "index": 25,
+          "index": 22,
           "act": 3,
           "rewardRank": "Boss",
-          "delaySec": 7.8,
+          "delaySec": 6.9,
           "spawns": [
             {
               "unitId": "bld_cheng",
@@ -1589,25 +1334,10 @@
           ]
         },
         {
-          "index": 26,
+          "index": 23,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.99,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 27,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.98,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "zu",
@@ -1619,10 +1349,70 @@
           ]
         },
         {
+          "index": 24,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 25,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 26,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 27,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.4,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
           "index": 28,
           "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.99,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "tie",
@@ -1637,13 +1427,13 @@
           "index": 29,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.99,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "zu",
               "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
+              "count": 4,
+              "spreadX": 2.6,
               "intervalSec": 0.4
             }
           ]
@@ -1652,13 +1442,13 @@
           "index": 30,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.98,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 3,
-              "spreadX": 2.6,
+              "spreadX": 2.1,
               "intervalSec": 0.4
             }
           ]
@@ -1667,12 +1457,12 @@
           "index": 31,
           "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.99,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "tie",
+              "unitId": "zqi",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.1,
               "intervalSec": 0.4
             }
@@ -1682,13 +1472,13 @@
           "index": 32,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.99,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
+              "count": 3,
+              "spreadX": 2.6,
               "intervalSec": 0.4
             }
           ]
@@ -1697,13 +1487,13 @@
           "index": 33,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.98,
+          "delaySec": 3.4,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 3,
-              "spreadX": 2.6,
+              "spreadX": 2.1,
               "intervalSec": 0.4
             }
           ]
@@ -1711,101 +1501,11 @@
         {
           "index": 34,
           "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.99,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 35,
-          "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.99,
+          "delaySec": 3.4,
           "spawns": [
             {
               "unitId": "zqi",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 36,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.98,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 37,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.99,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 38,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.99,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 39,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.98,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 40,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.99,
-          "spawns": [
-            {
-              "unitId": "e_shan",
               "level": 1,
               "count": 2,
               "spreadX": 2.1,
@@ -1837,7 +1537,7 @@
           "index": 2,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -1852,7 +1552,7 @@
           "index": 3,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "zu",
@@ -1867,7 +1567,7 @@
           "index": 4,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "zu",
@@ -1882,12 +1582,12 @@
           "index": 5,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_liu",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.1,
               "intervalSec": 0.55
             }
@@ -1897,7 +1597,7 @@
           "index": 6,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "zu",
@@ -1912,7 +1612,7 @@
           "index": 7,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 2.02,
           "spawns": [
             {
               "unitId": "zu",
@@ -1927,13 +1627,13 @@
           "index": 8,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 2.03,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "zu",
               "level": 1,
               "count": 2,
-              "spreadX": 2.1,
+              "spreadX": 2.6,
               "intervalSec": 0.55
             }
           ]
@@ -1942,13 +1642,13 @@
           "index": 9,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 2.03,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 4,
-              "spreadX": 2.6,
+              "spreadX": 2.1,
               "intervalSec": 0.55
             }
           ]
@@ -1957,10 +1657,10 @@
           "index": 10,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 2.03,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_lang",
               "level": 1,
               "count": 4,
               "spreadX": 2.6,
@@ -1972,13 +1672,13 @@
           "index": 11,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 2.03,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "e_lang",
               "level": 1,
               "count": 4,
-              "spreadX": 2.1,
+              "spreadX": 2.6,
               "intervalSec": 0.55
             }
           ]
@@ -1987,13 +1687,13 @@
           "index": 12,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 2.03,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
+              "count": 3,
+              "spreadX": 2.1,
               "intervalSec": 0.55
             }
           ]
@@ -2002,12 +1702,12 @@
           "index": 13,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_lang",
               "level": 1,
-              "count": 4,
+              "count": 2,
               "spreadX": 2.6,
               "intervalSec": 0.55
             }
@@ -2015,76 +1715,76 @@
         },
         {
           "index": 14,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 6.55,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "zu",
               "level": 1,
               "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
+              "spreadX": 2.6,
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 15,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 3.36,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "e_liu",
               "level": 1,
               "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
+              "spreadX": 2.1,
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 16,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "act": 2,
+          "rewardRank": "Elite",
+          "delaySec": 3.35,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "tie",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 17,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.78,
+          "delaySec": 3.36,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "zu",
               "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.55
+              "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 18,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.79,
+          "delaySec": 3.35,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "e_liu",
               "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.45
             }
           ]
         },
@@ -2092,7 +1792,7 @@
           "index": 19,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 6.55,
+          "delaySec": 3.36,
           "spawns": [
             {
               "unitId": "zu",
@@ -2107,12 +1807,12 @@
           "index": 20,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.25,
+          "delaySec": 3.35,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_shan",
               "level": 1,
-              "count": 5,
+              "count": 4,
               "spreadX": 2.1,
               "intervalSec": 0.45
             }
@@ -2121,14 +1821,14 @@
         {
           "index": 21,
           "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
+          "rewardRank": "Elite",
+          "delaySec": 3.36,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "zqi",
               "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
+              "count": 3,
+              "spreadX": 2.1,
               "intervalSec": 0.45
             }
           ]
@@ -2136,14 +1836,14 @@
         {
           "index": 22,
           "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 3.25,
+          "rewardRank": "Normal",
+          "delaySec": 3.35,
           "spawns": [
             {
-              "unitId": "tie",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
+              "count": 5,
+              "spreadX": 2.6,
               "intervalSec": 0.45
             }
           ]
@@ -2152,85 +1852,10 @@
           "index": 23,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 6,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 24,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 25,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 26,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
+          "delaySec": 3.36,
           "spawns": [
             {
               "unitId": "e_shan",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 27,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 28,
-          "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "zqi",
               "level": 1,
               "count": 4,
               "spreadX": 2.1,
@@ -2239,40 +1864,10 @@
           ]
         },
         {
-          "index": 29,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 6,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 30,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 3.25,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 31,
+          "index": 24,
           "act": 3,
           "rewardRank": "Boss",
-          "delaySec": 6.9,
+          "delaySec": 7.35,
           "spawns": [
             {
               "unitId": "bld_cheng",
@@ -2284,10 +1879,10 @@
           ]
         },
         {
-          "index": 32,
+          "index": 25,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.78,
+          "delaySec": 3.37,
           "spawns": [
             {
               "unitId": "zu",
@@ -2299,13 +1894,118 @@
           ]
         },
         {
-          "index": 33,
+          "index": 26,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.77,
+          "delaySec": 3.36,
           "spawns": [
             {
               "unitId": "e_liu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 27,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.37,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 28,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.37,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 29,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.36,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 30,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.37,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 31,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.37,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 32,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.36,
+          "spawns": [
+            {
+              "unitId": "e_shan",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 33,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.37,
+          "spawns": [
+            {
+              "unitId": "zqi",
               "level": 1,
               "count": 4,
               "spreadX": 2.1,
@@ -2316,14 +2016,14 @@
         {
           "index": 34,
           "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.78,
+          "rewardRank": "Normal",
+          "delaySec": 3.37,
           "spawns": [
             {
-              "unitId": "tie",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
+              "count": 5,
+              "spreadX": 2.6,
               "intervalSec": 0.4
             }
           ]
@@ -2332,13 +2032,13 @@
           "index": 35,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.77,
+          "delaySec": 3.36,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 4,
-              "spreadX": 2.6,
+              "spreadX": 2.1,
               "intervalSec": 0.4
             }
           ]
@@ -2346,176 +2046,11 @@
         {
           "index": 36,
           "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 37,
-          "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.77,
-          "spawns": [
-            {
-              "unitId": "tie",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 38,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 39,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.77,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 40,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.77,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 41,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 42,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.77,
+          "delaySec": 3.37,
           "spawns": [
             {
               "unitId": "zqi",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 43,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 44,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.77,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 45,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 46,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.77,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 47,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_shan",
               "level": 1,
               "count": 2,
               "spreadX": 2.1,
@@ -2547,7 +2082,7 @@
           "index": 2,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -2562,7 +2097,7 @@
           "index": 3,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "zu",
@@ -2577,7 +2112,7 @@
           "index": 4,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "zu",
@@ -2592,7 +2127,7 @@
           "index": 5,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_liu",
@@ -2607,7 +2142,7 @@
           "index": 6,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "zu",
@@ -2622,7 +2157,7 @@
           "index": 7,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "delaySec": 2.02,
           "spawns": [
             {
               "unitId": "zu",
@@ -2637,13 +2172,13 @@
           "index": 8,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 2.03,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "zu",
               "level": 1,
               "count": 3,
-              "spreadX": 2.1,
+              "spreadX": 2.6,
               "intervalSec": 0.55
             }
           ]
@@ -2652,52 +2187,7 @@
           "index": 9,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.65,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 10,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 1.66,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 11,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 1.66,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
-            }
-          ]
-        },
-        {
-          "index": 12,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_shan",
@@ -2709,10 +2199,55 @@
           ]
         },
         {
+          "index": 10,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.03,
+          "spawns": [
+            {
+              "unitId": "e_lang",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.03,
+          "spawns": [
+            {
+              "unitId": "e_lang",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "act": 1,
+          "rewardRank": "Normal",
+          "delaySec": 2.03,
+          "spawns": [
+            {
+              "unitId": "e_shan",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.1,
+              "intervalSec": 0.55
+            }
+          ]
+        },
+        {
           "index": 13,
           "act": 1,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 2.03,
           "spawns": [
             {
               "unitId": "e_lang",
@@ -2725,91 +2260,91 @@
         },
         {
           "index": 14,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "delaySec": 7.65,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "zu",
               "level": 1,
               "count": 4,
               "spreadX": 2.6,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 15,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "e_liu",
               "level": 1,
               "count": 4,
               "spreadX": 2.1,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 16,
-          "act": 1,
-          "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "act": 2,
+          "rewardRank": "Elite",
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "tie",
               "level": 1,
               "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.55
+              "spreadX": 2.1,
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 17,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "zu",
               "level": 1,
               "count": 4,
               "spreadX": 2.6,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 18,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.65,
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "e_shan",
+              "unitId": "e_liu",
               "level": 1,
-              "count": 3,
+              "count": 5,
               "spreadX": 2.1,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
         {
           "index": 19,
-          "act": 1,
+          "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 1.66,
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "e_lang",
+              "unitId": "zu",
               "level": 1,
-              "count": 2,
+              "count": 4,
               "spreadX": 2.6,
-              "intervalSec": 0.55
+              "intervalSec": 0.45
             }
           ]
         },
@@ -2817,13 +2352,13 @@
           "index": 20,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 6.55,
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "e_shan",
               "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
+              "count": 4,
+              "spreadX": 2.1,
               "intervalSec": 0.45
             }
           ]
@@ -2832,13 +2367,13 @@
           "index": 21,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 2.78,
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_lang",
               "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
+              "count": 4,
+              "spreadX": 2.6,
               "intervalSec": 0.45
             }
           ]
@@ -2846,14 +2381,14 @@
         {
           "index": 22,
           "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.79,
+          "rewardRank": "Elite",
+          "delaySec": 3.02,
           "spawns": [
             {
-              "unitId": "zu",
+              "unitId": "zqi",
               "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
+              "count": 3,
+              "spreadX": 2.1,
               "intervalSec": 0.45
             }
           ]
@@ -2862,130 +2397,10 @@
           "index": 23,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 24,
-          "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 2.79,
-          "spawns": [
-            {
-              "unitId": "tie",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 25,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 26,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.79,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 27,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 28,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.79,
+          "delaySec": 3.02,
           "spawns": [
             {
               "unitId": "e_shan",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 29,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.6,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 30,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.79,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 31,
-          "act": 2,
-          "rewardRank": "Elite",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "zqi",
               "level": 1,
               "count": 4,
               "spreadX": 2.1,
@@ -2994,40 +2409,25 @@
           ]
         },
         {
-          "index": 32,
+          "index": 24,
           "act": 2,
           "rewardRank": "Normal",
-          "delaySec": 2.79,
+          "delaySec": 3.02,
           "spawns": [
             {
               "unitId": "e_lang",
               "level": 1,
-              "count": 5,
+              "count": 3,
               "spreadX": 2.6,
               "intervalSec": 0.45
             }
           ]
         },
         {
-          "index": 33,
-          "act": 2,
-          "rewardRank": "Normal",
-          "delaySec": 2.78,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.45
-            }
-          ]
-        },
-        {
-          "index": 34,
+          "index": 25,
           "act": 3,
           "rewardRank": "Boss",
-          "delaySec": 6.45,
+          "delaySec": 6.9,
           "spawns": [
             {
               "unitId": "bld_cheng",
@@ -3039,13 +2439,148 @@
           ]
         },
         {
-          "index": 35,
+          "index": 26,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.61,
+          "delaySec": 3.11,
           "spawns": [
             {
               "unitId": "zu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 27,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 28,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.1,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 29,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 30,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "e_liu",
+              "level": 1,
+              "count": 5,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 31,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "tie",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 32,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.1,
+          "spawns": [
+            {
+              "unitId": "zu",
+              "level": 1,
+              "count": 3,
+              "spreadX": 2.6,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 33,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "e_shan",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 34,
+          "act": 3,
+          "rewardRank": "Elite",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "zqi",
+              "level": 1,
+              "count": 4,
+              "spreadX": 2.1,
+              "intervalSec": 0.4
+            }
+          ]
+        },
+        {
+          "index": 35,
+          "act": 3,
+          "rewardRank": "Normal",
+          "delaySec": 3.11,
+          "spawns": [
+            {
+              "unitId": "e_lang",
               "level": 1,
               "count": 4,
               "spreadX": 2.6,
@@ -3057,10 +2592,10 @@
           "index": 36,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.61,
+          "delaySec": 3.1,
           "spawns": [
             {
-              "unitId": "e_liu",
+              "unitId": "e_shan",
               "level": 1,
               "count": 4,
               "spreadX": 2.1,
@@ -3072,12 +2607,12 @@
           "index": 37,
           "act": 3,
           "rewardRank": "Elite",
-          "delaySec": 2.62,
+          "delaySec": 3.11,
           "spawns": [
             {
-              "unitId": "tie",
+              "unitId": "zqi",
               "level": 1,
-              "count": 4,
+              "count": 3,
               "spreadX": 2.1,
               "intervalSec": 0.4
             }
@@ -3087,208 +2622,13 @@
           "index": 38,
           "act": 3,
           "rewardRank": "Normal",
-          "delaySec": 2.61,
+          "delaySec": 3.11,
           "spawns": [
             {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 39,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 40,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "tie",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 41,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 42,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_liu",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 43,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.62,
-          "spawns": [
-            {
-              "unitId": "tie",
+              "unitId": "e_lang",
               "level": 1,
               "count": 2,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 44,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "zu",
-              "level": 1,
-              "count": 3,
               "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 45,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 46,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 47,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 48,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 49,
-          "act": 3,
-          "rewardRank": "Elite",
-          "delaySec": 2.62,
-          "spawns": [
-            {
-              "unitId": "zqi",
-              "level": 1,
-              "count": 5,
-              "spreadX": 2.1,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 50,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_lang",
-              "level": 1,
-              "count": 4,
-              "spreadX": 2.6,
-              "intervalSec": 0.4
-            }
-          ]
-        },
-        {
-          "index": 51,
-          "act": 3,
-          "rewardRank": "Normal",
-          "delaySec": 2.61,
-          "spawns": [
-            {
-              "unitId": "e_shan",
-              "level": 1,
-              "count": 3,
-              "spreadX": 2.1,
               "intervalSec": 0.4
             }
           ]

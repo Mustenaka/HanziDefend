@@ -1,9 +1,9 @@
 {
-  "refreshBaseCost": 15,
-  "refreshCostGrowth": 5,
+  "refreshBaseCost": 40,
+  "refreshCostGrowth": 45,
   "gridUnlock": {
-    "purchaseBaseCost": 40,
-    "purchaseCostGrowth": 20,
+    "purchaseBaseCost": 260,
+    "purchaseCostGrowth": 130,
     "baseAnchorRowOffset": -1.0,
     "autoUnlockPerMinorStage": 1
   },
@@ -55,15 +55,16 @@
     ]
   },
   "cardWeights": {
-    "unit": 70,
-    "unlock": 15,
+    "unit": 81,
+    "unlock": 4,
     "buff": 12,
     "global": 3
   },
   "cardOffer": {
     "baseCount": 3,
     "luckyExtraCount": 1,
-    "luckyChance": 0.10
+    "luckyChance": 0.10,
+    "freeOffersPerMinorStage": [2, 3, 3, 4, 4]
   },
   "cardPool": {
     "shapeUnlocks": [
@@ -130,6 +131,7 @@
       "x": 1.2,
       "y": 0.85
     },
-    "deploymentSpreadWidth": 9.0
+    "deploymentSpreadWidth": 9.0,
+    "allyAdvanceLimitY": 2.0
   }
 }

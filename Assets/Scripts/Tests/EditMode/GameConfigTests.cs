@@ -62,25 +62,53 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(config.GetBoss("bld_cheng").DisplayName, Is.EqualTo("敌方城堡"));
             Assert.That(config.GetCommander("cmd_bei").DisplayName, Is.EqualTo("刘备"));
             Assert.That(config.GetCommander("cmd_lv").DisplayName, Is.EqualTo("吕布"));
-            Assert.That(config.GetWaveSet("main_20").Waves.Length, Is.EqualTo(20));
+            Assert.That(config.GetWaveSet("main_20").Waves, Is.Not.Empty);
             Assert.That(config.GetLevel("level_1_5").StageIndex, Is.EqualTo(5));
             Assert.That(config.GetEffect("cmd_bei_active").Ops[0].Op, Is.EqualTo(EffectOpCode.Heal));
         }
 
+        /// <summary>
+        /// WO-F1 replaced the flat twenty-wave list with three acts. What survives from the old
+        /// shape is that waves are ordered, every combatant is level 1, and exactly one wave carries
+        /// the castle — but that wave now opens act three instead of closing the battle.
+        /// </summary>
         [Test]
-        public void Load_DefaultSource_HasTwentyOrderedWavesAndBossFinale()
+        public void Load_DefaultSource_HasOrderedThreeActWavesAndOpensActThreeWithTheCastle()
         {
             WaveDef[] waves = GameConfig.Load().GetWaveSet("main_20").Waves;
 
-            Assert.That(waves.Length, Is.EqualTo(20));
-            Assert.That(waves.Select(value => value.Index).ToArray(), Is.EqualTo(Enumerable.Range(1, 20).ToArray()));
-            Assert.That(waves[19].Spawns.Length, Is.EqualTo(1));
-            Assert.That(waves[19].Spawns[0].UnitId, Is.EqualTo("bld_cheng"));
-            Assert.That(waves[19].Spawns[0].Count, Is.EqualTo(1));
-            Assert.That(waves.Take(18).All(value => value.RewardRank == EnemyRank.Normal), Is.True);
-            Assert.That(waves[18].RewardRank, Is.EqualTo(EnemyRank.Elite));
-            Assert.That(waves[19].RewardRank, Is.EqualTo(EnemyRank.Boss));
+            Assert.That(waves.Select(value => value.Index).ToArray(),
+                Is.EqualTo(Enumerable.Range(1, waves.Length).ToArray()));
+            Assert.That(waves.Select(value => value.Act),
+                Is.Ordered, "acts must run forward through the wave list");
+            Assert.That(waves.Select(value => value.Act).Distinct().OrderBy(value => value),
+                Is.EqualTo(new[] { WaveActs.First, WaveActs.Second, WaveActs.Third }));
+
+            WaveDef castle = waves.Single(value => value.RewardRank == EnemyRank.Boss);
+            Assert.That(castle.Act, Is.EqualTo(WaveActs.Third));
+            Assert.That(castle.Index,
+                Is.EqualTo(waves.Where(value => value.Act == WaveActs.Third).Min(value => value.Index)),
+                "the castle arrives with act three, not after it");
+            Assert.That(castle.Spawns.Single().UnitId, Is.EqualTo("bld_cheng"));
+            Assert.That(castle.Spawns.Single().Count, Is.EqualTo(1));
+
+            Assert.That(waves.Where(value => value.Act == WaveActs.First)
+                .All(value => value.RewardRank == EnemyRank.Normal), Is.True,
+                "act one has no heavy armour, so it has no elite squads");
+            Assert.That(waves.Any(value => value.RewardRank == EnemyRank.Elite), Is.True);
             Assert.That(waves.SelectMany(value => value.Spawns).All(value => value.Level == 1), Is.True);
+        }
+
+        [Test]
+        public void Load_WaveSetWithoutThreeActsIsRejected()
+        {
+            string waves = new JsonConfigSource().ReadText("waves.json");
+            string flattened = waves.Replace("\"act\": 3,", "\"act\": 2,");
+
+            ConfigLoadException exception = Assert.Throws<ConfigLoadException>(() => GameConfig.Load(
+                new OverrideSource(new JsonConfigSource(), "waves.json", flattened)));
+
+            Assert.That(exception.Message, Does.Contain("act 3"));
         }
 
         [Test]
@@ -143,8 +171,15 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(config.Economy.CardOffer.BaseCount, Is.EqualTo(3));
             Assert.That(config.Economy.CardOffer.LuckyExtraCount, Is.EqualTo(1));
             Assert.That(config.Economy.CardOffer.LuckyChance, Is.EqualTo(0.10f));
-            Assert.That(config.Economy.GridUnlock.PurchaseBaseCost, Is.EqualTo(40));
-            Assert.That(config.Economy.GridUnlock.PurchaseCostGrowth, Is.EqualTo(20));
+            // WO-F1 §D: a cleared battle now pays out 175-292 coins instead of ~46, so every price
+            // it feeds was re-derived against that income rather than left where WO-E1 put it.
+            Assert.That(config.Economy.GridUnlock.PurchaseBaseCost, Is.EqualTo(260));
+            Assert.That(config.Economy.GridUnlock.PurchaseCostGrowth, Is.EqualTo(130));
+            Assert.That(config.Economy.RefreshBaseCost, Is.EqualTo(40));
+            Assert.That(config.Economy.RefreshCostGrowth, Is.EqualTo(45));
+            Assert.That(config.Economy.CardOffer.FreeOffersPerMinorStage,
+                Is.EqualTo(new[] { 2, 3, 3, 4, 4 }),
+                "the preparation round count is an explicit rising curve, not a coin by-product");
             Assert.That(config.Economy.GridUnlock.BaseAnchorRowOffset, Is.EqualTo(-1f));
             Assert.That(config.Economy.GridUnlock.AutoUnlockPerMinorStage, Is.EqualTo(1));
             Assert.That(config.Economy.CardPool.BuffEffectIds,
@@ -203,22 +238,23 @@ namespace HanziDefend.Tests.EditMode
             Assert.That(exception.Message, Does.Contain("2x2"));
         }
 
+        /// <summary>
+        /// M1-04 §6's armour mix, now checked per act instead of per wave-number band. Exact counts
+        /// were meaningful when a phase held six enemies; an act holds dozens, so the contract is
+        /// the ratio it was always meant to be.
+        /// </summary>
         [Test]
-        public void Load_DefaultSource_WaveArmorDistributionUsesTunedLowCountApproximation()
+        public void Load_DefaultSource_HoldsTheArmourMixInEachAct()
         {
             GameConfig config = GameConfig.Load();
-            foreach (string waveSetId in ExpectedWaveSetIds.Take(4))
-            {
-                WaveDef[] waves = config.GetWaveSet(waveSetId).Waves;
-                AssertArmorCounts(config, waves.Take(6), 4, 2, 0);
-                AssertArmorCounts(config, waves.Skip(6).Take(6), 3, 2, 1);
-                AssertArmorCounts(config, waves.Skip(12).Take(7), 4, 2, 2);
-            }
 
-            WaveDef[] stageFive = config.GetWaveSet("main_20_stage_5").Waves;
-            AssertArmorCounts(config, stageFive.Take(6), 4, 2, 0);
-            AssertArmorCounts(config, stageFive.Skip(6).Take(6), 3, 2, 1);
-            AssertArmorCounts(config, stageFive.Skip(12).Take(7), 5, 2, 3);
+            foreach (string waveSetId in ExpectedWaveSetIds)
+            {
+                WaveTimeline timeline = WaveTimeline.Compile(config, config.GetWaveSet(waveSetId));
+                AssertArmorMix(timeline.GetAct(WaveActs.First), 0.70d, 0.30d, 0.00d, waveSetId);
+                AssertArmorMix(timeline.GetAct(WaveActs.Second), 0.45d, 0.40d, 0.15d, waveSetId);
+                AssertArmorMix(timeline.GetAct(WaveActs.Third), 0.35d, 0.35d, 0.30d, waveSetId);
+            }
         }
 
         [Test]
@@ -609,23 +645,21 @@ namespace HanziDefend.Tests.EditMode
                    + source.Substring(index + original.Length);
         }
 
-        private static void AssertArmorCounts(
-            GameConfig config,
-            IEnumerable<WaveDef> waves,
-            int expectedUnarmored,
-            int expectedLight,
-            int expectedHeavy)
+        /// <summary>
+        /// Body-count ratios, within five points of the target. The slack is apportionment rounding:
+        /// squads are whole units, so an act of forty bodies cannot land on exactly 45/40/15.
+        /// </summary>
+        private static void AssertArmorMix(
+            WaveActSummary act,
+            double unarmored,
+            double light,
+            double heavy,
+            string context)
         {
-            var counts = new Dictionary<ArmorType, int>();
-            foreach (WaveSpawnDef spawn in waves.SelectMany(value => value.Spawns))
-            {
-                ArmorType armorType = config.GetUnit(spawn.UnitId).ArmorType;
-                counts[armorType] = counts.TryGetValue(armorType, out int count) ? count + spawn.Count : spawn.Count;
-            }
-
-            Assert.That(counts.GetValueOrDefault(ArmorType.Unarmored), Is.EqualTo(expectedUnarmored));
-            Assert.That(counts.GetValueOrDefault(ArmorType.Light), Is.EqualTo(expectedLight));
-            Assert.That(counts.GetValueOrDefault(ArmorType.Heavy), Is.EqualTo(expectedHeavy));
+            string label = $"{context} act {act.Act}";
+            Assert.That(act.UnarmoredRate, Is.EqualTo(unarmored).Within(0.05d), label + " unarmored");
+            Assert.That(act.LightRate, Is.EqualTo(light).Within(0.05d), label + " light");
+            Assert.That(act.HeavyRate, Is.EqualTo(heavy).Within(0.05d), label + " heavy");
         }
 
         private sealed class RecordingSource : IConfigSource

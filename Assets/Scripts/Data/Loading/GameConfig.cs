@@ -489,12 +489,20 @@ namespace HanziDefend.Data
                 Require(waveSet.Waves != null && waveSet.Waves.Length > 0,
                     $"Wave set '{waveSet.Id}' must contain waves.");
                 var indexes = new HashSet<int>();
+                int previousAct = 0;
 
                 foreach (WaveDef wave in waveSet.Waves)
                 {
                     Require(wave != null, $"Wave set '{waveSet.Id}' contains a null wave.");
                     Require(wave.Index > 0, $"Wave set '{waveSet.Id}' has a non-positive wave index.");
                     Require(indexes.Add(wave.Index), $"Wave set '{waveSet.Id}' duplicates wave {wave.Index}.");
+                    Require(wave.Act >= WaveActs.First && wave.Act <= WaveActs.Third,
+                        $"Wave set '{waveSet.Id}' wave {wave.Index} has act {wave.Act}; "
+                        + $"acts run 1..{WaveActs.Third}.");
+                    Require(wave.Act >= previousAct,
+                        $"Wave set '{waveSet.Id}' wave {wave.Index} drops back to act {wave.Act} "
+                        + $"after act {previousAct}; acts must run forward.");
+                    previousAct = wave.Act;
                     Require(wave.RewardRank == EnemyRank.Normal
                             || wave.RewardRank == EnemyRank.Elite
                             || wave.RewardRank == EnemyRank.Boss,
@@ -526,7 +534,57 @@ namespace HanziDefend.Data
                         RequireFiniteNonNegative(spawn.IntervalSec, $"Wave {wave.Index} intervalSec");
                     }
                 }
+
+                ValidateThreeActShape(waveSet);
             }
+        }
+
+        /// <summary>
+        /// The WO-F1 §A shape every wave set must have: three acts, and the castle standing at the
+        /// head of the third one rather than behind all of it. A castle that only appears after the
+        /// last guard turns act three into "clear the field, then grind a wall", which is exactly the
+        /// pacing this structure replaced.
+        /// </summary>
+        private void ValidateThreeActShape(WaveSetDef waveSet)
+        {
+            var acts = new HashSet<int>();
+            WaveDef bossWave = null;
+            foreach (WaveDef wave in waveSet.Waves)
+            {
+                acts.Add(wave.Act);
+                if (wave.RewardRank != EnemyRank.Boss)
+                {
+                    continue;
+                }
+
+                Require(bossWave == null,
+                    $"Wave set '{waveSet.Id}' declares more than one boss wave.");
+                bossWave = wave;
+            }
+
+            for (int act = WaveActs.First; act <= WaveActs.Third; act++)
+            {
+                Require(acts.Contains(act),
+                    $"Wave set '{waveSet.Id}' has no wave in act {act}; a battle is three acts.");
+            }
+
+            Require(bossWave != null, $"Wave set '{waveSet.Id}' has no boss wave.");
+            Require(bossWave.Act == WaveActs.Third,
+                $"Wave set '{waveSet.Id}' puts its boss wave in act {bossWave.Act}; "
+                + "the castle belongs to act 3.");
+
+            int firstThirdActWave = int.MaxValue;
+            foreach (WaveDef wave in waveSet.Waves)
+            {
+                if (wave.Act == WaveActs.Third && wave.Index < firstThirdActWave)
+                {
+                    firstThirdActWave = wave.Index;
+                }
+            }
+
+            Require(bossWave.Index == firstThirdActWave,
+                $"Wave set '{waveSet.Id}' opens act 3 with wave {firstThirdActWave} but spawns the "
+                + $"castle at wave {bossWave.Index}; the castle must arrive with the act, not after it.");
         }
 
         private void ValidateLevelsAndBases()
@@ -614,6 +672,25 @@ namespace HanziDefend.Data
             RequireFinite(cardOffer.LuckyChance, "economy.cardOffer.luckyChance");
             Require(cardOffer.LuckyChance >= 0f && cardOffer.LuckyChance <= 1f,
                 "economy.cardOffer.luckyChance must be in [0,1].");
+            Require(cardOffer.FreeOffersPerMinorStage != null,
+                "economy.cardOffer.freeOffersPerMinorStage must be an array.");
+            Require(cardOffer.FreeOffersPerMinorStage.Length >= Levels.Count,
+                $"economy.cardOffer.freeOffersPerMinorStage has "
+                + $"{cardOffer.FreeOffersPerMinorStage.Length} entries for {Levels.Count} minor "
+                + "stages; every stage must name its own number of free hands.");
+            for (int index = 0; index < cardOffer.FreeOffersPerMinorStage.Length; index++)
+            {
+                Require(cardOffer.FreeOffersPerMinorStage[index] > 0,
+                    $"economy.cardOffer.freeOffersPerMinorStage[{index}] must be positive — a minor "
+                    + "stage with no free hand cannot be played.");
+                if (index > 0)
+                {
+                    Require(cardOffer.FreeOffersPerMinorStage[index]
+                            >= cardOffer.FreeOffersPerMinorStage[index - 1],
+                        "economy.cardOffer.freeOffersPerMinorStage must not decrease: later minor "
+                        + "stages have more unlocked cells to fill, not fewer.");
+                }
+            }
 
             ValidateCardPool(Economy.CardPool);
             ValidateSettlementReward(Economy.SettlementReward);
@@ -633,6 +710,13 @@ namespace HanziDefend.Data
             Require(battle.DeploymentCellSize.X > 0f && battle.DeploymentCellSize.Y > 0f,
                 "economy.battle.deploymentCellSize values must be positive.");
             RequireFinitePositive(battle.DeploymentSpreadWidth, "economy.battle.deploymentSpreadWidth");
+            RequireFinite(battle.AllyAdvanceLimitY, "economy.battle.allyAdvanceLimitY");
+            Require(battle.AllyAdvanceLimitY < battle.EnemySpawnCenter.Y,
+                "economy.battle.allyAdvanceLimitY must sit below the enemy spawn centre; a limit at "
+                + "or beyond it is the fight-at-their-door behaviour it exists to prevent.");
+            Require(battle.AllyAdvanceLimitY > battle.AllyBasePosition.Y,
+                "economy.battle.allyAdvanceLimitY must sit above the ally camp, or the line can "
+                + "never leave home.");
             Require(battle.AllyBasePosition.X != battle.EnemyBasePosition.X
                     || battle.AllyBasePosition.Y != battle.EnemyBasePosition.Y,
                 "economy.battle allyBasePosition and enemyBasePosition must be different.");

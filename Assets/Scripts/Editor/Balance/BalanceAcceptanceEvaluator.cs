@@ -125,7 +125,7 @@ namespace HanziDefend.Editor.Balance
                     Percent(metrics.StageFiveWinRate) + "; target 30%-50%"),
                 Check(
                     "stage1_duration",
-                    "Mean duration A_siege_nub/stage 1",
+                    "Mean duration " + BalanceReferenceLineups.StageOneGateLineupId + "/stage 1",
                     InRange(
                         metrics.StageOneMeanDurationSeconds,
                         MinimumMeanDurationSeconds,
@@ -133,7 +133,7 @@ namespace HanziDefend.Editor.Balance
                     Seconds(metrics.StageOneMeanDurationSeconds) + "; target 90-150s"),
                 Check(
                     "stage5_duration",
-                    "Mean duration A_siege_nub/stage 5",
+                    "Mean duration " + BalanceReferenceLineups.StageFiveGateLineupId + "/stage 5",
                     InRange(
                         metrics.StageFiveMeanDurationSeconds,
                         MinimumMeanDurationSeconds,
@@ -141,12 +141,12 @@ namespace HanziDefend.Editor.Balance
                     Seconds(metrics.StageFiveMeanDurationSeconds) + "; target 90-150s"),
                 Check(
                     "stage1_heavy_armor",
-                    "Heavy armor share main_20",
+                    "Heavy armor share main_20 (all acts)",
                     AtLeast(metrics.StageOneHeavyRate, MinimumHeavyArmorRate),
                     Percent(metrics.StageOneHeavyRate) + "; floor 15%"),
                 Check(
                     "stage5_heavy_armor",
-                    "Heavy armor share main_20_stage_5",
+                    "Heavy armor share main_20_stage_5 (all acts)",
                     AtLeast(metrics.StageFiveHeavyRate, MinimumHeavyArmorRate),
                     Percent(metrics.StageFiveHeavyRate) + "; floor 15%")
             };
@@ -168,14 +168,17 @@ namespace HanziDefend.Editor.Balance
 
         private static BalanceAcceptanceMetrics CreateMetrics(BalanceRunReport report)
         {
+            // The gate reads the two accumulated reference boards: the stage-one board against
+            // stage one, and the stage-five board against stage five. Crossing them would grade a
+            // stage-five schedule against a four-unit opening board (WO-F1 §C).
             BalanceCohortSummary stageOne = report.Cohorts.FirstOrDefault(value =>
-                value.LineupId == "A_siege_nub" && value.StageIndex == 1);
+                value.LineupId == BalanceReferenceLineups.StageOneGateLineupId && value.StageIndex == 1);
             BalanceCohortSummary stageFive = report.Cohorts.FirstOrDefault(value =>
-                value.LineupId == "A_siege_nub" && value.StageIndex == 5);
+                value.LineupId == BalanceReferenceLineups.StageFiveGateLineupId && value.StageIndex == 5);
             BalanceArmorDistribution stageOneArmor = report.ArmorDistributions.FirstOrDefault(value =>
-                value.WaveSetId == "main_20" && value.FirstWave == 1 && value.LastWave == 19);
+                value.WaveSetId == "main_20" && value.Phase == "ALL");
             BalanceArmorDistribution stageFiveArmor = report.ArmorDistributions.FirstOrDefault(value =>
-                value.WaveSetId == "main_20_stage_5" && value.FirstWave == 1 && value.LastWave == 19);
+                value.WaveSetId == "main_20_stage_5" && value.Phase == "ALL");
 
             return new BalanceAcceptanceMetrics(
                 ProjectHundredGames(report),

@@ -39,11 +39,28 @@ namespace HanziDefend.Data
     {
         public int Index { get; set; }
 
+        /// <summary>
+        /// Which of the three acts this wave belongs to (WO-F1 §A). Acts are the readable unit of
+        /// a battle — inside one the enemy stream never stops, and between two there is a visible
+        /// gap. The field is only a label: the gap itself is expressed as a longer
+        /// <see cref="DelaySec"/> on the act's first wave, so the timeline stays one flat list.
+        /// </summary>
+        public int Act { get; set; } = WaveActs.First;
+
         public EnemyRank RewardRank { get; set; } = (EnemyRank)(-1);
 
         public float DelaySec { get; set; }
 
         public WaveSpawnDef[] Spawns { get; set; } = Array.Empty<WaveSpawnDef>();
+    }
+
+    /// <summary>The three-act structure WO-F1 §A locks in. Named so no caller writes a bare 3.</summary>
+    public static class WaveActs
+    {
+        public const int First = 1;
+        public const int Second = 2;
+        public const int Third = 3;
+        public const int Count = 3;
     }
 
     [Serializable]
@@ -328,6 +345,39 @@ namespace HanziDefend.Data
         public int LuckyExtraCount { get; set; }
 
         public float LuckyChance { get; set; }
+
+        /// <summary>
+        /// Free hands dealt in each minor stage, indexed by <c>stageIndex - 1</c> (WO-F1 §D).
+        ///
+        /// <para>Before this existed a minor stage got exactly one free hand and every further hand
+        /// was a coin refresh, which made the number of preparation rounds a by-product of the coin
+        /// balance — measured at 3/2/2/1/1, i.e. falling exactly where the field is widening. The
+        /// curve makes the round count a value somebody chose. Stages past the array's end reuse its
+        /// last entry, so a sixth minor stage cannot silently drop to zero hands.</para>
+        /// </summary>
+        public int[] FreeOffersPerMinorStage { get; set; } = Array.Empty<int>();
+
+        /// <summary>Free hands for a minor stage, clamping past the end of the curve.</summary>
+        public int FreeOffersForStage(int stageIndex)
+        {
+            int[] curve = FreeOffersPerMinorStage;
+            if (curve == null || curve.Length == 0)
+            {
+                return 1;
+            }
+
+            int index = stageIndex - 1;
+            if (index < 0)
+            {
+                index = 0;
+            }
+            else if (index >= curve.Length)
+            {
+                index = curve.Length - 1;
+            }
+
+            return curve[index];
+        }
     }
 
     [Serializable]
@@ -497,6 +547,19 @@ namespace HanziDefend.Data
         /// how many columns are unlocked, so the front line always fills the base.
         /// </summary>
         public float DeploymentSpreadWidth { get; set; }
+
+        /// <summary>
+        /// How far up the field allies will advance while the castle has not appeared yet
+        /// (WO-F1 §B). Zero disables the limit entirely.
+        ///
+        /// <para>Without it the whole ally line walks to the enemy's spawn door and fights there:
+        /// measured enemy death height sat at Y=6.8 with a spawn centre of Y=6, i.e. enemies were
+        /// dying essentially where they appeared, and the midfield the three-act pacing is built
+        /// around never existed. The limit lifts the moment the castle spawns, because act three is
+        /// supposed to be an assault; and <c>RushBase</c> units ignore it, because charging past the
+        /// line is the entire point of a battering ram.</para>
+        /// </summary>
+        public float AllyAdvanceLimitY { get; set; }
     }
 
     [Serializable]

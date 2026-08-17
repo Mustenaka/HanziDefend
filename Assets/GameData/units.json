@@ -187,8 +187,8 @@
   "bosses": [
     {
       "id": "bld_cheng", "name": "城", "displayName": "敌方城堡",
-      "hp": 6000.0, "armor": 40.0, "unitType": "Building", "armorType": "Building",
-      "atk": 60.0, "range": 2.2, "atkSpeed": 0.9, "pierce": 30.0,
+      "hp": 3600.0, "armor": 40.0, "unitType": "Building", "armorType": "Building",
+      "atk": 75.0, "range": 2.2, "atkSpeed": 0.9, "pierce": 30.0,
       "atkType": "Blunt", "bonusVs": [], "effects": []
     }
   ],

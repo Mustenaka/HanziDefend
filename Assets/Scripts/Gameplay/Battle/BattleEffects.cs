@@ -16,13 +16,15 @@ namespace HanziDefend.Gameplay.Battle
             BattleTeam sourceTeam,
             Vector2 origin,
             int spawnLevel,
-            IReadOnlyList<int> adjacentAllyEntityIds = null)
+            IReadOnlyList<int> adjacentAllyEntityIds = null,
+            int? restrictToEntityId = null)
         {
             SourceEntityId = sourceEntityId;
             SourceTeam = sourceTeam;
             Origin = origin;
             SpawnLevel = spawnLevel;
             this.adjacentAllyEntityIds = CopyAdjacentAllies(adjacentAllyEntityIds);
+            RestrictToEntityId = restrictToEntityId;
         }
 
         public int? SourceEntityId { get; }
@@ -32,6 +34,18 @@ namespace HanziDefend.Gameplay.Battle
         public Vector2 Origin { get; }
 
         public int SpawnLevel { get; }
+
+        /// <summary>
+        /// When set, the effect resolves as if this were the only entity on the field: every
+        /// per-target op keeps just this entity, and one-shot global ops (SpawnUnit, ModifyCoins)
+        /// are skipped entirely.
+        ///
+        /// <para>This is what lets an ally that enters late (WO-F1 §B) inherit the run's carried
+        /// buffs. Replaying an <c>AllyAll</c> buff unrestricted would apply it a second time to the
+        /// units already standing there, and a Stack-rule buff such as <c>buff_atk_up</c> would
+        /// compound once per late arrival.</para>
+        /// </summary>
+        public int? RestrictToEntityId { get; }
 
         public IReadOnlyList<int> AdjacentAllyEntityIds => adjacentAllyEntityIds ?? EmptyAdjacentAllies;
 

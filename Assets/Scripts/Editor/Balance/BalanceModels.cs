@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HanziDefend.Data;
 using HanziDefend.Gameplay.Battle;
 using HanziDefend.Gameplay.Deploy;
 
@@ -7,6 +8,11 @@ namespace HanziDefend.Editor.Balance
 {
     public readonly struct BalanceLineupSpawn
     {
+        /// <summary>
+        /// One deployed unit. <paramref name="column"/> and <paramref name="row"/> are absolute
+        /// playfield coordinates on the 7x7 grid — the same numbers <c>RunState.DeployedGrid</c>
+        /// stores, so a lineup can be copied straight out of a simulated run and back in.
+        /// </summary>
         public BalanceLineupSpawn(string unitId, int level, int column, int row)
         {
             UnitId = string.IsNullOrWhiteSpace(unitId)
@@ -30,7 +36,8 @@ namespace HanziDefend.Editor.Balance
             string displayName,
             bool expectedToContainSiege,
             IReadOnlyList<BalanceLineupSpawn> spawns,
-            int gridColumnsOverride = 0)
+            IReadOnlyList<GridCoordinate> unlockedCells = null,
+            IReadOnlyList<string> levelIds = null)
         {
             Id = string.IsNullOrWhiteSpace(id)
                 ? throw new ArgumentException("Lineup id is required.", nameof(id))
@@ -42,19 +49,9 @@ namespace HanziDefend.Editor.Balance
                 throw new ArgumentException("A balance lineup requires at least one unit.", nameof(spawns));
             }
 
-            if (gridColumnsOverride < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(gridColumnsOverride));
-            }
-
-            GridColumnsOverride = gridColumnsOverride;
-            var snapshot = new BalanceLineupSpawn[spawns.Count];
-            for (int index = 0; index < spawns.Count; index++)
-            {
-                snapshot[index] = spawns[index];
-            }
-
-            Spawns = Array.AsReadOnly(snapshot);
+            Spawns = Snapshot(spawns);
+            UnlockedCells = unlockedCells == null ? null : Snapshot(unlockedCells);
+            LevelIds = levelIds == null ? null : Snapshot(levelIds);
         }
 
         public string Id { get; }
@@ -63,89 +60,187 @@ namespace HanziDefend.Editor.Balance
 
         public bool ExpectedToContainSiege { get; }
 
-        /// <summary>
-        /// Width of the unlocked region this lineup deploys on; zero keeps the level's own
-        /// <c>initialUnlock</c> rect. WO-E4 uses it to probe wider shape tiers without editing
-        /// levels.json, because the unlock mask is run state rather than a level property. The
-        /// runner rejects any width that cannot be reached by unlocking cells around the initial
-        /// rect, so an override is always a state a real run can grow into.
-        /// </summary>
-        public int GridColumnsOverride { get; }
-
         public IReadOnlyList<BalanceLineupSpawn> Spawns { get; }
+
+        /// <summary>
+        /// The unlock mask this lineup stands on, in absolute playfield coordinates; null keeps the
+        /// level's own <c>initialUnlock</c> rect.
+        ///
+        /// <para>It is a cell set rather than a column count because a real run's mask is not a
+        /// rectangle: it grows one unlock card at a time and ends up an irregular blob around the
+        /// camp. WO-E4's centred-rectangle override could only express 3, 5 or 7 columns, which is
+        /// precisely the abstraction WO-F1 §0.5 identifies as making the reference model a different
+        /// game from the one being played. The runner still checks that a mask is reachable.</para>
+        /// </summary>
+        public IReadOnlyList<GridCoordinate> UnlockedCells { get; }
+
+        /// <summary>
+        /// Levels this lineup is meaningful on; null means all of them. A board accumulated by the
+        /// end of stage five says nothing when it is dropped into stage one's waves, so the two
+        /// reference boards each name their own stage instead of being crossed with every level.
+        /// </summary>
+        public IReadOnlyList<string> LevelIds { get; }
+
+        public int DeclaredUnlockedCellCount => UnlockedCells?.Count ?? 0;
+
+        public bool AppliesTo(string levelId)
+        {
+            if (LevelIds == null)
+            {
+                return true;
+            }
+
+            for (int index = 0; index < LevelIds.Count; index++)
+            {
+                if (string.Equals(LevelIds[index], levelId, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static IReadOnlyList<T> Snapshot<T>(IReadOnlyList<T> source)
+        {
+            var values = new T[source.Count];
+            for (int index = 0; index < source.Count; index++)
+            {
+                values[index] = source[index];
+            }
+
+            return Array.AsReadOnly(values);
+        }
     }
 
+    /// <summary>
+    /// The reference boards, lifted verbatim out of <see cref="RunAccumulationSimulator"/> run
+    /// <c>0xE1002026</c> — the project's own default balance seed.
+    ///
+    /// <para>They are frozen literals rather than a live call into the simulator on purpose: a
+    /// reference lineup that silently rewrites itself whenever an economy number moves is not a
+    /// reference. Regenerate them deliberately (the simulator prints them in this exact form),
+    /// review the diff, and paste. <c>BalanceRunnerTests</c> pins the properties WO-F1 §C requires
+    /// so a careless paste cannot quietly shrink the model back to six level-1 units.</para>
+    /// </summary>
     public static class BalanceReferenceLineups
     {
+        private const string StageOneLevelId = "level_1_1";
+        private const string StageFiveLevelId = "level_1_5";
+
+        /// <summary>The level's own starting 3x3, spelled out so stage-one lineups read the same way.</summary>
+        private static readonly GridCoordinate[] StageOneMask =
+        {
+            new GridCoordinate(2, 2), new GridCoordinate(3, 2), new GridCoordinate(4, 2),
+            new GridCoordinate(2, 3), new GridCoordinate(3, 3), new GridCoordinate(4, 3),
+            new GridCoordinate(2, 4), new GridCoordinate(3, 4), new GridCoordinate(4, 4)
+        };
+
+        /// <summary>
+        /// Twenty-one cells: the starting 3x3, plus four automatic per-stage unlocks and the cards
+        /// a run's coins actually bought by stage five. Irregular and bottom-heavy, because that is
+        /// what unlock cards ranked by "nearest the camp" produce.
+        /// </summary>
+        private static readonly GridCoordinate[] StageFiveMask =
+        {
+            new GridCoordinate(0, 0), new GridCoordinate(1, 0), new GridCoordinate(2, 0),
+            new GridCoordinate(3, 0), new GridCoordinate(4, 0), new GridCoordinate(5, 0),
+            new GridCoordinate(6, 0),
+            new GridCoordinate(1, 1), new GridCoordinate(2, 1), new GridCoordinate(3, 1),
+            new GridCoordinate(4, 1), new GridCoordinate(5, 1),
+            new GridCoordinate(2, 2), new GridCoordinate(3, 2), new GridCoordinate(4, 2),
+            new GridCoordinate(2, 3), new GridCoordinate(3, 3), new GridCoordinate(4, 3),
+            new GridCoordinate(2, 4), new GridCoordinate(3, 4), new GridCoordinate(4, 4)
+        };
+
         private static readonly IReadOnlyList<BalanceLineup> AllLineups = Array.AsReadOnly(new[]
         {
+            // Stage one, with siege. Four units on the untouched 3x3 and every one of its nine cells
+            // used: this is what 45 starting coins and two free hands plus one 40-coin refresh buy.
             new BalanceLineup(
-                "A_siege_nub",
-                "A · 含器械（3弓+1盾+1矛+1弩兵）",
+                "A_real_s1",
+                "A_real_s1 · 真实开局（弩车2+长矛+冰+重骑，3×3 满格）",
                 true,
                 new[]
                 {
-                    new BalanceLineupSpawn("dun", 1, 0, 0),
-                    new BalanceLineupSpawn("mao", 1, 2, 0),
-                    new BalanceLineupSpawn("nub", 1, 0, 1),
-                    new BalanceLineupSpawn("gong", 1, 1, 1),
-                    new BalanceLineupSpawn("gong", 1, 1, 2),
-                    new BalanceLineupSpawn("gong", 1, 2, 2)
-                }),
-            // Kept verbatim as the WO-E1 vertical baseline. It is also the worst possible
-            // anti-building draw: three of its six units are gong, and Arrow is 0.25x versus
-            // Building armour. Renamed, never re-tuned, so WO-E4 numbers stay comparable.
-            new BalanceLineup(
-                "B_no_siege",
-                "B_worst · 无器械最差组合基准（3弓+2盾+1矛）",
-                false,
-                new[]
-                {
-                    new BalanceLineupSpawn("dun", 1, 0, 0),
-                    new BalanceLineupSpawn("dun", 1, 0, 1),
-                    new BalanceLineupSpawn("mao", 1, 2, 0),
-                    new BalanceLineupSpawn("gong", 1, 0, 2),
-                    new BalanceLineupSpawn("gong", 1, 1, 2),
-                    new BalanceLineupSpawn("gong", 1, 2, 2)
-                }),
-            // WO-E4: best anti-building siege-free lineup buildable under the 3-column shape
-            // unlock (1x1 / 2x1 / 1x2 only). Per-cell damage versus bld_cheng at level 1:
-            // qqi 12.0, dao 10.8, mao 8.4, dun 5.1, zu 5.0, gong 4.0. Three 2x1 is the maximum
-            // a 3-wide grid takes, and the leftover column prefers one 1x2 mao over two 1x1.
-            new BalanceLineup(
-                "B_fair_s1",
-                "B_fair_s1 · 无器械 3 列最优（3轻骑+1长矛+1卒）",
-                false,
-                new[]
-                {
-                    new BalanceLineupSpawn("qqi", 1, 0, 0),
-                    new BalanceLineupSpawn("qqi", 1, 0, 1),
-                    new BalanceLineupSpawn("qqi", 1, 0, 2),
-                    new BalanceLineupSpawn("mao", 1, 2, 0),
-                    new BalanceLineupSpawn("zu", 1, 2, 2)
-                }),
-            // WO-E4: same optimisation on a 5-wide unlocked region, where two 2x2 footprints fit.
-            // lia is the highest per-cell anti-building unit in the whole table (24.3), and a
-            // 5x3 region seats exactly two 2x2 footprints; the remaining seven cells reuse the
-            // 3-wide optimum. WO-C5 note: the width is now an unlock-mask state, reachable by
-            // playing one vertical unlock card on each flank of the level's starting rect.
-            new BalanceLineup(
-                "B_fair_s5",
-                "B_fair_s5 · 无器械 5 列最优（2链甲+2轻骑+1长矛+1卒）",
-                false,
-                new[]
-                {
-                    new BalanceLineupSpawn("lia", 1, 0, 0),
-                    new BalanceLineupSpawn("lia", 1, 2, 0),
-                    new BalanceLineupSpawn("mao", 1, 4, 0),
-                    new BalanceLineupSpawn("qqi", 1, 0, 2),
-                    new BalanceLineupSpawn("qqi", 1, 2, 2),
-                    new BalanceLineupSpawn("zu", 1, 4, 2)
+                    new BalanceLineupSpawn("nuc", 2, 3, 2),
+                    new BalanceLineupSpawn("mao", 1, 2, 2),
+                    new BalanceLineupSpawn("bing", 1, 4, 3),
+                    new BalanceLineupSpawn("zqi", 1, 2, 4)
                 },
-                gridColumnsOverride: 5)
+                StageOneMask,
+                new[] { StageOneLevelId }),
+
+            // Stage five, with siege: eleven units carrying two siege pieces and six merges,
+            // spread over twenty-one unlocked cells. This is the board WO-F1 §C asks the balance
+            // targets to be measured against.
+            new BalanceLineup(
+                "A_real_s5",
+                "A_real_s5 · 真实积累 S5（11 单位 / 21 格 / 含弩车+冲车）",
+                true,
+                new[]
+                {
+                    new BalanceLineupSpawn("nuc", 2, 3, 2),
+                    new BalanceLineupSpawn("mao", 2, 2, 2),
+                    new BalanceLineupSpawn("bing", 1, 4, 3),
+                    new BalanceLineupSpawn("zqi", 2, 2, 4),
+                    new BalanceLineupSpawn("huo", 1, 3, 1),
+                    new BalanceLineupSpawn("chc", 2, 4, 0),
+                    new BalanceLineupSpawn("qqi", 2, 3, 0),
+                    new BalanceLineupSpawn("gong", 1, 2, 0),
+                    new BalanceLineupSpawn("zu", 1, 1, 0),
+                    new BalanceLineupSpawn("dao", 2, 1, 1),
+                    new BalanceLineupSpawn("gong", 1, 0, 0)
+                },
+                StageFiveMask,
+                new[] { StageFiveLevelId }),
+
+            // The same policy on the same seed, declining every siege card. Same unlock mask —
+            // refusing siege changes what gets deployed, not how the grid grows.
+            new BalanceLineup(
+                "B_real_s1_nosiege",
+                "B_real_s1_nosiege · 真实开局·无器械（长矛+冰+重骑+弓）",
+                false,
+                new[]
+                {
+                    new BalanceLineupSpawn("mao", 1, 3, 2),
+                    new BalanceLineupSpawn("bing", 1, 2, 2),
+                    new BalanceLineupSpawn("zqi", 1, 2, 4),
+                    new BalanceLineupSpawn("gong", 1, 4, 2)
+                },
+                StageOneMask,
+                new[] { StageOneLevelId }),
+
+            new BalanceLineup(
+                "B_real_s5_nosiege",
+                "B_real_s5_nosiege · 真实积累 S5·无器械（12 单位 / 21 格）",
+                false,
+                new[]
+                {
+                    new BalanceLineupSpawn("mao", 2, 3, 2),
+                    new BalanceLineupSpawn("bing", 1, 2, 2),
+                    new BalanceLineupSpawn("zqi", 2, 2, 4),
+                    new BalanceLineupSpawn("gong", 1, 4, 2),
+                    new BalanceLineupSpawn("huo", 1, 3, 1),
+                    new BalanceLineupSpawn("mao", 2, 4, 0),
+                    new BalanceLineupSpawn("zu", 1, 3, 0),
+                    new BalanceLineupSpawn("zu", 1, 5, 0),
+                    new BalanceLineupSpawn("gong", 1, 2, 0),
+                    new BalanceLineupSpawn("zu", 1, 1, 0),
+                    new BalanceLineupSpawn("dao", 2, 1, 1),
+                    new BalanceLineupSpawn("gong", 1, 0, 0)
+                },
+                StageFiveMask,
+                new[] { StageFiveLevelId })
         });
 
         public static IReadOnlyList<BalanceLineup> All => AllLineups;
+
+        /// <summary>Cohort id whose stage-1 numbers the locked win-rate and duration gates read.</summary>
+        public const string StageOneGateLineupId = "A_real_s1";
+
+        /// <summary>Cohort id whose stage-5 numbers the locked win-rate and duration gates read.</summary>
+        public const string StageFiveGateLineupId = "A_real_s5";
     }
 
     public sealed class BalanceRunRequest
@@ -195,6 +290,7 @@ namespace HanziDefend.Editor.Balance
             SimulatePhysics = simulatePhysics;
             OutputDirectory = outputDirectory;
             MaxDegreeOfParallelism = maxDegreeOfParallelism;
+            Cohorts = BuildCohorts();
         }
 
         public int GamesPerCohort { get; }
@@ -214,11 +310,14 @@ namespace HanziDefend.Editor.Balance
         /// <summary>Zero selects min(4, current CPU count); one forces deterministic serial execution.</summary>
         public int MaxDegreeOfParallelism { get; }
 
+        /// <summary>The lineup/level pairs that will actually run, after each lineup's own filter.</summary>
+        public IReadOnlyList<BalanceCohortKey> Cohorts { get; }
+
         public int EffectiveMaxDegreeOfParallelism => MaxDegreeOfParallelism == 0
             ? Math.Max(1, Math.Min(4, Environment.ProcessorCount))
             : MaxDegreeOfParallelism;
 
-        public int CohortCount => checked(LevelIds.Count * Lineups.Count);
+        public int CohortCount => Cohorts.Count;
 
         public int TotalGames => checked(GamesPerCohort * CohortCount);
 
@@ -236,9 +335,36 @@ namespace HanziDefend.Editor.Balance
                 new[] { "level_1_1", "level_1_5" },
                 BalanceReferenceLineups.All,
                 seed,
-                600d,
+                // The target band is 90-150s. A battle still running at 300 has not "nearly won":
+                // it is the stalemate WO-F1 §A set out to remove, and calling it a timeout at 300
+                // instead of 600 halves the cost of finding that out.
+                300d,
                 false,
                 outputDirectory);
+        }
+
+        private IReadOnlyList<BalanceCohortKey> BuildCohorts()
+        {
+            var cohorts = new List<BalanceCohortKey>();
+            for (int lineupIndex = 0; lineupIndex < Lineups.Count; lineupIndex++)
+            {
+                BalanceLineup lineup = Lineups[lineupIndex];
+                for (int levelIndex = 0; levelIndex < LevelIds.Count; levelIndex++)
+                {
+                    if (lineup.AppliesTo(LevelIds[levelIndex]))
+                    {
+                        cohorts.Add(new BalanceCohortKey(lineup, LevelIds[levelIndex]));
+                    }
+                }
+            }
+
+            if (cohorts.Count == 0)
+            {
+                throw new ArgumentException(
+                    "No lineup applies to any requested level; the run would be empty.");
+            }
+
+            return cohorts.AsReadOnly();
         }
 
         private static IReadOnlyList<T> Snapshot<T>(IReadOnlyList<T> source)
@@ -253,6 +379,18 @@ namespace HanziDefend.Editor.Balance
         }
     }
 
+    public readonly struct BalanceCohortKey
+    {
+        internal BalanceCohortKey(BalanceLineup lineup, string levelId)
+        {
+            Lineup = lineup;
+            LevelId = levelId;
+        }
+
+        public BalanceLineup Lineup { get; }
+        public string LevelId { get; }
+    }
+
     public sealed class BalanceBattleResult
     {
         internal BalanceBattleResult(
@@ -260,7 +398,7 @@ namespace HanziDefend.Editor.Balance
             string lineupName,
             string levelId,
             int stageIndex,
-            int gridColumns,
+            int unlockedCellCount,
             int gameIndex,
             uint seed,
             BattleResult result,
@@ -275,6 +413,10 @@ namespace HanziDefend.Editor.Balance
             float bossHp,
             float bossMaxHp,
             bool timedOut,
+            int peakConcurrentUnits,
+            double lastAllyEntrySeconds,
+            IReadOnlyList<float> enemyDeathPositionsY,
+            IReadOnlyList<float> enemyDeathPositionsYBeforeCastle,
             IReadOnlyList<BalanceEntityResult> entities,
             IReadOnlyList<BalanceCoinPoint> coinCurve)
         {
@@ -282,7 +424,7 @@ namespace HanziDefend.Editor.Balance
             LineupName = lineupName;
             LevelId = levelId;
             StageIndex = stageIndex;
-            GridColumns = gridColumns;
+            UnlockedCellCount = unlockedCellCount;
             GameIndex = gameIndex;
             Seed = seed;
             Result = result;
@@ -297,6 +439,10 @@ namespace HanziDefend.Editor.Balance
             BossHp = bossHp;
             BossMaxHp = bossMaxHp;
             TimedOut = timedOut;
+            PeakConcurrentUnits = peakConcurrentUnits;
+            LastAllyEntrySeconds = lastAllyEntrySeconds;
+            EnemyDeathPositionsY = enemyDeathPositionsY;
+            EnemyDeathPositionsYBeforeCastle = enemyDeathPositionsYBeforeCastle;
             Entities = entities;
             CoinCurve = coinCurve;
         }
@@ -305,8 +451,10 @@ namespace HanziDefend.Editor.Balance
         public string LineupName { get; }
         public string LevelId { get; }
         public int StageIndex { get; }
-        /// <summary>Deployment columns this battle actually used, after any lineup override.</summary>
-        public int GridColumns { get; }
+
+        /// <summary>Unlocked deployment cells this battle actually ran on.</summary>
+        public int UnlockedCellCount { get; }
+
         public int GameIndex { get; }
         public uint Seed { get; }
         public BattleResult Result { get; }
@@ -321,6 +469,26 @@ namespace HanziDefend.Editor.Balance
         public float BossHp { get; }
         public float BossMaxHp { get; }
         public bool TimedOut { get; }
+
+        /// <summary>
+        /// Highest number of living combatants on the field at once. The enemy count went up by
+        /// five to ten times in WO-F1, so this is the number the performance budget now rides on.
+        /// </summary>
+        public int PeakConcurrentUnits { get; }
+
+        /// <summary>When the last queued ally walked on; zero when every unit was Instant.</summary>
+        public double LastAllyEntrySeconds { get; }
+
+        /// <summary>
+        /// Y coordinate of every enemy death. Enemies spawn at Y=6 and the camp sits at Y=-8, so a
+        /// high value means the enemy died at its own door and the front line never moved — which is
+        /// the symptom WO-F1 §B exists to detect.
+        /// </summary>
+        public IReadOnlyList<float> EnemyDeathPositionsY { get; }
+
+        /// <summary>Enemy death heights from before the castle spawned; see the cohort summary.</summary>
+        public IReadOnlyList<float> EnemyDeathPositionsYBeforeCastle { get; }
+
         public IReadOnlyList<BalanceEntityResult> Entities { get; }
         public IReadOnlyList<BalanceCoinPoint> CoinCurve { get; }
         public bool IsWin => Result == BattleResult.Win;
@@ -335,7 +503,8 @@ namespace HanziDefend.Editor.Balance
             double spawnTimeSeconds,
             double endTimeSeconds,
             bool survived,
-            long damage)
+            long damage,
+            float deathPositionY)
         {
             EntityId = entityId;
             UnitId = unitId;
@@ -344,6 +513,7 @@ namespace HanziDefend.Editor.Balance
             EndTimeSeconds = endTimeSeconds;
             Survived = survived;
             Damage = damage;
+            DeathPositionY = deathPositionY;
         }
 
         public int EntityId { get; }
@@ -353,6 +523,10 @@ namespace HanziDefend.Editor.Balance
         public double EndTimeSeconds { get; }
         public bool Survived { get; }
         public long Damage { get; }
+
+        /// <summary>Where this unit died along the battle axis; NaN when it survived.</summary>
+        public float DeathPositionY { get; }
+
         public double SurvivalSeconds => Math.Max(0d, EndTimeSeconds - SpawnTimeSeconds);
     }
 
@@ -386,7 +560,7 @@ namespace HanziDefend.Editor.Balance
             string lineupName,
             string levelId,
             int stageIndex,
-            int gridColumns,
+            int unlockedCellCount,
             int games,
             int wins,
             int losses,
@@ -397,13 +571,18 @@ namespace HanziDefend.Editor.Balance
             double p95DurationSeconds,
             double meanWallClockMilliseconds,
             double totalWallClockSeconds,
-            double meanEndCoins)
+            double meanEndCoins,
+            double meanDroppedCoins,
+            int peakConcurrentUnits,
+            double enemyDeathYP90,
+            double enemyDeathYP90BeforeCastle,
+            double meanLastAllyEntrySeconds)
         {
             LineupId = lineupId;
             LineupName = lineupName;
             LevelId = levelId;
             StageIndex = stageIndex;
-            GridColumns = gridColumns;
+            UnlockedCellCount = unlockedCellCount;
             Games = games;
             Wins = wins;
             Losses = losses;
@@ -415,14 +594,18 @@ namespace HanziDefend.Editor.Balance
             MeanWallClockMilliseconds = meanWallClockMilliseconds;
             TotalWallClockSeconds = totalWallClockSeconds;
             MeanEndCoins = meanEndCoins;
+            MeanDroppedCoins = meanDroppedCoins;
+            PeakConcurrentUnits = peakConcurrentUnits;
+            EnemyDeathYP90 = enemyDeathYP90;
+            EnemyDeathYP90BeforeCastle = enemyDeathYP90BeforeCastle;
+            MeanLastAllyEntrySeconds = meanLastAllyEntrySeconds;
         }
 
         public string LineupId { get; }
         public string LineupName { get; }
         public string LevelId { get; }
         public int StageIndex { get; }
-        /// <summary>Deployment columns this cohort actually used, after any lineup override.</summary>
-        public int GridColumns { get; }
+        public int UnlockedCellCount { get; }
         public int Games { get; }
         public int Wins { get; }
         public int Losses { get; }
@@ -434,6 +617,27 @@ namespace HanziDefend.Editor.Balance
         public double MeanWallClockMilliseconds { get; }
         public double TotalWallClockSeconds { get; }
         public double MeanEndCoins { get; }
+
+        /// <summary>Coins the battle itself paid out, averaged over the cohort.</summary>
+        public double MeanDroppedCoins { get; }
+
+        public int PeakConcurrentUnits { get; }
+
+        /// <summary>
+        /// 90th percentile of enemy death Y across the cohort. Below 4.0 the front line has formed
+        /// in midfield; at or above it the enemy is still dying on its own doorstep (WO-F1 §B).
+        /// </summary>
+        public double EnemyDeathYP90 { get; }
+
+        /// <summary>
+        /// The same percentile restricted to deaths before the castle arrives. This is the number
+        /// the WO-F1 §B threshold is about: whether a front line forms in midfield. The all-battle
+        /// figure above also contains act three, where the line is supposed to march up and take
+        /// the castle, so it reads high by design once the assault starts.
+        /// </summary>
+        public double EnemyDeathYP90BeforeCastle { get; }
+
+        public double MeanLastAllyEntrySeconds { get; }
     }
 
     public sealed class BalanceUnitSummary
@@ -503,7 +707,10 @@ namespace HanziDefend.Editor.Balance
         }
 
         public string WaveSetId { get; }
+
+        /// <summary>Which act these counts describe: <c>ACT1</c>..<c>ACT3</c>, or <c>ALL</c>.</summary>
         public string Phase { get; }
+
         public int FirstWave { get; }
         public int LastWave { get; }
         public int Unarmored { get; }

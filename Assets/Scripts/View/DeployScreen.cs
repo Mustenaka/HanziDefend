@@ -1685,7 +1685,11 @@ namespace HanziDefend.View
             }
             coinText.text = $"金币  {economy.State.Coins}";
             stageText.text = $"小关 {economy.State.StageIndex}/{config.Levels.Count}";
-            refreshText.text = $"刷新  {economy.NextRefreshCost}";
+            // The same button deals the stage's free hands and then charges for re-rolls, so the
+            // label has to say which one the next press is (WO-F1 §D).
+            refreshText.text = economy.FreeOffersRemaining > 0
+                ? $"发牌  免费×{economy.FreeOffersRemaining}"
+                : $"刷新  {economy.NextRefreshCost}";
         }
 
         /// <summary>

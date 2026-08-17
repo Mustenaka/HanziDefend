@@ -381,7 +381,14 @@ namespace HanziDefend.Gameplay.Battle
 
             bool allyBaseDestroyed = allyBase.IsDestroyed;
             bool bossDestroyed = TryGetBoss(out BattleUnit boss) && boss.State == BattleUnitState.Dead;
-            BattleResult candidate = bossDestroyed
+
+            // Winning takes the castle *and* outlasting act three. A siege engine flattens the
+            // castle in about nine seconds, so ending the battle there would finish it around the
+            // eighty-second mark — under the 90s floor — and the escort waves that carry act three's
+            // whole tension would never be played. The camp can still fall after the castle does,
+            // which is exactly the tension a final act should have.
+            bool wavesFullySpawned = waveScheduler == null || waveScheduler.IsComplete;
+            BattleResult candidate = bossDestroyed && wavesFullySpawned
                 ? BattleResult.Win
                 : allyBaseDestroyed
                     ? BattleResult.Lose
@@ -812,11 +819,30 @@ namespace HanziDefend.Gameplay.Battle
 
             // OverlapCircle included a target when its tick-start collider touched the
             // query circle. Keep that snapshot timing while replacing the query itself.
-            float searchDistance = rules.TargetSearchRadius + rules.ColliderRadius;
+            //
+            // A unit that cannot move is the exception: for it, "in search radius" and "reachable"
+            // are the same question, so its candidate set is its own attack range. Without this the
+            // castle (moveSpeed 0, range 2.2, search radius 24) locked onto a crossbow four to seven
+            // cells away, could not close the distance, and therefore never fired a shot for the
+            // whole battle — while the melee standing on top of it was passed over. That single
+            // behaviour produced the 92% stage-one win rate and the 84s mean duration, and it
+            // inverted M1-04 §3.3's anti-monopoly rule into a guarantee of siege monopoly.
+            float searchDistance = IsStationary(seeker)
+                ? seeker.Stats.Range + rules.ColliderRadius
+                : rules.TargetSearchRadius + rules.ColliderRadius;
             Vector2 queryPosition = candidate.EntityId < targetQueryPositions.Count
                 ? targetQueryPositions[candidate.EntityId]
                 : candidate.Position;
             return (queryPosition - seeker.Position).sqrMagnitude <= searchDistance * searchDistance;
+        }
+
+        /// <summary>
+        /// A unit with no move speed can never shorten the distance to a target, so a target it
+        /// cannot reach is not a target at all.
+        /// </summary>
+        private static bool IsStationary(BattleUnit unit)
+        {
+            return unit.Stats.MoveSpeed <= 0f;
         }
 
         private void CaptureTargetQueryPositions()

@@ -20,10 +20,20 @@ namespace HanziDefend.Editor.Balance
     /// </summary>
     public static class WaveSetSpecTable
     {
-        /// <summary>WO-F1 §A.2, unchanged: act one probes, act two presses, act three decides.</summary>
-        public const float FirstActPressure = 0.55f;
-        public const float SecondActPressure = 0.85f;
-        public const float ThirdActPressure = 1.05f;
+        /// <summary>
+        /// Occupancy, not difficulty. A coefficient below 1.0 literally means "the enemy supplies
+        /// less than the player can kill", i.e. idle ally output — which is the thing this work
+        /// order exists to remove. In queueing terms the steady-state lifetime only has a fixed
+        /// point at 1.0; below it the queue drains and every arrival dies under full fire.
+        ///
+        /// <para>So the three values now read: act one is nearly saturated, act two is saturated,
+        /// act three overruns and the line starts giving ground. <b>These never move for win rate</b>
+        /// — that is <see cref="stageDifficultyScalar"/>'s job, and mixing the two is how the last
+        /// two rounds ended up with a hidden second difficulty curve.</para>
+        /// </summary>
+        public const float FirstActPressure = 0.90f;
+        public const float SecondActPressure = 1.05f;
+        public const float ThirdActPressure = 1.20f;
 
         /// <summary>
         /// Act lengths. WO-F1 §A.1's first-version numbers were 32 / 38 / >=42, which put the last

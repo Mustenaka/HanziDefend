@@ -144,10 +144,10 @@
     {
       "id": "chc", "name": "冲车", "displayName": "冲车", "faction": "Ally", "tier": "Green",
       "gridW": 2, "gridH": 2, "footprint": "MissingLowerLeft", "layer": "Ground", "spawnMode": "Delayed", "targeting": "RushBase",
-      "unitType": "Special", "armorType": "Building", "atkType": "Siege",
-      "bonusVs": [{ "target": "Building", "value": 900.0 }],
+      "unitType": "Special", "armorType": "Heavy", "atkType": "Siege",
+      "bonusVs": [{ "target": "Building", "value": 300.0 }],
       "traits": [{ "type": "DeathSpawn", "unitId": "zu", "count": 3 }], "effects": [],
-      "hp": { "base": 2600.0, "growth": 0.0 }, "atk": { "base": 300.0, "growth": 0.0 },
+      "hp": { "base": 1000.0, "growth": 0.0 }, "atk": { "base": 300.0, "growth": 0.0 },
       "range": { "base": 1.5, "growth": 0.0 }, "minRange": { "base": 0.0, "growth": 0.0 },
       "atkSpeed": { "base": 0.4, "growth": 0.0 }, "cooldown": { "base": 9.0, "growth": 0.0 },
       "armor": { "base": 25.0, "growth": 0.0 }, "pierce": { "base": 40.0, "growth": 0.0 },
@@ -188,7 +188,7 @@
     {
       "id": "bld_cheng", "name": "城", "displayName": "敌方城堡",
       "hp": 3600.0, "armor": 40.0, "unitType": "Building", "armorType": "Building",
-      "atk": 75.0, "range": 2.2, "atkSpeed": 0.9, "pierce": 30.0,
+      "atk": 60.0, "range": 7.0, "atkSpeed": 0.9, "pierce": 30.0,
       "atkType": "Blunt", "bonusVs": [], "effects": []
     }
   ],

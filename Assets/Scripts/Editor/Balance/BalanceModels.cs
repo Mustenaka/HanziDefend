@@ -115,7 +115,7 @@ namespace HanziDefend.Editor.Balance
 
     /// <summary>
     /// The reference boards, lifted verbatim out of <see cref="RunAccumulationSimulator"/> run
-    /// <c>0xE1002026</c> — the project's own default balance seed.
+    /// <c>0xA7CA930A</c>, the seed whose stage-one board sits at the p50 of a 21-seed sample.
     ///
     /// <para>They are frozen literals rather than a live call into the simulator on purpose: a
     /// reference lineup that silently rewrites itself whenever an economy number moves is not a
@@ -143,11 +143,9 @@ namespace HanziDefend.Editor.Balance
         /// </summary>
         private static readonly GridCoordinate[] StageFiveMask =
         {
-            new GridCoordinate(0, 0), new GridCoordinate(1, 0), new GridCoordinate(2, 0),
-            new GridCoordinate(3, 0), new GridCoordinate(4, 0), new GridCoordinate(5, 0),
-            new GridCoordinate(6, 0),
-            new GridCoordinate(1, 1), new GridCoordinate(2, 1), new GridCoordinate(3, 1),
-            new GridCoordinate(4, 1), new GridCoordinate(5, 1),
+            new GridCoordinate(1, 0), new GridCoordinate(2, 0), new GridCoordinate(3, 0),
+            new GridCoordinate(4, 0),
+            new GridCoordinate(2, 1), new GridCoordinate(3, 1),
             new GridCoordinate(2, 2), new GridCoordinate(3, 2), new GridCoordinate(4, 2),
             new GridCoordinate(2, 3), new GridCoordinate(3, 3), new GridCoordinate(4, 3),
             new GridCoordinate(2, 4), new GridCoordinate(3, 4), new GridCoordinate(4, 4)
@@ -159,13 +157,12 @@ namespace HanziDefend.Editor.Balance
             // used: this is what 45 starting coins and two free hands plus one 40-coin refresh buy.
             new BalanceLineup(
                 "A_real_s1",
-                "A_real_s1 · 真实开局（弩车2+长矛+冰+重骑，3×3 满格）",
+                "A_real_s1 · 真实开局·中位（冲车+长矛2+重骑，3×3）",
                 true,
                 new[]
                 {
-                    new BalanceLineupSpawn("nuc", 2, 3, 2),
-                    new BalanceLineupSpawn("mao", 1, 2, 2),
-                    new BalanceLineupSpawn("bing", 1, 4, 3),
+                    new BalanceLineupSpawn("chc", 1, 3, 2),
+                    new BalanceLineupSpawn("mao", 2, 2, 2),
                     new BalanceLineupSpawn("zqi", 1, 2, 4)
                 },
                 StageOneMask,
@@ -176,21 +173,18 @@ namespace HanziDefend.Editor.Balance
             // targets to be measured against.
             new BalanceLineup(
                 "A_real_s5",
-                "A_real_s5 · 真实积累 S5（11 单位 / 21 格 / 含弩车+冲车）",
+                "A_real_s5 · 真实积累 S5·中位（8 单位 / 15 格 / 含冲车+弩车）",
                 true,
                 new[]
                 {
-                    new BalanceLineupSpawn("nuc", 2, 3, 2),
+                    new BalanceLineupSpawn("chc", 2, 3, 2),
                     new BalanceLineupSpawn("mao", 2, 2, 2),
-                    new BalanceLineupSpawn("bing", 1, 4, 3),
                     new BalanceLineupSpawn("zqi", 2, 2, 4),
-                    new BalanceLineupSpawn("huo", 1, 3, 1),
-                    new BalanceLineupSpawn("chc", 2, 4, 0),
-                    new BalanceLineupSpawn("qqi", 2, 3, 0),
-                    new BalanceLineupSpawn("gong", 1, 2, 0),
-                    new BalanceLineupSpawn("zu", 1, 1, 0),
-                    new BalanceLineupSpawn("dao", 2, 1, 1),
-                    new BalanceLineupSpawn("gong", 1, 0, 0)
+                    new BalanceLineupSpawn("gong", 2, 3, 1),
+                    new BalanceLineupSpawn("bing", 1, 3, 2),
+                    new BalanceLineupSpawn("nuc", 2, 2, 0),
+                    new BalanceLineupSpawn("gong", 2, 4, 0),
+                    new BalanceLineupSpawn("zu", 1, 1, 0)
                 },
                 StageFiveMask,
                 new[] { StageFiveLevelId }),
@@ -199,36 +193,34 @@ namespace HanziDefend.Editor.Balance
             // refusing siege changes what gets deployed, not how the grid grows.
             new BalanceLineup(
                 "B_real_s1_nosiege",
-                "B_real_s1_nosiege · 真实开局·无器械（长矛+冰+重骑+弓）",
+                "B_real_s1_nosiege · 真实开局·中位·无器械（长矛×2+重骑）",
                 false,
                 new[]
                 {
                     new BalanceLineupSpawn("mao", 1, 3, 2),
-                    new BalanceLineupSpawn("bing", 1, 2, 2),
-                    new BalanceLineupSpawn("zqi", 1, 2, 4),
-                    new BalanceLineupSpawn("gong", 1, 4, 2)
+                    new BalanceLineupSpawn("mao", 1, 2, 2),
+                    new BalanceLineupSpawn("zqi", 1, 2, 4)
                 },
                 StageOneMask,
                 new[] { StageOneLevelId }),
 
             new BalanceLineup(
                 "B_real_s5_nosiege",
-                "B_real_s5_nosiege · 真实积累 S5·无器械（12 单位 / 21 格）",
+                "B_real_s5_nosiege · 真实积累 S5·中位·无器械（11 单位 / 15 格）",
                 false,
                 new[]
                 {
                     new BalanceLineupSpawn("mao", 2, 3, 2),
-                    new BalanceLineupSpawn("bing", 1, 2, 2),
+                    new BalanceLineupSpawn("mao", 2, 2, 2),
                     new BalanceLineupSpawn("zqi", 2, 2, 4),
-                    new BalanceLineupSpawn("gong", 1, 4, 2),
-                    new BalanceLineupSpawn("huo", 1, 3, 1),
-                    new BalanceLineupSpawn("mao", 2, 4, 0),
-                    new BalanceLineupSpawn("zu", 1, 3, 0),
-                    new BalanceLineupSpawn("zu", 1, 5, 0),
+                    new BalanceLineupSpawn("gong", 2, 3, 1),
+                    new BalanceLineupSpawn("bing", 1, 4, 2),
+                    new BalanceLineupSpawn("gong", 2, 4, 3),
+                    new BalanceLineupSpawn("gong", 2, 3, 0),
                     new BalanceLineupSpawn("gong", 1, 2, 0),
-                    new BalanceLineupSpawn("zu", 1, 1, 0),
-                    new BalanceLineupSpawn("dao", 2, 1, 1),
-                    new BalanceLineupSpawn("gong", 1, 0, 0)
+                    new BalanceLineupSpawn("gong", 1, 4, 0),
+                    new BalanceLineupSpawn("gong", 1, 2, 1),
+                    new BalanceLineupSpawn("zu", 1, 1, 0)
                 },
                 StageFiveMask,
                 new[] { StageFiveLevelId })

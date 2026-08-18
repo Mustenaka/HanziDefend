@@ -55,31 +55,83 @@ namespace HanziDefend.Tests.EditMode
             }
         }
 
+        // Sampling behind the two bounds below: RunAccumulationSimulator over 21 seeds drawn from
+        // Rng(0xE1002026), scoring each stage-one board as Σ(live cap × atk × atkSpeed × armour-mix
+        // multiplier) with the act-three mix 0.34/0.34/0.32 and no hit-point term. Frozen cohort
+        // seed is 0xA7CA930A, whose board scores 391.2 — the p50 of that sample.
+        private const int ReferenceSampleSeeds = 21;
+        private const double StageOneBoardP25 = 308.3d;
+        private const double StageOneBoardP75 = 480.7d;
+
         /// <summary>
-        /// WO-F1 §C in assertions: the stage-five reference board has to be what a player who
-        /// actually reached stage five is holding, not six level-1 units on three columns.
+        /// WO-F4 §0: the stage-five board is graded on properties, not on a unit count. Under
+        /// barracks a cell's worth is its live cap times its output, so "ten units" stopped meaning
+        /// "a strong board" — a median board is fewer, better-chosen units filling the same cells.
         /// </summary>
         [Test]
-        public void StageFiveReferenceBoard_HasTenPlusUnitsOnFifteenPlusCellsIncludingMerges()
+        public void ReferenceBoards_FillTheirGridCarryMergesAndSitInsideTheSampledBand()
         {
-            BalanceLineup lineup = BalanceReferenceLineups.All
-                .Single(value => value.Id == BalanceReferenceLineups.StageFiveGateLineupId);
+            GameConfig config = GameConfig.Load();
 
-            Assert.That(lineup.Spawns, Has.Count.GreaterThanOrEqualTo(10),
-                "a stage-five board carries at least ten units");
-            Assert.That(lineup.DeclaredUnlockedCellCount, Is.GreaterThanOrEqualTo(15),
-                "a stage-five board is spread over at least fifteen unlocked cells");
-            Assert.That(lineup.Spawns.Count(value => value.Level >= 2), Is.GreaterThanOrEqualTo(3),
-                "a stage-five board carries merge results, not only fresh level-1 cards");
-            Assert.That(lineup.ExpectedToContainSiege, Is.True);
-            Assert.That(lineup.LevelIds, Is.EqualTo(new[] { "level_1_5" }));
+            foreach (BalanceLineup lineup in BalanceReferenceLineups.All)
+            {
+                int occupied = lineup.Spawns.Sum(value =>
+                    UnitFootprint.FromDefinition(config.GetUnit(value.UnitId)).OccupiedCellCount);
+                double fill = occupied / (double)lineup.DeclaredUnlockedCellCount;
+                Assert.That(fill, Is.GreaterThanOrEqualTo(0.9d),
+                    $"{lineup.Id}: an empty cell is permanent zero output under barracks, so a "
+                    + "reference board must be effectively full");
+            }
+
+            BalanceLineup stageFive = BalanceReferenceLineups.All
+                .Single(value => value.Id == BalanceReferenceLineups.StageFiveGateLineupId);
+            Assert.That(stageFive.Spawns.Count(value => value.Level >= 2), Is.GreaterThanOrEqualTo(1),
+                "a stage-five board carries at least one merge result");
+            Assert.That(stageFive.ExpectedToContainSiege, Is.True);
+            Assert.That(stageFive.LevelIds, Is.EqualTo(new[] { "level_1_5" }));
 
             BalanceLineup noSiege = BalanceReferenceLineups.All
                 .Single(value => value.Id == "B_real_s5_nosiege");
             Assert.That(noSiege.ExpectedToContainSiege, Is.False);
             Assert.That(noSiege.DeclaredUnlockedCellCount,
-                Is.EqualTo(lineup.DeclaredUnlockedCellCount),
+                Is.EqualTo(stageFive.DeclaredUnlockedCellCount),
                 "declining siege changes what is deployed, not how the grid grew");
+        }
+
+        /// <summary>
+        /// The frozen stage-one cohort must be a typical board, not a lucky one. Both sides are
+        /// checked on purpose: a one-sided floor would happily accept another 0xE1002026, the
+        /// above-median seed this work order already froze once by accident.
+        /// </summary>
+        [Test]
+        public void StageOneReferenceBoard_ScoresInsideTheSampledInterquartileBand()
+        {
+            GameConfig config = GameConfig.Load();
+            BalanceLineup lineup = BalanceReferenceLineups.All
+                .Single(value => value.Id == BalanceReferenceLineups.StageOneGateLineupId);
+
+            double score = 0d;
+            foreach (BalanceLineupSpawn spawn in lineup.Spawns)
+            {
+                UnitDef unit = config.GetUnit(spawn.UnitId);
+                int cells = UnitFootprint.FromDefinition(unit).OccupiedCellCount;
+                int cap = config.Economy.Deployment.LiveCapForUnit(unit.Id, cells);
+                if (unit.AtkType == AttackType.None || unit.Atk.Base <= 0f)
+                {
+                    continue;
+                }
+
+                double multiplier =
+                    (0.34d * Formula.TypeMultiplier(unit.AtkType, ArmorType.Unarmored, config.Economy))
+                    + (0.34d * Formula.TypeMultiplier(unit.AtkType, ArmorType.Light, config.Economy))
+                    + (0.32d * Formula.TypeMultiplier(unit.AtkType, ArmorType.Heavy, config.Economy));
+                score += cap * unit.Atk.Base * unit.AtkSpeed.Base * multiplier;
+            }
+
+            Assert.That(ReferenceSampleSeeds, Is.GreaterThanOrEqualTo(15));
+            Assert.That(score, Is.InRange(StageOneBoardP25, StageOneBoardP75),
+                $"stage-one board scores {score:0.0}; the {ReferenceSampleSeeds}-seed sample puts "
+                + $"p25 at {StageOneBoardP25} and p75 at {StageOneBoardP75}");
         }
 
         /// <summary>

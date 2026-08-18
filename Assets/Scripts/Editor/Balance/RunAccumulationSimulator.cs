@@ -185,8 +185,20 @@ namespace HanziDefend.Editor.Balance
 
                 for (int action = 0; action < MaximumPaidActionsPerStage; action++)
                 {
-                    // Grid before re-rolls: an unlocked cell is permanent and inherited, while a
-                    // re-roll is spent the moment it is taken.
+                    // Filling an empty cell outranks widening the grid. Under barracks an empty
+                    // cell is permanent zero output, so buying a wider board while one of the cells
+                    // already owned produces nothing is strictly the wrong order.
+                    if (HasEmptyPlaceableCell(config, economy)
+                        && economy.CanRefresh
+                        && economy.TryRefresh(out _))
+                    {
+                        paidRefreshes++;
+                        PlayHand(config, economy, allowSiege);
+                        continue;
+                    }
+
+                    // Grid before re-rolls otherwise: an unlocked cell is permanent and inherited,
+                    // while a re-roll is spent the moment it is taken.
                     if (economy.CanPurchaseUnlockCard && economy.TryPurchaseUnlockCard(out _))
                     {
                         purchases++;
@@ -203,6 +215,12 @@ namespace HanziDefend.Editor.Balance
 
                     break;
                 }
+
+                // Closing fill, deliberately exempt from the quality gate. The gate can decline a
+                // whole hand, and a declined hand at the end of a stage leaves the cell it would
+                // have filled empty — which under barracks is permanent zero output, not merely a
+                // weaker unit. Any 1x1 beats an empty cell (卒 83.8 per cell, 弓 141.5).
+                PlayHand(config, economy, allowSiege);
 
                 economy.SnapshotToRunState();
                 int drops = BattleDropCoins(config, level);
@@ -493,6 +511,23 @@ namespace HanziDefend.Editor.Balance
                 + (LateArmourMix[1] * Formula.TypeMultiplier(unit.AtkType, ArmorType.Light, config.Economy))
                 + (LateArmourMix[2] * Formula.TypeMultiplier(unit.AtkType, ArmorType.Heavy, config.Economy));
             return raw * weighted;
+        }
+
+        /// <summary>True when at least one unlocked cell is free and could still hold a 1x1.</summary>
+        private static bool HasEmptyPlaceableCell(GameConfig config, CardEconomy economy)
+        {
+            IReadOnlyList<UnitDef> eligible = UnitCardPoolPolicy.GetEligibleUnits(config, economy.Grid);
+            for (int index = 0; index < eligible.Count; index++)
+            {
+                var footprint = UnitFootprint.FromDefinition(eligible[index]);
+                if (footprint.OccupiedCellCount == 1
+                    && economy.Grid.GetAvailableAnchors(footprint).Count > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static int CountSiegeUnits(GameConfig config, CardEconomy economy)

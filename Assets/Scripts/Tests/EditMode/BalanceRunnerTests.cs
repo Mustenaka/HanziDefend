@@ -280,7 +280,7 @@ namespace HanziDefend.Tests.EditMode
                 TickTo(system, cooldown - 0.5d);
                 Assert.That(system.GetAliveCount(BattleTeam.Ally), Is.Zero,
                     "still queued half a second before its cooldown expires");
-                Assert.That(system.CapturePendingDeployments().Single().RemainingSeconds,
+                Assert.That(system.CaptureDeploymentSlots().Single().RemainingSeconds,
                     Is.GreaterThan(0f));
 
                 TickTo(system, cooldown + 0.2d);
@@ -313,6 +313,117 @@ namespace HanziDefend.Tests.EditMode
                 "entry order follows the cooldown ladder already in units.json");
             Assert.That(recorder.EntrySeconds["zu"], Is.EqualTo(1.2d).Within(0.05d));
             Assert.That(recorder.EntrySeconds["chc"], Is.EqualTo(9.0d).Within(0.05d));
+        }
+
+        /// <summary>
+        /// WO-F3 §C.1②, the core of the work order: a deployment cell is a barracks. It produces
+        /// again when its cooldown expires, <b>not</b> when the previous unit dies. Reverting to the
+        /// one-shot queue must turn this red.
+        /// </summary>
+        [Test]
+        public void Deploy_KeepsProducingWhileThePreviousUnitIsStillAlive()
+        {
+            GameConfig config = CreateEmptyBattlefieldConfig();
+            UnitDef fill = config.GetUnit("zu");
+            float cooldown = fill.Cooldown.Base;
+
+            using (BattleSystem system = BattleSystem.CreateEncounter(
+                       config, "level_1_1", 0xF3000001u, simulatePhysics: false))
+            {
+                system.Deploy(new UnitSpawnRequest("zu", 1, new UnityEngine.Vector2(0f, -7f)));
+
+                TickTo(system, cooldown + 0.2d);
+                Assert.That(system.AllyFieldUnitCount, Is.EqualTo(1), "first unit arrives on cooldown");
+
+                TickTo(system, (cooldown * 2d) + 0.2d);
+                Assert.That(system.AllyFieldUnitCount, Is.EqualTo(2),
+                    "the second one arrives on the next cooldown, with the first still alive");
+
+                TickTo(system, (cooldown * 3d) + 0.2d);
+                Assert.That(system.AllyFieldUnitCount, Is.EqualTo(3));
+            }
+        }
+
+        /// <summary>WO-F3 §C.1③, first half: a full cell stops producing and holds its cooldown.</summary>
+        [Test]
+        public void Deploy_StopsAtTheCellLiveCap()
+        {
+            GameConfig config = CreateEmptyBattlefieldConfig();
+            int cap = config.Economy.Deployment.LiveCapForCells(1);
+            float cooldown = config.GetUnit("zu").Cooldown.Base;
+            Assert.That(cap, Is.GreaterThan(1), "a 1x1 cell is meant to stack");
+
+            using (BattleSystem system = BattleSystem.CreateEncounter(
+                       config, "level_1_1", 0xF3000002u, simulatePhysics: false))
+            {
+                system.Deploy(new UnitSpawnRequest("zu", 1, new UnityEngine.Vector2(0f, -7f)));
+
+                // Well past the point where an uncapped cell would have produced many more.
+                TickTo(system, cooldown * (cap + 4));
+
+                Assert.That(system.AllyFieldUnitCount, Is.EqualTo(cap), "the cell holds at its cap");
+                DeploymentSlotSnapshot slot = system.CaptureDeploymentSlots().Single();
+                Assert.That(slot.IsHeldAtCap, Is.True);
+                Assert.That(slot.LiveCount, Is.EqualTo(slot.LiveCap));
+                Assert.That(slot.RemainingSeconds, Is.Zero,
+                    "a held cell parks its cooldown rather than banking charges to dump on release");
+            }
+        }
+
+        /// <summary>
+        /// WO-F3 §C.1③, second half, end to end: over a real battle a board produces far more units
+        /// than it has cells, which can only happen if cells refill after their units die.
+        /// </summary>
+        [Test]
+        public void Deploy_RefillsCellsAcrossARealBattleAndRespectsTheFieldLimit()
+        {
+            GameConfig config = GameConfig.Load();
+            BalanceLineup lineup = BalanceReferenceLineups.All
+                .Single(value => value.Id == BalanceReferenceLineups.StageOneGateLineupId);
+            var recorder = new RecordingDeploymentEvents();
+
+            using (BattleSystem system = BattleSystem.CreateEncounter(
+                       config, "level_1_1", 0xF3000003u, recorder, simulatePhysics: false))
+            {
+                foreach (BalanceLineupSpawn spawn in lineup.Spawns)
+                {
+                    system.Deploy(new UnitSpawnRequest(
+                        spawn.UnitId, spawn.Level, new UnityEngine.Vector2(0f, -7f)));
+                }
+
+                int peak = 0;
+                while (!system.IsSettled && system.SimulatedTimeSeconds < 160d)
+                {
+                    system.Tick(system.FixedDeltaTime);
+                    if (system.AllyFieldUnitCount > peak)
+                    {
+                        peak = system.AllyFieldUnitCount;
+                    }
+                }
+
+                // Measured 10 productions from 4 cells on the stage-one board. The board is three
+                // large units (live cap 1-2) and one 1x1, so its ceiling is modest by construction —
+                // the assertion is that cells produce repeatedly, not that this board floods.
+                Assert.That(recorder.EntryOrder.Count, Is.GreaterThan(lineup.Spawns.Count * 2),
+                    "cells keep producing through the battle, not once each");
+                Assert.That(peak,
+                    Is.LessThanOrEqualTo(config.Economy.Deployment.AllyFieldUnitLimit),
+                    "the ally field limit is never exceeded");
+            }
+        }
+
+        [Test]
+        public void DeploymentLiveCaps_AreDataDrivenAndNeverRiseWithFootprintSize()
+        {
+            DeploymentRulesDef deployment = GameConfig.Load().Economy.Deployment;
+
+            Assert.That(deployment.AllyFieldUnitLimit, Is.GreaterThan(0));
+            Assert.That(deployment.LiveCapByFootprintCells, Is.Not.Empty);
+            Assert.That(deployment.LiveCapForCells(1),
+                Is.GreaterThanOrEqualTo(deployment.LiveCapForCells(2)));
+            Assert.That(deployment.LiveCapForCells(2),
+                Is.GreaterThanOrEqualTo(deployment.LiveCapForCells(4)));
+            Assert.That(deployment.LiveCapForCells(4), Is.GreaterThan(0));
         }
 
         [Test]
@@ -651,6 +762,40 @@ namespace HanziDefend.Tests.EditMode
                 "a siege-free stage-five board must be able to win at all");
             Assert.That(noSiege.WinRate, Is.LessThan(stageFive.WinRate),
                 "…and must still be clearly worse than the board that brought siege");
+        }
+
+        /// <summary>
+        /// A battlefield with no enemies, so ally production can be observed on its own. The single
+        /// wave sits far past any tick budget the tests use, which also keeps the wave scheduler
+        /// incomplete and therefore keeps the battle from settling.
+        /// </summary>
+        private static GameConfig CreateEmptyBattlefieldConfig()
+        {
+            GameConfig config = GameConfig.Load();
+            LevelDef level = config.GetLevel("level_1_1");
+            level.BaseHp = 1000000f;
+            config.GetWaveSet(level.WaveSetId).Waves = new[]
+            {
+                new WaveDef
+                {
+                    Index = 1,
+                    Act = WaveActs.Third,
+                    RewardRank = EnemyRank.Boss,
+                    DelaySec = 100000f,
+                    Spawns = new[]
+                    {
+                        new WaveSpawnDef
+                        {
+                            UnitId = "bld_cheng",
+                            Level = 1,
+                            Count = 1,
+                            SpreadX = 0f,
+                            IntervalSec = 0f
+                        }
+                    }
+                }
+            };
+            return config;
         }
 
         private static void TickTo(BattleSystem system, double targetSeconds)

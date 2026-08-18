@@ -54,6 +54,15 @@
       { "armorType": "Building", "atkType": "Siege", "value": 2.0 }
     ]
   },
+  "deployment": {
+    "allyFieldUnitLimit": 60,
+    "liveCapByFootprintCells": [
+      { "cells": 1, "cap": 4 },
+      { "cells": 2, "cap": 2 },
+      { "cells": 3, "cap": 1 },
+      { "cells": 4, "cap": 1 }
+    ]
+  },
   "cardWeights": {
     "unit": 81,
     "unlock": 4,

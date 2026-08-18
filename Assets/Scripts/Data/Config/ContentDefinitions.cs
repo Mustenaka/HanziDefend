@@ -562,9 +562,77 @@ namespace HanziDefend.Data
         public float AllyAdvanceLimitY { get; set; }
     }
 
+    /// <summary>How many of one unit a single deployment cell may keep on the field at once.</summary>
+    [Serializable]
+    public sealed class FootprintLiveCapDef
+    {
+        /// <summary>Occupied cells of the unit's footprint (L-shapes count 3, not 4).</summary>
+        public int Cells { get; set; }
+
+        public int Cap { get; set; }
+    }
+
+    /// <summary>
+    /// Rules for treating a deployment cell as a barracks (WO-F3).
+    ///
+    /// <para>拆解文档 §36 asks for units to spawn "according to deployment and cooldown", and §38
+    /// calls the intended feel bullet-hell with units dying easily. M1-00 §3.1 compressed that into
+    /// "Delayed spawns when its cooldown expires", which reads as one-shot, and WO-F1 §B implemented
+    /// the compressed sentence. These rules restore the missing half: a cell keeps producing.</para>
+    /// </summary>
+    [Serializable]
+    public sealed class DeploymentRulesDef
+    {
+        /// <summary>
+        /// Hard ceiling on ally units alive on the field at once, whatever the cells would produce.
+        /// The performance gate is written against 200 units total and both sides now stream, so a
+        /// board of barracks needs a ceiling that is a decision rather than an emergent accident.
+        /// </summary>
+        public int AllyFieldUnitLimit { get; set; }
+
+        /// <summary>
+        /// Simultaneous-alive cap per cell, by footprint size. Without it the units that never die
+        /// because they stand at the back — 弓, 弩车 — stack without bound. With it, a big unit
+        /// (cap 1) makes cooldown-driven and death-driven respawn the same thing.
+        /// </summary>
+        public FootprintLiveCapDef[] LiveCapByFootprintCells { get; set; }
+            = Array.Empty<FootprintLiveCapDef>();
+
+        /// <summary>Live cap for a footprint of the given size; falls back to the largest declared.</summary>
+        public int LiveCapForCells(int cells)
+        {
+            FootprintLiveCapDef[] entries = LiveCapByFootprintCells;
+            if (entries == null || entries.Length == 0)
+            {
+                return 1;
+            }
+
+            int best = entries[0].Cap;
+            int bestCells = entries[0].Cells;
+            for (int index = 0; index < entries.Length; index++)
+            {
+                FootprintLiveCapDef entry = entries[index];
+                if (entry.Cells == cells)
+                {
+                    return entry.Cap;
+                }
+
+                if (entry.Cells < cells && entry.Cells >= bestCells)
+                {
+                    bestCells = entry.Cells;
+                    best = entry.Cap;
+                }
+            }
+
+            return best;
+        }
+    }
+
     [Serializable]
     public sealed class EconomyDef
     {
+        public DeploymentRulesDef Deployment { get; set; } = new DeploymentRulesDef();
+
         public int RefreshBaseCost { get; set; }
 
         public int RefreshCostGrowth { get; set; }

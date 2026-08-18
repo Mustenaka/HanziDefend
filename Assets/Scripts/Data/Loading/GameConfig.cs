@@ -692,6 +692,7 @@ namespace HanziDefend.Data
                 }
             }
 
+            ValidateDeployment(Economy.Deployment);
             ValidateCardPool(Economy.CardPool);
             ValidateSettlementReward(Economy.SettlementReward);
 
@@ -720,6 +721,58 @@ namespace HanziDefend.Data
             Require(battle.AllyBasePosition.X != battle.EnemyBasePosition.X
                     || battle.AllyBasePosition.Y != battle.EnemyBasePosition.Y,
                 "economy.battle allyBasePosition and enemyBasePosition must be different.");
+        }
+
+        /// <summary>
+        /// WO-F3: a deployment cell produces units forever, so both of its bounds have to be real
+        /// numbers somebody chose. A missing or non-positive cap is an unbounded spawner.
+        /// </summary>
+        private void ValidateDeployment(DeploymentRulesDef deployment)
+        {
+            Require(deployment != null, "economy.deployment is required.");
+            Require(deployment.AllyFieldUnitLimit > 0,
+                "economy.deployment.allyFieldUnitLimit must be positive — deployment cells produce "
+                + "units for the whole battle, so the field needs a declared ceiling.");
+            Require(deployment.LiveCapByFootprintCells != null
+                    && deployment.LiveCapByFootprintCells.Length > 0,
+                "economy.deployment.liveCapByFootprintCells must declare at least one tier.");
+
+            var seenCells = new HashSet<int>();
+            int previousCells = 0;
+            int previousCap = int.MaxValue;
+            foreach (FootprintLiveCapDef entry in deployment.LiveCapByFootprintCells)
+            {
+                Require(entry != null, "economy.deployment.liveCapByFootprintCells has a null entry.");
+                Require(entry.Cells > 0,
+                    "economy.deployment.liveCapByFootprintCells cells must be positive.");
+                Require(entry.Cap > 0,
+                    $"economy.deployment.liveCapByFootprintCells cap for {entry.Cells} cells must be "
+                    + "positive; zero would make the cell produce nothing at all.");
+                Require(seenCells.Add(entry.Cells),
+                    $"economy.deployment.liveCapByFootprintCells repeats {entry.Cells} cells.");
+                Require(entry.Cells > previousCells,
+                    "economy.deployment.liveCapByFootprintCells must be ordered by ascending cells.");
+                Require(entry.Cap <= previousCap,
+                    $"economy.deployment.liveCapByFootprintCells gives {entry.Cells} cells a higher "
+                    + "cap than a smaller footprint; a bigger unit cannot stack deeper than a small one.");
+                previousCells = entry.Cells;
+                previousCap = entry.Cap;
+            }
+
+            foreach (UnitDef unit in AllyUnits)
+            {
+                int cells = UnitFootprintCellCount(unit);
+                Require(deployment.LiveCapForCells(cells) > 0,
+                    $"economy.deployment.liveCapByFootprintCells has no usable cap for ally unit "
+                    + $"'{unit.Id}' ({cells} cells).");
+            }
+        }
+
+        /// <summary>Occupied cells of a unit footprint; the two L-shapes cover three, not four.</summary>
+        private static int UnitFootprintCellCount(UnitDef unit)
+        {
+            int bounding = unit.GridW * unit.GridH;
+            return unit.Footprint == UnitFootprintShape.Rectangle ? bounding : bounding - 1;
         }
 
         private static void ValidatePosition(Position2Def position, string context)

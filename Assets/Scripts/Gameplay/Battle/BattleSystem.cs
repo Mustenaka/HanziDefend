@@ -1057,6 +1057,7 @@ namespace HanziDefend.Gameplay.Battle
             unit.TargetEntityId = null;
             unit.CurrentHp = 0f;
             (unit.Team == BattleTeam.Ally ? aliveAllyUnits : aliveEnemyUnits).Remove(unit);
+            ReleaseDeploymentSlotFor(unit.EntityId);
             events.UnitDied(new UnitDiedEvent(
                 NextEventSequence(),
                 TickIndex,

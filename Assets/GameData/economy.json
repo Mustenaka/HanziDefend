@@ -61,6 +61,10 @@
       { "cells": 2, "cap": 2 },
       { "cells": 3, "cap": 1 },
       { "cells": 4, "cap": 1 }
+    ],
+    "liveCapOverrides": [
+      { "unitId": "huo", "cap": 1 },
+      { "unitId": "bing", "cap": 1 }
     ]
   },
   "cardWeights": {

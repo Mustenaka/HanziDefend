@@ -759,10 +759,34 @@ namespace HanziDefend.Data
                 previousCap = entry.Cap;
             }
 
+            Require(deployment.LiveCapOverrides != null,
+                "economy.deployment.liveCapOverrides must be an array.");
+            foreach (UnitLiveCapDef entry in deployment.LiveCapOverrides)
+            {
+                Require(entry != null, "economy.deployment.liveCapOverrides has a null entry.");
+                RequireId(entry.UnitId, "economy.deployment.liveCapOverrides unitId");
+                Require(UnitsById.ContainsKey(entry.UnitId),
+                    $"economy.deployment.liveCapOverrides references unknown unit '{entry.UnitId}'.");
+                Require(entry.Cap > 0,
+                    $"economy.deployment.liveCapOverrides cap for '{entry.UnitId}' must be positive.");
+            }
+
+            // An aura projects from one source and does not stack, so a second body on the same cell
+            // adds hit points and nothing else. This is a rule, not a tuning value.
+            foreach (UnitDef unit in AllyUnits)
+            {
+                if (unit.Atk != null && unit.Atk.Base <= 0f)
+                {
+                    Require(deployment.LiveCapForUnit(unit.Id, UnitFootprintCellCount(unit)) == 1,
+                        $"Unit '{unit.Id}' has no attack, so its aura is its only contribution and "
+                        + "auras do not stack; its deployment live cap must be exactly 1.");
+                }
+            }
+
             foreach (UnitDef unit in AllyUnits)
             {
                 int cells = UnitFootprintCellCount(unit);
-                Require(deployment.LiveCapForCells(cells) > 0,
+                Require(deployment.LiveCapForUnit(unit.Id, cells) > 0,
                     $"economy.deployment.liveCapByFootprintCells has no usable cap for ally unit "
                     + $"'{unit.Id}' ({cells} cells).");
             }

@@ -105,6 +105,20 @@ namespace HanziDefend.Editor.Balance
         /// <summary>Siege placements the board wants before siege stops jumping the queue.</summary>
         private const int MinimumSiegeUnits = 1;
 
+        /// <summary>
+        /// A hand is worth playing when its best placeable unit card reaches this fraction of the
+        /// best per-cell value currently obtainable; below it, and while a free deal is still owed,
+        /// the policy re-deals instead.
+        ///
+        /// <para>Per-cell value spans nearly five times across the ally table, and stage one has
+        /// only nine cells — so a single-seed board is largely a lottery ticket, which is what made
+        /// the stage-one reading swing. This is a bounded quality floor, <b>not</b> "re-roll until
+        /// the best card appears": it can only spend deals the curve already granted, so a run that
+        /// keeps missing simply plays fewer, better-chosen hands. Re-rolling to exhaustion would
+        /// bias the reference board upward, which is the same error in the other direction.</para>
+        /// </summary>
+        private const double HandQualityFloor = 0.6d;
+
         /// <summary>Unarmored / light / heavy shares of act three, used to weight effective DPS.</summary>
         private static readonly double[] LateArmourMix = { 0.34d, 0.34d, 0.32d };
 
@@ -145,6 +159,11 @@ namespace HanziDefend.Editor.Balance
                 {
                     economy.DrawOffer();
                     freeHands++;
+                    if (ShouldRedealInsteadOfPlaying(config, economy, allowSiege))
+                    {
+                        continue;
+                    }
+
                     PlayHand(config, economy, allowSiege);
                 }
 
@@ -156,6 +175,11 @@ namespace HanziDefend.Editor.Balance
                     }
 
                     freeHands++;
+                    if (ShouldRedealInsteadOfPlaying(config, economy, allowSiege))
+                    {
+                        continue;
+                    }
+
                     PlayHand(config, economy, allowSiege);
                 }
 
@@ -224,6 +248,72 @@ namespace HanziDefend.Editor.Balance
             }
 
             return total;
+        }
+
+        /// <summary>
+        /// True when this hand is poor enough to be worth re-dealing, and a free deal remains to
+        /// pay for it. See <see cref="HandQualityFloor"/> for why the floor is bounded.
+        /// </summary>
+        private static bool ShouldRedealInsteadOfPlaying(
+            GameConfig config,
+            CardEconomy economy,
+            bool allowSiege)
+        {
+            if (economy.FreeOffersRemaining <= 0 || economy.CurrentOffer == null)
+            {
+                return false;
+            }
+
+            // A hand carrying an unlock card is always worth playing: grid is permanent.
+            IReadOnlyList<CardOfferItem> cards = economy.CurrentOffer.Cards;
+            for (int index = 0; index < cards.Count; index++)
+            {
+                if (cards[index].Category == CardCategory.Unlock)
+                {
+                    return false;
+                }
+            }
+
+            double bestInHand = 0d;
+            for (int index = 0; index < cards.Count; index++)
+            {
+                CardOfferItem card = cards[index];
+                if (card.Category != CardCategory.Unit)
+                {
+                    continue;
+                }
+
+                UnitDef definition = config.GetUnit(card.ContentId);
+                if (!allowSiege && definition.AtkType == AttackType.Siege)
+                {
+                    continue;
+                }
+
+                double value = PerCellValue(config, definition);
+                if (value > bestInHand)
+                {
+                    bestInHand = value;
+                }
+            }
+
+            double bestAvailable = 0d;
+            IReadOnlyList<UnitDef> eligible = UnitCardPoolPolicy.GetEligibleUnits(config, economy.Grid);
+            for (int index = 0; index < eligible.Count; index++)
+            {
+                UnitDef definition = eligible[index];
+                if (!allowSiege && definition.AtkType == AttackType.Siege)
+                {
+                    continue;
+                }
+
+                double value = PerCellValue(config, definition);
+                if (value > bestAvailable)
+                {
+                    bestAvailable = value;
+                }
+            }
+
+            return bestAvailable > 0d && bestInHand < HandQualityFloor * bestAvailable;
         }
 
         private static void PlayHand(GameConfig config, CardEconomy economy, bool allowSiege)

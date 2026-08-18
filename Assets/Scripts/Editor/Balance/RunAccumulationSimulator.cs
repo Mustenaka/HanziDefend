@@ -85,8 +85,28 @@ namespace HanziDefend.Editor.Balance
         /// <summary>Ceiling on coin-funded actions per stage; a stop, not a target.</summary>
         private const int MaximumPaidActionsPerStage = 24;
 
-        /// <summary>Aura units (火 / 冰) the policy will keep on the board. See RankUnitCards.</summary>
-        private const int MaximumAuraUnits = 2;
+        /// <summary>
+        /// Aura units (火 / 冰) the policy will keep on the board — one, not two.
+        ///
+        /// <para>An aura resolves from a single source: the battle looks up one aura provider, and
+        /// two providers do not stack. Combined with their live cap of 1, a second aura unit is one
+        /// deployment cell producing 120 hit points of body and zero damage. Measured on the
+        /// stage-one board it cost about a hundred effective DPS out of nine cells.</para>
+        /// </summary>
+        private const int MaximumAuraUnits = 1;
+
+        /// <summary>
+        /// How much a cell's sustained hit-point output counts against its sustained damage in
+        /// <see cref="PerCellValue"/>. HP throughput runs two to four times the DPS figures, so an
+        /// unweighted sum would rank purely by tankiness.
+        /// </summary>
+        private const double HitPointWeight = 0.25d;
+
+        /// <summary>Siege placements the board wants before siege stops jumping the queue.</summary>
+        private const int MinimumSiegeUnits = 1;
+
+        /// <summary>Unarmored / light / heavy shares of act three, used to weight effective DPS.</summary>
+        private static readonly double[] LateArmourMix = { 0.34d, 0.34d, 0.32d };
 
         public static IReadOnlyList<RunAccumulationStage> Simulate(GameConfig config, uint seed)
         {
@@ -279,6 +299,7 @@ namespace HanziDefend.Editor.Balance
             bool allowSiege)
         {
             int auraCount = CountAuraUnits(config, economy);
+            int siegeCount = CountSiegeUnits(config, economy);
             var ranked = new List<CardOfferItem>();
             for (int index = 0; index < cards.Count; index++)
             {
@@ -303,28 +324,100 @@ namespace HanziDefend.Editor.Balance
             }
 
             ranked.Sort((left, right) => CompareUnitPreference(
+                config,
                 config.GetUnit(left.ContentId),
-                config.GetUnit(right.ContentId)));
+                config.GetUnit(right.ContentId),
+                siegeCount < MinimumSiegeUnits));
             return ranked;
         }
 
-        private static int CompareUnitPreference(UnitDef left, UnitDef right)
+        private static int CompareUnitPreference(
+            GameConfig config,
+            UnitDef left,
+            UnitDef right,
+            bool stillNeedsSiege)
         {
-            bool leftSiege = left.AtkType == AttackType.Siege;
-            bool rightSiege = right.AtkType == AttackType.Siege;
-            if (leftSiege != rightSiege)
+            // Siege jumps the queue only until the board owns a can-opener. The castle takes 0.25x
+            // from arrow and 0.5x from slash, so a board with no siege has no route through act
+            // three at all — but past the first one, siege is just another unit, and ranking it
+            // ahead unconditionally cost the stage-one board a cell of 104/cell archer to buy a
+            // 78/cell crossbow it already had.
+            if (stillNeedsSiege)
             {
-                return leftSiege ? -1 : 1;
+                bool leftSiege = left.AtkType == AttackType.Siege;
+                bool rightSiege = right.AtkType == AttackType.Siege;
+                if (leftSiege != rightSiege)
+                {
+                    return leftSiege ? -1 : 1;
+                }
             }
 
-            int leftCells = UnitFootprint.FromDefinition(left).OccupiedCellCount;
-            int rightCells = UnitFootprint.FromDefinition(right).OccupiedCellCount;
-            if (leftCells != rightCells)
+            double leftValue = PerCellValue(config, left);
+            double rightValue = PerCellValue(config, right);
+            int byValue = rightValue.CompareTo(leftValue);
+            return byValue != 0 ? byValue : string.CompareOrdinal(left.Id, right.Id);
+        }
+
+        /// <summary>
+        /// What one deployment cell is worth once cells are barracks (WO-F3).
+        ///
+        /// <para>The old rule was "prefer the biggest footprint", which came from the one-shot era
+        /// where a cell delivered one unit forever and a bigger unit was simply more unit. Under
+        /// barracks a cell's output is <c>live cap × per-unit contribution</c> spread over its
+        /// occupied cells, and the live cap <i>falls</i> as the footprint grows — so the old rule
+        /// selected almost exactly the wrong end of the table. Measured: it built a stage-one board
+        /// worth 443 effective DPS on nine cells where the same nine cells can hold 865.</para>
+        ///
+        /// <para>Two terms, because a cell buys both damage and a body that soaks: sustained damage
+        /// <c>cap × effective DPS / cells</c>, plus sustained hit points <c>cap × hp / cooldown /
+        /// cells</c>. The hit-point term is weighted at <see cref="HitPointWeight"/> because raw HP
+        /// throughput runs two to four times the DPS numbers and would otherwise decide the whole
+        /// ordering by itself.</para>
+        /// </summary>
+        private static double PerCellValue(GameConfig config, UnitDef unit)
+        {
+            var footprint = UnitFootprint.FromDefinition(unit);
+            int cells = Math.Max(1, footprint.OccupiedCellCount);
+            int cap = Math.Max(1, config.Economy.Deployment.LiveCapForUnit(unit.Id, cells));
+            float cooldown = Math.Max(0.1f, unit.Cooldown.Base);
+
+            double damagePerCell = cap * EffectiveDps(config, unit) / cells;
+            double hitPointsPerCell = cap * unit.Hp.Base / cooldown / cells;
+            return damagePerCell + (HitPointWeight * hitPointsPerCell);
+        }
+
+        /// <summary>
+        /// Raw damage per second, weighted by the armour mix act three actually fields, so a unit
+        /// that only looks strong against the armour class it never meets does not rank on it.
+        /// </summary>
+        private static double EffectiveDps(GameConfig config, UnitDef unit)
+        {
+            if (unit.AtkType == AttackType.None || unit.Atk.Base <= 0f)
             {
-                return rightCells.CompareTo(leftCells);
+                return 0d;
             }
 
-            return string.CompareOrdinal(left.Id, right.Id);
+            double raw = unit.Atk.Base * unit.AtkSpeed.Base;
+            double weighted =
+                (LateArmourMix[0] * Formula.TypeMultiplier(unit.AtkType, ArmorType.Unarmored, config.Economy))
+                + (LateArmourMix[1] * Formula.TypeMultiplier(unit.AtkType, ArmorType.Light, config.Economy))
+                + (LateArmourMix[2] * Formula.TypeMultiplier(unit.AtkType, ArmorType.Heavy, config.Economy));
+            return raw * weighted;
+        }
+
+        private static int CountSiegeUnits(GameConfig config, CardEconomy economy)
+        {
+            int total = 0;
+            IReadOnlyList<DeploymentPlacement> placements = economy.Grid.Placements;
+            for (int index = 0; index < placements.Count; index++)
+            {
+                if (config.GetUnit(placements[index].UnitId).AtkType == AttackType.Siege)
+                {
+                    total++;
+                }
+            }
+
+            return total;
         }
 
         private static int CountAuraUnits(GameConfig config, CardEconomy economy)

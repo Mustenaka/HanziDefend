@@ -562,6 +562,15 @@ namespace HanziDefend.Data
         public float AllyAdvanceLimitY { get; set; }
     }
 
+    /// <summary>A named unit's live cap, overriding whatever its footprint tier would give.</summary>
+    [Serializable]
+    public sealed class UnitLiveCapDef
+    {
+        public string UnitId { get; set; } = string.Empty;
+
+        public int Cap { get; set; }
+    }
+
     /// <summary>How many of one unit a single deployment cell may keep on the field at once.</summary>
     [Serializable]
     public sealed class FootprintLiveCapDef
@@ -597,6 +606,32 @@ namespace HanziDefend.Data
         /// </summary>
         public FootprintLiveCapDef[] LiveCapByFootprintCells { get; set; }
             = Array.Empty<FootprintLiveCapDef>();
+
+        /// <summary>
+        /// Per-unit overrides of the footprint tier. Some units are wrong to judge by size alone:
+        /// 火 and 冰 have <c>atk: 0</c> and only project an aura, and the aura does not stack —
+        /// a second one on the same cell is 120 hit points of empty body, so their cap is 1.
+        /// </summary>
+        public UnitLiveCapDef[] LiveCapOverrides { get; set; } = Array.Empty<UnitLiveCapDef>();
+
+        /// <summary>Live cap for one unit: its override when it has one, else the footprint tier.</summary>
+        public int LiveCapForUnit(string unitId, int cells)
+        {
+            UnitLiveCapDef[] overrides = LiveCapOverrides;
+            if (overrides != null && !string.IsNullOrEmpty(unitId))
+            {
+                for (int index = 0; index < overrides.Length; index++)
+                {
+                    UnitLiveCapDef entry = overrides[index];
+                    if (entry != null && string.Equals(entry.UnitId, unitId, StringComparison.Ordinal))
+                    {
+                        return entry.Cap;
+                    }
+                }
+            }
+
+            return LiveCapForCells(cells);
+        }
 
         /// <summary>Live cap for a footprint of the given size; falls back to the largest declared.</summary>
         public int LiveCapForCells(int cells)

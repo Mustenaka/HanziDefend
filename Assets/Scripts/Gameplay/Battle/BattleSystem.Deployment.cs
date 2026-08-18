@@ -221,7 +221,7 @@ namespace HanziDefend.Gameplay.Battle
         {
             DeploymentRulesDef deployment = config.Economy.Deployment;
             int cells = HanziDefend.Gameplay.Deploy.UnitFootprint.FromDefinition(definition).OccupiedCellCount;
-            return Math.Max(1, deployment == null ? 1 : deployment.LiveCapForCells(cells));
+            return Math.Max(1, deployment == null ? 1 : deployment.LiveCapForUnit(definition.Id, cells));
         }
 
         /// <summary>
